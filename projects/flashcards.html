@@ -11,8 +11,8 @@
       --panel:#12121a;
       --panel2:#181826;
       --stroke:#2a2a40;
-      --purple:#7c3aed;
-      --purple2:#a78bfa;
+      --accent:#ffcd00;
+      --accent2:#ffe066;
       --text:#f1f1f8;
       --muted:#a8a8c0;
       --danger:#ef4444;
@@ -20,44 +20,96 @@
     }
 
     *{box-sizing:border-box}
+
     body{
       margin:0;
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       background:
-        radial-gradient(800px 380px at 10% -5%, rgba(124,58,237,.18), transparent 60%),
-        radial-gradient(700px 360px at 100% 0%, rgba(167,139,250,.10), transparent 58%),
+        radial-gradient(900px 420px at 10% -5%, rgba(255,205,0,.16), transparent 60%),
+        radial-gradient(700px 360px at 100% 0%, rgba(255,224,102,.10), transparent 58%),
         var(--bg);
       color:var(--text);
     }
 
-    .wrap{max-width:1100px;margin:0 auto;padding:20px}
+    .wrap{
+      max-width:1180px;
+      margin:0 auto;
+      padding:24px;
+    }
+
     .hero,.card{
       border:1px solid var(--stroke);
-      border-radius:22px;
+      border-radius:24px;
       background:linear-gradient(180deg, rgba(18,18,26,.96), rgba(18,18,26,.88));
       box-shadow:var(--shadow);
     }
 
-    .hero{padding:22px;margin-bottom:18px}
-    .hero h1{margin:0 0 8px;font-size:28px}
-    .hero p{margin:0;color:var(--muted);line-height:1.45}
+    .hero{
+      padding:28px;
+      margin-bottom:20px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-40px;
+      top:-40px;
+      width:180px;
+      height:180px;
+      background:radial-gradient(circle, rgba(255,205,0,.22), transparent 65%);
+      pointer-events:none;
+    }
+
+    .hero h1{
+      margin:0 0 10px;
+      font-size:30px;
+      line-height:1.15;
+    }
+
+    .hero p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.5;
+      max-width:760px;
+    }
 
     .grid{
       display:grid;
-      grid-template-columns:360px 1fr;
-      gap:18px;
+      grid-template-columns:380px 1fr;
+      gap:20px;
+      align-items:start;
     }
 
-    .panel,.viewer{padding:18px}
-    .panel h2,.topbar h2{margin:0 0 14px;font-size:18px}
-    .label{display:block;margin:12px 0 8px;font-size:13px;color:var(--muted)}
+    .panel,.viewer{
+      padding:20px;
+    }
+
+    .panel h2,.topbar h2{
+      margin:0 0 14px;
+      font-size:18px;
+    }
+
+    .label{
+      display:block;
+      margin:14px 0 8px;
+      font-size:13px;
+      color:var(--muted);
+    }
 
     .dropzone{
-      border:1.5px dashed rgba(167,139,250,.38);
-      background:rgba(124,58,237,.06);
+      border:1.5px dashed rgba(255,205,0,.45);
+      background:rgba(255,205,0,.06);
       border-radius:18px;
-      padding:18px;
+      padding:20px;
       text-align:center;
+      transition:.2s ease;
+    }
+
+    .dropzone:hover{
+      border-color:rgba(255,205,0,.7);
+      background:rgba(255,205,0,.08);
     }
 
     .dropzone input{
@@ -69,7 +121,7 @@
     .fileName{
       margin-top:10px;
       font-size:13px;
-      color:var(--purple2);
+      color:var(--accent2);
       word-break:break-word;
     }
 
@@ -82,11 +134,19 @@
       padding:12px 13px;
       font-size:14px;
       outline:none;
+      transition:border-color .15s ease, box-shadow .15s ease;
+    }
+
+    textarea:focus,
+    input[type="number"]:focus,
+    select:focus{
+      border-color:rgba(255,205,0,.55);
+      box-shadow:0 0 0 3px rgba(255,205,0,.10);
     }
 
     textarea{
       resize:vertical;
-      min-height:160px;
+      min-height:180px;
       line-height:1.45;
     }
 
@@ -97,28 +157,34 @@
     }
 
     .btns{
-      display:flex;
-      flex-wrap:wrap;
+      display:grid;
+      grid-template-columns:1fr 1fr;
       gap:10px;
-      margin-top:16px;
+      margin-top:18px;
     }
 
     button{
-      border:1px solid rgba(124,58,237,.35);
-      background:linear-gradient(180deg, rgba(124,58,237,.22), rgba(124,58,237,.12));
+      border:1px solid rgba(255,205,0,.35);
+      background:linear-gradient(180deg, rgba(255,205,0,.24), rgba(255,205,0,.12));
       color:#fff;
       border-radius:14px;
       padding:11px 14px;
       font-size:14px;
       font-weight:600;
       cursor:pointer;
+      transition:transform .12s ease, filter .12s ease, border-color .12s ease;
     }
 
-    button:hover{filter:brightness(1.07)}
+    button:hover{
+      filter:brightness(1.05);
+      transform:translateY(-1px);
+    }
+
     .secondary{
       border:1px solid var(--stroke);
       background:var(--panel2);
     }
+
     .danger{
       border:1px solid rgba(239,68,68,.35);
       background:rgba(239,68,68,.10);
@@ -126,11 +192,15 @@
     }
 
     .status{
-      margin-top:12px;
+      margin-top:14px;
+      padding:12px 14px;
       font-size:13px;
       color:var(--muted);
       min-height:18px;
       white-space:pre-wrap;
+      border:1px solid var(--stroke);
+      border-radius:14px;
+      background:rgba(255,255,255,.02);
     }
 
     .topbar{
@@ -139,40 +209,64 @@
       align-items:center;
       gap:10px;
       margin-bottom:16px;
+      padding-bottom:10px;
+      border-bottom:1px solid rgba(255,255,255,.05);
     }
 
-    .count{color:var(--muted);font-size:13px}
+    .count{
+      color:var(--muted);
+      font-size:13px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,205,0,.08);
+      border:1px solid rgba(255,205,0,.18);
+    }
 
     .flashcard{
       border:1px solid var(--stroke);
-      background:linear-gradient(180deg, rgba(24,24,38,.96), rgba(24,24,38,.88));
-      border-radius:22px;
-      min-height:300px;
+      background:
+        linear-gradient(180deg, rgba(24,24,38,.98), rgba(24,24,38,.90));
+      border-radius:24px;
+      min-height:360px;
       display:flex;
       flex-direction:column;
       justify-content:center;
       align-items:center;
       text-align:center;
-      padding:26px;
+      padding:30px;
       cursor:pointer;
       user-select:none;
-      transition:transform .15s ease, border-color .15s ease;
+      transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .flashcard::before{
+      content:"";
+      position:absolute;
+      inset:auto -50px -50px auto;
+      width:160px;
+      height:160px;
+      background:radial-gradient(circle, rgba(255,205,0,.12), transparent 65%);
+      pointer-events:none;
     }
 
     .flashcard:hover{
       transform:translateY(-2px);
-      border-color:rgba(167,139,250,.45);
+      border-color:rgba(255,205,0,.45);
+      box-shadow:0 18px 36px rgba(0,0,0,.28);
     }
 
     .flashcard small{
-      color:var(--purple2);
+      color:var(--accent2);
       font-size:12px;
-      margin-bottom:10px;
+      margin-bottom:12px;
+      letter-spacing:.02em;
     }
 
     .flashcard .content{
-      font-size:22px;
-      line-height:1.4;
+      font-size:24px;
+      line-height:1.45;
       max-width:700px;
       white-space:pre-wrap;
     }
@@ -182,20 +276,33 @@
       justify-content:center;
       flex-wrap:wrap;
       gap:10px;
-      margin-top:14px;
+      margin-top:16px;
     }
 
     .empty{
       border:1px dashed var(--stroke);
       border-radius:20px;
-      padding:30px;
+      padding:42px 30px;
       text-align:center;
       color:var(--muted);
+      background:rgba(255,255,255,.02);
+      min-height:360px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
     }
 
     @media (max-width:860px){
       .grid{grid-template-columns:1fr}
+      .btns{grid-template-columns:1fr 1fr}
       .flashcard .content{font-size:18px}
+    }
+
+    @media (max-width:560px){
+      .wrap{padding:16px}
+      .hero{padding:22px}
+      .btns{grid-template-columns:1fr}
+      .row{grid-template-columns:1fr}
     }
   </style>
 </head>
