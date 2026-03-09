@@ -564,16 +564,16 @@
   loadDemoBtn.addEventListener("click", () => {
     flashcards = [
       {
-        question: "What is qualitative research?",
-        answer: "A type of research that focuses on understanding meanings, experiences, and perceptions."
+        question: "What is Leeyam's situation nowadays?",
+        answer: "STRESS NA AKOOOOOO"
       },
       {
-        question: "What is phenomenology?",
-        answer: "A qualitative approach used to explore and describe lived experiences."
+        question: "Can everyone use his flashcards project?",
+        answer: "Everyone can use this flashcard reviewer project for free."
       },
       {
-        question: "Why is purposive sampling used?",
-        answer: "It helps researchers choose participants who are relevant to the study."
+        question: "How is this project made?",
+        answer: "The developer just woke up one day then he knew everything about this."
       }
     ];
 
@@ -639,7 +639,7 @@
     statusText.textContent = "Generating AI flashcards...";
 
     try {
-      const res = await fetch("https://purpz-muchie-proxy.vercel.app/api/flashcards", {
+      const res = await fetch("https://personal-backend-two.vercel.app/api/flashcards", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
