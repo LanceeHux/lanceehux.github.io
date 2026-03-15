@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Flashcard Reviewer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    :root {
+      --bg: #09090f;
+      --panel: #121222;
+      --panel-2: #181833;
+      --line: rgba(255,255,255,.08);
+      --text: #f5f7ff;
+      --muted: #b8bdd6;
+      --gold: #ffcd00;
+      --gold-2: #ffd93d;
+      --danger: #ff5b7a;
+      --ok: #39d98a;
+      --shadow: 0 18px 40px rgba(0,0,0,.35);
+      --radius: 24px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(255,205,0,.12), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(130,80,255,.12), transparent 28%),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      width: min(1180px, calc(100% - 28px));
+      margin: 28px auto;
+      display: grid;
+      grid-template-columns: 390px 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar, .main { padding: 22px; }
+
+    h1, h2, h3, p { margin: 0; }
+
+    .eyebrow {
+      display: inline-block;
+      color: #111;
+      background: var(--gold);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: .86rem;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    .title {
+      font-size: clamp(1.7rem, 3vw, 2.2rem);
+      line-height: 1.05;
+      margin-bottom: 8px;
+    }
+
+    .muted { color: var(--muted); }
+
+    .stack { display: grid; gap: 14px; margin-top: 18px; }
+
+    label {
+      display: block;
+      font-size: .94rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    input[type="file"], input[type="number"], textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      border-radius: 16px;
+      padding: 14px 14px;
+      font: inherit;
+      outline: none;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+      line-height: 1.5;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      transition: .22s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, var(--gold), #d6a800);
+      color: #111;
+    }
+
+    .btn-primary:hover { transform: translateY(-2px); }
+
+    .btn-secondary {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .btn-danger {
+      background: rgba(255,91,122,.12);
+      color: #ffd7df;
+      border: 1px solid rgba(255,91,122,.35);
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .status {
+      margin-top: 8px;
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      min-height: 54px;
+      white-space: pre-wrap;
+    }
+
+    .question-box, .feedback-box {
+      background: rgba(255,255,255,.025);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 18px;
+    }
+
+    .question-box {
+      margin-top: 18px;
+      min-height: 112px;
+    }
+
+    .question-number {
+      color: var(--gold);
+      font-weight: 800;
+      margin-bottom: 10px;
+      font-size: .92rem;
+    }
+
+    .answer-area {
+      margin-top: 16px;
+    }
+
+    .feedback-box {
+      margin-top: 16px;
+      min-height: 130px;
+    }
+
+    .score {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .score.ok {
+      background: rgba(57,217,138,.12);
+      color: #84efb5;
+      border: 1px solid rgba(57,217,138,.28);
+    }
+
+    .score.mid {
+      background: rgba(255,205,0,.12);
+      color: #ffe06c;
+      border: 1px solid rgba(255,205,0,.28);
+    }
+
+    .score.bad {
+      background: rgba(255,91,122,.12);
+      color: #ffb6c5;
+      border: 1px solid rgba(255,91,122,.28);
+    }
+
+    .mini {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .mini .item {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .mini strong {
+      display: block;
+      color: var(--gold);
+      font-size: 1.2rem;
+    }
+
+    code.inline {
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--line);
+      padding: 2px 8px;
+      border-radius: 8px;
+    }
+
+    @media (max-width: 920px) {
+      .wrap { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="card sidebar">
+      <div class="eyebrow">AI Reviewer</div>
+      <h1 class="title">PDF to question-answer practice</h1>
+      <p class="muted">Upload a PDF, extract its text, let Groq generate a question, answer it yourself, then let AI check whether your answer matches the PDF's idea.</p>
+
+      <div class="stack">
+        
+
+        <div>
+          <label for="pdfFile">Reviewer PDF</label>
+          <input id="pdfFile" type="file" accept="application/pdf" />
+        </div>
+
+        <div>
+          <label for="sourceText">Extracted / editable source text</label>
+          <textarea id="sourceText" placeholder="PDF text will appear here..."></textarea>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="difficulty">Difficulty</label>
+            <select id="difficulty">
+              <option value="easy">Easy</option>
+              <option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+          <div>
+            <label for="focusType">Question type</label>
+            <select id="focusType">
+              <option value="definition" selected>Definition</option>
+              <option value="concept">Concept</option>
+              <option value="application">Application</option>
+              <option value="comparison">Comparison</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <button class="btn-primary" id="extractBtn">Extract PDF Text</button>
+          <button class="btn-secondary" id="generateBtn">Generate Question</button>
+          <button class="btn-secondary" id="checkBtn">Check My Answer</button>
+          <button class="btn-danger" id="clearBtn">Clear</button>
+        </div>
+
+        <div class="status" id="statusText">Ready. Upload a PDF, extract text, then generate a question.</div>
+      </div>
+    </section>
+
+    <section class="card main">
+      <div class="eyebrow">Session</div>
+      <h2 class="title" style="font-size: clamp(1.4rem, 2.5vw, 2rem);">Interactive flashcard reviewer</h2>
+      <p class="muted">Instead of simply showing a card, this page asks a question and evaluates your answer against the source idea from the PDF.</p>
+
+      <div class="mini">
+        <div class="item"><strong id="qCount">0</strong><span class="muted">Questions asked</span></div>
+        <div class="item"><strong id="bestScore">0</strong><span class="muted">Best score</span></div>
+        <div class="item"><strong id="lastScore">0</strong><span class="muted">Last score</span></div>
+      </div>
+
+      <div class="question-box">
+        <div class="question-number" id="questionNumber">Question 0</div>
+        <div id="questionText" style="font-size: 1.1rem; line-height: 1.6;">No question yet. Click <span class="muted">Generate Question</span>.</div>
+      </div>
+
+      <div class="answer-area">
+        <label for="userAnswer">Your answer</label>
+        <textarea id="userAnswer" placeholder="Type your answer here..."></textarea>
+      </div>
+
+      <div class="feedback-box" id="feedbackBox">
+        <div class="muted">AI feedback will appear here after you submit your answer.</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+    const pdfFile = document.getElementById("pdfFile");
+    const sourceText = document.getElementById("sourceText");
+    const difficulty = document.getElementById("difficulty");
+    const focusType = document.getElementById("focusType");
+    const extractBtn = document.getElementById("extractBtn");
+    const generateBtn = document.getElementById("generateBtn");
+    const checkBtn = document.getElementById("checkBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const statusText = document.getElementById("statusText");
+    const questionNumber = document.getElementById("questionNumber");
+    const questionText = document.getElementById("questionText");
+    const userAnswer = document.getElementById("userAnswer");
+    const feedbackBox = document.getElementById("feedbackBox");
+    const qCount = document.getElementById("qCount");
+    const bestScore = document.getElementById("bestScore");
+    const lastScore = document.getElementById("lastScore");
+
+    let currentQuestion = null;
+    let askedCount = 0;
+    let best = 0;
+
+    function setStatus(message) {
+      statusText.textContent = message;
+    }
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", "&#039;");
+    }
+
+    async function extractPdfText(file) {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = "";
+
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const content = await page.getTextContent();
+        const pageText = content.items.map(item => item.str).join(" ");
+        fullText += pageText + "\n\n";
+      }
+
+      return fullText.trim();
+    }
+
+    const API_BASE = "https://personal-backend.vercel.app/api";
+
+async function callBackend(endpoint, payload) {
+  const response = await fetch(`${API_BASE}/${endpoint}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const raw = await response.text();
+
+  if (!response.ok) {
+    throw new Error(raw || "Backend request failed.");
+  }
+
+  return JSON.parse(raw);
+}
+
+      const raw = await response.text();
+
+      if (!response.ok) {
+        throw new Error(raw || "Groq request failed.");
+      }
+
+      const data = JSON.parse(raw);
+      return data.choices?.[0]?.message?.content || "{}";
+    }
+
+    async function generateQuestionFromText() {
+  const text = sourceText.value.trim();
+  if (!text) throw new Error("Extract or paste source text first.");
+
+  const limitedText = text.slice(0, 5000);
+
+  return await callBackend("generate-question", {
+    text: limitedText,
+    difficulty: difficulty.value,
+    type: focusType.value
+  });
+}
+
+    async function evaluateAnswer(questionObj, answerText) {
+  return await callBackend("check-answer", {
+    question: questionObj.question,
+    answerIdea: questionObj.answer_idea,
+    sourceBasis: questionObj.source_snippet,
+    userAnswer: answerText
+  });
+}
+
+    function renderFeedback(result, questionObj) {
+      const score = Number(result.score) || 0;
+      let scoreClass = "bad";
+      if (score >= 80) scoreClass = "ok";
+      else if (score >= 50) scoreClass = "mid";
+
+      feedbackBox.innerHTML = `
+        <div class="score ${scoreClass}">Score: ${escapeHtml(String(score))}/100</div>
+        <p style="margin-bottom:10px;"><strong>Verdict:</strong> ${escapeHtml(result.verdict || "unknown")}</p>
+        <p style="margin-bottom:10px;"><strong>Feedback:</strong> ${escapeHtml(result.feedback || "No feedback.")}</p>
+        <p style="margin-bottom:10px;"><strong>Strong points:</strong> ${escapeHtml(Array.isArray(result.strong_points) ? result.strong_points.join(", ") : String(result.strong_points || "None"))}</p>
+        <p style="margin-bottom:10px;"><strong>Missed points:</strong> ${escapeHtml(Array.isArray(result.missed_points) ? result.missed_points.join(", ") : String(result.missed_points || "None"))}</p>
+        <p style="margin-bottom:10px;"><strong>Better answer:</strong> ${escapeHtml(result.corrected_answer || questionObj.answer_idea || "")}</p>
+        <p class="muted"><strong>Expected idea:</strong> ${escapeHtml(questionObj.answer_idea || "")}</p>
+      `;
+
+      lastScore.textContent = String(score);
+      if (score > best) {
+        best = score;
+        bestScore.textContent = String(best);
+      }
+    }
+
+    extractBtn.addEventListener("click", async () => {
+      try {
+        const file = pdfFile.files?.[0];
+        if (!file) throw new Error("Please choose a PDF file first.");
+        setStatus("Extracting PDF text...");
+        const text = await extractPdfText(file);
+        sourceText.value = text;
+        setStatus(`PDF text extracted. ${text.length} characters ready.`);
+      } catch (err) {
+        setStatus(`Error: ${err.message}`);
+      }
+    });
+
+    generateBtn.addEventListener("click", async () => {
+      try {
+        setStatus("Generating question from Groq...");
+        generateBtn.disabled = true;
+        const generated = await generateQuestionFromText();
+        currentQuestion = generated;
+        askedCount += 1;
+        qCount.textContent = String(askedCount);
+        questionNumber.textContent = `Question ${askedCount}`;
+        questionText.textContent = generated.question || "No question generated.";
+        feedbackBox.innerHTML = `<div class="muted">Question ready. Type your answer and click <strong>Check My Answer</strong>.</div>`;
+        userAnswer.value = "";
+        setStatus(`Question generated on topic: ${generated.topic || "General"}`);
+      } catch (err) {
+        setStatus(`Error: ${err.message}`);
+      } finally {
+        generateBtn.disabled = false;
+      }
+    });
+
+    checkBtn.addEventListener("click", async () => {
+      try {
+        if (!currentQuestion) throw new Error("Generate a question first.");
+        const answer = userAnswer.value.trim();
+        if (!answer) throw new Error("Please type your answer first.");
+
+        setStatus("Checking your answer with Groq...");
+        checkBtn.disabled = true;
+        const result = await evaluateAnswer(currentQuestion, answer);
+        renderFeedback(result, currentQuestion);
+        setStatus("Answer checked.");
+      } catch (err) {
+        setStatus(`Error: ${err.message}`);
+      } finally {
+        checkBtn.disabled = false;
+      }
+    });
+
+    clearBtn.addEventListener("click", () => {
+      sourceText.value = "";
+      userAnswer.value = "";
+      currentQuestion = null;
+      questionNumber.textContent = "Question 0";
+      questionText.textContent = "No question yet. Click Generate Question.";
+      feedbackBox.innerHTML = `<div class="muted">AI feedback will appear here after you submit your answer.</div>`;
+      setStatus("Cleared.");
+    });
+  </script>
+</body>
+</html>
