@@ -233,6 +233,49 @@
       border-radius: 8px;
     }
 
+    .choices-box {
+  display: grid;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.choice-btn {
+  width: 100%;
+  text-align: left;
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 16px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.choice-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255,205,0,.35);
+}
+
+.choice-btn.selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(255,205,0,.15) inset;
+  background: rgba(255,205,0,.08);
+}
+
+.choice-btn.correct {
+  background: rgba(57,217,138,.12);
+  border-color: rgba(57,217,138,.4);
+  color: #b7ffd7;
+}
+
+.choice-btn.wrong {
+  background: rgba(255,91,122,.12);
+  border-color: rgba(255,91,122,.4);
+  color: #ffd0d8;
+}
+    
     @media (max-width: 920px) {
       .wrap { grid-template-columns: 1fr; }
     }
@@ -330,7 +373,7 @@
   const statusText = document.getElementById("statusText");
   const questionNumber = document.getElementById("questionNumber");
   const questionText = document.getElementById("questionText");
-  const userAnswer = document.getElementById("userAnswer");
+  const choicesBox = document.getElementById("choicesBox");
   const feedbackBox = document.getElementById("feedbackBox");
   const qCount = document.getElementById("qCount");
   const bestScore = document.getElementById("bestScore");
@@ -339,6 +382,7 @@
   let currentQuestion = null;
   let askedCount = 0;
   let best = 0;
+  let selectedChoice = null;
 
   function setStatus(message) {
     statusText.textContent = message;
@@ -389,32 +433,83 @@
   }
 
   async function generateQuestionFromText() {
-    const text = sourceText.value.trim();
-    if (!text) throw new Error("Extract or paste source text first.");
+  const text = sourceText.value.trim();
+  if (!text) throw new Error("Extract or paste source text first.");
 
-    const limitedText = text.slice(0, 5000);
+  const limitedText = text.slice(0, 5000);
 
-    return await callBackend("generate-question", {
-      text: limitedText,
-      difficulty: difficulty.value,
-      type: focusType.value
-    });
-  }
+  return await callBackend("generate-question", {
+    text: limitedText,
+    difficulty: difficulty.value,
+    type: focusType.value,
+    mode: "multiple-choice",
+    choiceCount: 3
+  });
+}
 
-  async function evaluateAnswer(questionObj, answerText) {
-    return await callBackend("check-answer", {
-      question: questionObj.question,
-      answerIdea: questionObj.answer_idea,
-      sourceBasis: questionObj.source_snippet,
-      userAnswer: answerText
-    });
-  }
-
+  async function evaluateAnswer(questionObj, selectedAnswer) {
+  return await callBackend("check-answer", {
+    question: questionObj.question,
+    correctAnswer: questionObj.correct_answer,
+    selectedAnswer
+  });
+}
   function renderFeedback(result, questionObj) {
-    const score = Number(result.score) || 0;
-    let scoreClass = "bad";
-    if (score >= 80) scoreClass = "ok";
-    else if (score >= 50) scoreClass = "mid";
+  const score = Number(result.score) || 0;
+  let scoreClass = "bad";
+  if (score >= 80) scoreClass = "ok";
+  else if (score >= 50) scoreClass = "mid";
+
+  feedbackBox.innerHTML = `
+    <div class="score ${scoreClass}">Score: ${escapeHtml(String(score))}/100</div>
+    <p style="margin-bottom:10px;"><strong>Verdict:</strong> ${escapeHtml(result.verdict || "unknown")}</p>
+    <p style="margin-bottom:10px;"><strong>Feedback:</strong> ${escapeHtml(result.feedback || "No feedback.")}</p>
+    <p style="margin-bottom:10px;"><strong>Correct answer:</strong> ${escapeHtml(questionObj.correct_answer || "")}</p>
+    <p class="muted"><strong>Expected idea:</strong> ${escapeHtml(questionObj.answer_idea || "")}</p>
+  `;
+
+  document.querySelectorAll(".choice-btn").forEach(btn => {
+    const rawText = btn.textContent.replace(/^[A-Z]\.\s*/, "");
+    btn.disabled = true;
+
+    if (rawText === questionObj.correct_answer) {
+      btn.classList.add("correct");
+    } else if (rawText === selectedChoice) {
+      btn.classList.add("wrong");
+    }
+  });
+
+  lastScore.textContent = String(score);
+  if (score > best) {
+    best = score;
+    bestScore.textContent = String(best);
+  }
+}
+
+    function renderChoices(choices) {
+  selectedChoice = null;
+  choicesBox.innerHTML = "";
+
+  if (!Array.isArray(choices) || choices.length === 0) {
+    choicesBox.innerHTML = `<div class="muted">No choices available.</div>`;
+    return;
+  }
+
+  choices.forEach((choice, index) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "choice-btn";
+    btn.textContent = `${String.fromCharCode(65 + index)}. ${choice}`;
+
+    btn.addEventListener("click", () => {
+      selectedChoice = choice;
+      document.querySelectorAll(".choice-btn").forEach(el => el.classList.remove("selected"));
+      btn.classList.add("selected");
+    });
+
+    choicesBox.appendChild(btn);
+  });
+}
 
     feedbackBox.innerHTML = `
       <div class="score ${scoreClass}">Score: ${escapeHtml(String(score))}/100</div>
@@ -456,8 +551,8 @@
       qCount.textContent = String(askedCount);
       questionNumber.textContent = `Question ${askedCount}`;
       questionText.textContent = generated.question || "No question generated.";
-      feedbackBox.innerHTML = `<div class="muted">Question ready. Type your answer and click <strong>Check My Answer</strong>.</div>`;
-      userAnswer.value = "";
+      renderChoices(generated.choices || []);
+      feedbackBox.innerHTML = `<div class="muted">Question ready. Select one choice and click <strong>Check My Answer</strong>.</div>`;
       setStatus(`Question generated on topic: ${generated.topic || "General"}`);
     } catch (err) {
       setStatus(`Error: ${err.message}`);
@@ -467,32 +562,32 @@
   });
 
   checkBtn.addEventListener("click", async () => {
-    try {
-      if (!currentQuestion) throw new Error("Generate a question first.");
-      const answer = userAnswer.value.trim();
-      if (!answer) throw new Error("Please type your answer first.");
+  try {
+    if (!currentQuestion) throw new Error("Generate a question first.");
+    if (!selectedChoice) throw new Error("Please select an answer first.");
 
-      setStatus("Checking your answer...");
-      checkBtn.disabled = true;
-      const result = await evaluateAnswer(currentQuestion, answer);
-      renderFeedback(result, currentQuestion);
-      setStatus("Answer checked.");
-    } catch (err) {
-      setStatus(`Error: ${err.message}`);
-    } finally {
-      checkBtn.disabled = false;
-    }
-  });
+    setStatus("Checking your answer...");
+    checkBtn.disabled = true;
+    const result = await evaluateAnswer(currentQuestion, selectedChoice);
+    renderFeedback(result, currentQuestion);
+    setStatus("Answer checked.");
+  } catch (err) {
+    setStatus(`Error: ${err.message}`);
+  } finally {
+    checkBtn.disabled = false;
+  }
+});
 
   clearBtn.addEventListener("click", () => {
-    sourceText.value = "";
-    userAnswer.value = "";
-    currentQuestion = null;
-    questionNumber.textContent = "Question 0";
-    questionText.textContent = "No question yet. Click Generate Question.";
-    feedbackBox.innerHTML = `<div class="muted">AI feedback will appear here after you submit your answer.</div>`;
-    setStatus("Cleared.");
-  });
+  sourceText.value = "";
+  selectedChoice = null;
+  currentQuestion = null;
+  questionNumber.textContent = "Question 0";
+  questionText.textContent = "No question yet. Click Generate Question.";
+  choicesBox.innerHTML = `<div class="muted">Choices will appear here after generating a question.</div>`;
+  feedbackBox.innerHTML = `<div class="muted">AI feedback will appear here after you submit your answer.</div>`;
+  setStatus("Cleared.");
+});
 </script>
 </body>
 </html>
