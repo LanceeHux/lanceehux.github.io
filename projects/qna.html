@@ -317,192 +317,182 @@
   </div>
 
   <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-    const pdfFile = document.getElementById("pdfFile");
-    const sourceText = document.getElementById("sourceText");
-    const difficulty = document.getElementById("difficulty");
-    const focusType = document.getElementById("focusType");
-    const extractBtn = document.getElementById("extractBtn");
-    const generateBtn = document.getElementById("generateBtn");
-    const checkBtn = document.getElementById("checkBtn");
-    const clearBtn = document.getElementById("clearBtn");
-    const statusText = document.getElementById("statusText");
-    const questionNumber = document.getElementById("questionNumber");
-    const questionText = document.getElementById("questionText");
-    const userAnswer = document.getElementById("userAnswer");
-    const feedbackBox = document.getElementById("feedbackBox");
-    const qCount = document.getElementById("qCount");
-    const bestScore = document.getElementById("bestScore");
-    const lastScore = document.getElementById("lastScore");
+  const pdfFile = document.getElementById("pdfFile");
+  const sourceText = document.getElementById("sourceText");
+  const difficulty = document.getElementById("difficulty");
+  const focusType = document.getElementById("focusType");
+  const extractBtn = document.getElementById("extractBtn");
+  const generateBtn = document.getElementById("generateBtn");
+  const checkBtn = document.getElementById("checkBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const statusText = document.getElementById("statusText");
+  const questionNumber = document.getElementById("questionNumber");
+  const questionText = document.getElementById("questionText");
+  const userAnswer = document.getElementById("userAnswer");
+  const feedbackBox = document.getElementById("feedbackBox");
+  const qCount = document.getElementById("qCount");
+  const bestScore = document.getElementById("bestScore");
+  const lastScore = document.getElementById("lastScore");
 
-    let currentQuestion = null;
-    let askedCount = 0;
-    let best = 0;
+  let currentQuestion = null;
+  let askedCount = 0;
+  let best = 0;
 
-    function setStatus(message) {
-      statusText.textContent = message;
-    }
-
-    function escapeHtml(str) {
-      return String(str || "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", "&#039;");
-    }
-
-    async function extractPdfText(file) {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      let fullText = "";
-
-      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-        const page = await pdf.getPage(pageNum);
-        const content = await page.getTextContent();
-        const pageText = content.items.map(item => item.str).join(" ");
-        fullText += pageText + "\n\n";
-      }
-
-      return fullText.trim();
-    }
-
-    const API_BASE = "https://personal-backend.vercel.app/api";
-
-async function callBackend(endpoint, payload) {
-  const response = await fetch(`${API_BASE}/${endpoint}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(payload)
-  });
-
-  const raw = await response.text();
-
-  if (!response.ok) {
-    throw new Error(raw || "Backend request failed.");
+  function setStatus(message) {
+    statusText.textContent = message;
   }
 
-  return JSON.parse(raw);
-}
+  function escapeHtml(str) {
+    return String(str || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
 
-      const raw = await response.text();
+  async function extractPdfText(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let fullText = "";
 
-      if (!response.ok) {
-        throw new Error(raw || "Groq request failed.");
-      }
-
-      const data = JSON.parse(raw);
-      return data.choices?.[0]?.message?.content || "{}";
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const content = await page.getTextContent();
+      const pageText = content.items.map(item => item.str).join(" ");
+      fullText += pageText + "\n\n";
     }
 
-    async function generateQuestionFromText() {
-  const text = sourceText.value.trim();
-  if (!text) throw new Error("Extract or paste source text first.");
+    return fullText.trim();
+  }
 
-  const limitedText = text.slice(0, 5000);
+  const API_BASE = "https://personal-backend.vercel.app/api";
 
-  return await callBackend("generate-question", {
-    text: limitedText,
-    difficulty: difficulty.value,
-    type: focusType.value
-  });
-}
+  async function callBackend(endpoint, payload) {
+    const response = await fetch(`${API_BASE}/${endpoint}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
 
-    async function evaluateAnswer(questionObj, answerText) {
-  return await callBackend("check-answer", {
-    question: questionObj.question,
-    answerIdea: questionObj.answer_idea,
-    sourceBasis: questionObj.source_snippet,
-    userAnswer: answerText
-  });
-}
+    const raw = await response.text();
 
-    function renderFeedback(result, questionObj) {
-      const score = Number(result.score) || 0;
-      let scoreClass = "bad";
-      if (score >= 80) scoreClass = "ok";
-      else if (score >= 50) scoreClass = "mid";
-
-      feedbackBox.innerHTML = `
-        <div class="score ${scoreClass}">Score: ${escapeHtml(String(score))}/100</div>
-        <p style="margin-bottom:10px;"><strong>Verdict:</strong> ${escapeHtml(result.verdict || "unknown")}</p>
-        <p style="margin-bottom:10px;"><strong>Feedback:</strong> ${escapeHtml(result.feedback || "No feedback.")}</p>
-        <p style="margin-bottom:10px;"><strong>Strong points:</strong> ${escapeHtml(Array.isArray(result.strong_points) ? result.strong_points.join(", ") : String(result.strong_points || "None"))}</p>
-        <p style="margin-bottom:10px;"><strong>Missed points:</strong> ${escapeHtml(Array.isArray(result.missed_points) ? result.missed_points.join(", ") : String(result.missed_points || "None"))}</p>
-        <p style="margin-bottom:10px;"><strong>Better answer:</strong> ${escapeHtml(result.corrected_answer || questionObj.answer_idea || "")}</p>
-        <p class="muted"><strong>Expected idea:</strong> ${escapeHtml(questionObj.answer_idea || "")}</p>
-      `;
-
-      lastScore.textContent = String(score);
-      if (score > best) {
-        best = score;
-        bestScore.textContent = String(best);
-      }
+    if (!response.ok) {
+      throw new Error(raw || "Backend request failed.");
     }
 
-    extractBtn.addEventListener("click", async () => {
-      try {
-        const file = pdfFile.files?.[0];
-        if (!file) throw new Error("Please choose a PDF file first.");
-        setStatus("Extracting PDF text...");
-        const text = await extractPdfText(file);
-        sourceText.value = text;
-        setStatus(`PDF text extracted. ${text.length} characters ready.`);
-      } catch (err) {
-        setStatus(`Error: ${err.message}`);
-      }
+    return JSON.parse(raw);
+  }
+
+  async function generateQuestionFromText() {
+    const text = sourceText.value.trim();
+    if (!text) throw new Error("Extract or paste source text first.");
+
+    const limitedText = text.slice(0, 5000);
+
+    return await callBackend("generate-question", {
+      text: limitedText,
+      difficulty: difficulty.value,
+      type: focusType.value
     });
+  }
 
-    generateBtn.addEventListener("click", async () => {
-      try {
-        setStatus("Generating question from Groq...");
-        generateBtn.disabled = true;
-        const generated = await generateQuestionFromText();
-        currentQuestion = generated;
-        askedCount += 1;
-        qCount.textContent = String(askedCount);
-        questionNumber.textContent = `Question ${askedCount}`;
-        questionText.textContent = generated.question || "No question generated.";
-        feedbackBox.innerHTML = `<div class="muted">Question ready. Type your answer and click <strong>Check My Answer</strong>.</div>`;
-        userAnswer.value = "";
-        setStatus(`Question generated on topic: ${generated.topic || "General"}`);
-      } catch (err) {
-        setStatus(`Error: ${err.message}`);
-      } finally {
-        generateBtn.disabled = false;
-      }
+  async function evaluateAnswer(questionObj, answerText) {
+    return await callBackend("check-answer", {
+      question: questionObj.question,
+      answerIdea: questionObj.answer_idea,
+      sourceBasis: questionObj.source_snippet,
+      userAnswer: answerText
     });
+  }
 
-    checkBtn.addEventListener("click", async () => {
-      try {
-        if (!currentQuestion) throw new Error("Generate a question first.");
-        const answer = userAnswer.value.trim();
-        if (!answer) throw new Error("Please type your answer first.");
+  function renderFeedback(result, questionObj) {
+    const score = Number(result.score) || 0;
+    let scoreClass = "bad";
+    if (score >= 80) scoreClass = "ok";
+    else if (score >= 50) scoreClass = "mid";
 
-        setStatus("Checking your answer with Groq...");
-        checkBtn.disabled = true;
-        const result = await evaluateAnswer(currentQuestion, answer);
-        renderFeedback(result, currentQuestion);
-        setStatus("Answer checked.");
-      } catch (err) {
-        setStatus(`Error: ${err.message}`);
-      } finally {
-        checkBtn.disabled = false;
-      }
-    });
+    feedbackBox.innerHTML = `
+      <div class="score ${scoreClass}">Score: ${escapeHtml(String(score))}/100</div>
+      <p style="margin-bottom:10px;"><strong>Verdict:</strong> ${escapeHtml(result.verdict || "unknown")}</p>
+      <p style="margin-bottom:10px;"><strong>Feedback:</strong> ${escapeHtml(result.feedback || "No feedback.")}</p>
+      <p style="margin-bottom:10px;"><strong>Strong points:</strong> ${escapeHtml(Array.isArray(result.strong_points) ? result.strong_points.join(", ") : String(result.strong_points || "None"))}</p>
+      <p style="margin-bottom:10px;"><strong>Missed points:</strong> ${escapeHtml(Array.isArray(result.missed_points) ? result.missed_points.join(", ") : String(result.missed_points || "None"))}</p>
+      <p style="margin-bottom:10px;"><strong>Better answer:</strong> ${escapeHtml(result.corrected_answer || questionObj.answer_idea || "")}</p>
+      <p class="muted"><strong>Expected idea:</strong> ${escapeHtml(questionObj.answer_idea || "")}</p>
+    `;
 
-    clearBtn.addEventListener("click", () => {
-      sourceText.value = "";
+    lastScore.textContent = String(score);
+    if (score > best) {
+      best = score;
+      bestScore.textContent = String(best);
+    }
+  }
+
+  extractBtn.addEventListener("click", async () => {
+    try {
+      const file = pdfFile.files?.[0];
+      if (!file) throw new Error("Please choose a PDF file first.");
+      setStatus("Extracting PDF text...");
+      const text = await extractPdfText(file);
+      sourceText.value = text;
+      setStatus(`PDF text extracted. ${text.length} characters ready.`);
+    } catch (err) {
+      setStatus(`Error: ${err.message}`);
+    }
+  });
+
+  generateBtn.addEventListener("click", async () => {
+    try {
+      setStatus("Generating question...");
+      generateBtn.disabled = true;
+      const generated = await generateQuestionFromText();
+      currentQuestion = generated;
+      askedCount += 1;
+      qCount.textContent = String(askedCount);
+      questionNumber.textContent = `Question ${askedCount}`;
+      questionText.textContent = generated.question || "No question generated.";
+      feedbackBox.innerHTML = `<div class="muted">Question ready. Type your answer and click <strong>Check My Answer</strong>.</div>`;
       userAnswer.value = "";
-      currentQuestion = null;
-      questionNumber.textContent = "Question 0";
-      questionText.textContent = "No question yet. Click Generate Question.";
-      feedbackBox.innerHTML = `<div class="muted">AI feedback will appear here after you submit your answer.</div>`;
-      setStatus("Cleared.");
-    });
-  </script>
+      setStatus(`Question generated on topic: ${generated.topic || "General"}`);
+    } catch (err) {
+      setStatus(`Error: ${err.message}`);
+    } finally {
+      generateBtn.disabled = false;
+    }
+  });
+
+  checkBtn.addEventListener("click", async () => {
+    try {
+      if (!currentQuestion) throw new Error("Generate a question first.");
+      const answer = userAnswer.value.trim();
+      if (!answer) throw new Error("Please type your answer first.");
+
+      setStatus("Checking your answer...");
+      checkBtn.disabled = true;
+      const result = await evaluateAnswer(currentQuestion, answer);
+      renderFeedback(result, currentQuestion);
+      setStatus("Answer checked.");
+    } catch (err) {
+      setStatus(`Error: ${err.message}`);
+    } finally {
+      checkBtn.disabled = false;
+    }
+  });
+
+  clearBtn.addEventListener("click", () => {
+    sourceText.value = "";
+    userAnswer.value = "";
+    currentQuestion = null;
+    questionNumber.textContent = "Question 0";
+    questionText.textContent = "No question yet. Click Generate Question.";
+    feedbackBox.innerHTML = `<div class="muted">AI feedback will appear here after you submit your answer.</div>`;
+    setStatus("Cleared.");
+  });
+</script>
 </body>
 </html>
