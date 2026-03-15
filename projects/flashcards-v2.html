@@ -386,6 +386,8 @@
   let best = 0;
   let selectedChoice = null;
 
+  const API_BASE = "https://personal-backend-two.vercel.app/api";
+
   function setStatus(message) {
     statusText.textContent = message;
   }
@@ -414,8 +416,6 @@
     return fullText.trim();
   }
 
-  const API_BASE = "https://personal-backend-two.vercel.app/api";
-
   async function callBackend(endpoint, payload) {
     const response = await fetch(`${API_BASE}/${endpoint}`, {
       method: "POST",
@@ -435,78 +435,93 @@
   }
 
   async function generateQuestionFromText() {
-  const text = sourceText.value.trim();
-  if (!text) throw new Error("Extract or paste source text first.");
+    const text = sourceText.value.trim();
+    if (!text) throw new Error("Extract or paste source text first.");
 
-  const limitedText = text.slice(0, 5000);
+    const limitedText = text.slice(0, 5000);
 
-  return await callBackend("generate-question", {
-    text: limitedText,
-    difficulty: difficulty.value,
-    type: focusType.value,
-    mode: "multiple-choice",
-    choiceCount: 3
-  });
-}
-
-  async function evaluateAnswer(questionObj, selectedAnswer) {
-  return await callBackend("check-answer", {
-    question: questionObj.question,
-    correctAnswer: questionObj.correct_answer,
-    selectedAnswer
-  });
-}
-  function renderFeedback(result, questionObj) {
-  const score = Number(result.score) || 0;
-  let scoreClass = "bad";
-  if (score >= 80) scoreClass = "ok";
-  else if (score >= 50) scoreClass = "mid";
-
-
-  document.querySelectorAll(".choice-btn").forEach(btn => {
-    const rawText = btn.textContent.replace(/^[A-Z]\.\s*/, "");
-    btn.disabled = true;
-
-    if (rawText === questionObj.correct_answer) {
-      btn.classList.add("correct");
-    } else if (rawText === selectedChoice) {
-      btn.classList.add("wrong");
-    }
-  });
-
-}
-
-    function renderChoices(choices) {
-  selectedChoice = null;
-  choicesBox.innerHTML = "";
-
-  if (!Array.isArray(choices) || choices.length === 0) {
-    choicesBox.innerHTML = `<div class="muted">No choices available.</div>`;
-    return;
+    return await callBackend("generate-question", {
+      text: limitedText,
+      difficulty: difficulty.value,
+      type: focusType.value,
+      mode: "multiple-choice",
+      choiceCount: 3
+    });
   }
 
-  choices.forEach((choice, index) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "choice-btn";
-    btn.textContent = `${String.fromCharCode(65 + index)}. ${choice}`;
+  async function evaluateAnswer(questionObj, selectedAnswer) {
+    return await callBackend("check-answer", {
+      question: questionObj.question,
+      correctAnswer: questionObj.correct_answer,
+      selectedAnswer
+    });
+  }
 
-    btn.addEventListener("click", () => {
-      selectedChoice = choice;
-      document.querySelectorAll(".choice-btn").forEach(el => el.classList.remove("selected"));
-      btn.classList.add("selected");
+  function renderChoices(choices) {
+    selectedChoice = null;
+    choicesBox.innerHTML = "";
+
+    if (!Array.isArray(choices) || choices.length === 0) {
+      choicesBox.innerHTML = `<div class="muted">No choices available.</div>`;
+      return;
+    }
+
+    choices.forEach((choice, index) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "choice-btn";
+      btn.textContent = `${String.fromCharCode(65 + index)}. ${choice}`;
+
+      btn.addEventListener("click", () => {
+        selectedChoice = choice;
+        document.querySelectorAll(".choice-btn").forEach(el => {
+          el.classList.remove("selected");
+        });
+        btn.classList.add("selected");
+      });
+
+      choicesBox.appendChild(btn);
+    });
+  }
+
+  function renderFeedback(result, questionObj) {
+    const score = Number(result.score) || 0;
+    let scoreClass = "bad";
+
+    if (score >= 80) scoreClass = "ok";
+    else if (score >= 50) scoreClass = "mid";
+
+    feedbackBox.innerHTML = `
+      <div class="score ${scoreClass}">Score: ${escapeHtml(String(score))}/100</div>
+      <p style="margin-bottom:10px;"><strong>Verdict:</strong> ${escapeHtml(result.verdict || "unknown")}</p>
+      <p style="margin-bottom:10px;"><strong>Feedback:</strong> ${escapeHtml(result.feedback || "No feedback.")}</p>
+      <p style="margin-bottom:10px;"><strong>Correct answer:</strong> ${escapeHtml(questionObj.correct_answer || "")}</p>
+      <p class="muted"><strong>Expected idea:</strong> ${escapeHtml(questionObj.answer_idea || "")}</p>
+    `;
+
+    document.querySelectorAll(".choice-btn").forEach(btn => {
+      const rawText = btn.textContent.replace(/^[A-Z]\.\s*/, "");
+      btn.disabled = true;
+
+      if (rawText === questionObj.correct_answer) {
+        btn.classList.add("correct");
+      } else if (rawText === selectedChoice) {
+        btn.classList.add("wrong");
+      }
     });
 
-    choicesBox.appendChild(btn);
-  });
-}
-
-  
+    lastScore.textContent = String(score);
+    if (score > best) {
+      best = score;
+      bestScore.textContent = String(best);
+    }
+  }
 
   extractBtn.addEventListener("click", async () => {
     try {
       const file = pdfFile.files?.[0];
       if (!file) throw new Error("Please choose a PDF file first.");
+
       setStatus("Extracting PDF text...");
       const text = await extractPdfText(file);
       sourceText.value = text;
@@ -520,12 +535,15 @@
     try {
       setStatus("Generating question...");
       generateBtn.disabled = true;
+
       const generated = await generateQuestionFromText();
       currentQuestion = generated;
       askedCount += 1;
+
       qCount.textContent = String(askedCount);
       questionNumber.textContent = `Question ${askedCount}`;
       questionText.textContent = generated.question || "No question generated.";
+
       renderChoices(generated.choices || []);
       feedbackBox.innerHTML = `<div class="muted">Question ready. Select one choice and click <strong>Check My Answer</strong>.</div>`;
       setStatus(`Question generated on topic: ${generated.topic || "General"}`);
@@ -537,32 +555,39 @@
   });
 
   checkBtn.addEventListener("click", async () => {
-  try {
-    if (!currentQuestion) throw new Error("Generate a question first.");
-    if (!selectedChoice) throw new Error("Please select an answer first.");
+    try {
+      if (!currentQuestion) throw new Error("Generate a question first.");
+      if (!selectedChoice) throw new Error("Please select an answer first.");
 
-    setStatus("Checking your answer...");
-    checkBtn.disabled = true;
-    const result = await evaluateAnswer(currentQuestion, selectedChoice);
-    renderFeedback(result, currentQuestion);
-    setStatus("Answer checked.");
-  } catch (err) {
-    setStatus(`Error: ${err.message}`);
-  } finally {
-    checkBtn.disabled = false;
-  }
-});
+      setStatus("Checking your answer...");
+      checkBtn.disabled = true;
+
+      const result = await evaluateAnswer(currentQuestion, selectedChoice);
+      renderFeedback(result, currentQuestion);
+      setStatus("Answer checked.");
+    } catch (err) {
+      setStatus(`Error: ${err.message}`);
+    } finally {
+      checkBtn.disabled = false;
+    }
+  });
 
   clearBtn.addEventListener("click", () => {
-  sourceText.value = "";
-  selectedChoice = null;
-  currentQuestion = null;
-  questionNumber.textContent = "Question 0";
-  questionText.textContent = "No question yet. Click Generate Question.";
-  choicesBox.innerHTML = `<div class="muted">Choices will appear here after generating a question.</div>`;
-  feedbackBox.innerHTML = `<div class="muted">AI feedback will appear here after you submit your answer.</div>`;
-  setStatus("Cleared.");
-});
+    sourceText.value = "";
+    selectedChoice = null;
+    currentQuestion = null;
+    askedCount = 0;
+    best = 0;
+
+    questionNumber.textContent = "Question 0";
+    questionText.textContent = "No question yet. Click Generate Question.";
+    choicesBox.innerHTML = `<div class="muted">Choices will appear here after generating a question.</div>`;
+    feedbackBox.innerHTML = `<div class="muted">AI feedback will appear here after you submit your answer.</div>`;
+    qCount.textContent = "0";
+    bestScore.textContent = "0";
+    lastScore.textContent = "0";
+    setStatus("Cleared.");
+  });
 </script>
 </body>
 </html>
