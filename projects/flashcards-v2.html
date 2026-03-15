@@ -385,6 +385,7 @@
   let askedCount = 0;
   let best = 0;
   let selectedChoice = null;
+  let isChecking = false;
 
   const API_BASE = "https://personal-backend-two.vercel.app/api";
 
@@ -457,8 +458,38 @@
     });
   }
 
+  async function autoCheckAnswer(choice, btn) {
+    try {
+      if (!currentQuestion || isChecking) return;
+
+      isChecking = true;
+      selectedChoice = choice;
+
+      document.querySelectorAll(".choice-btn").forEach(el => {
+        el.classList.remove("selected");
+        el.disabled = true;
+      });
+
+      btn.classList.add("selected");
+
+      setStatus("Checking your answer...");
+      feedbackBox.innerHTML = `<div class="muted">Checking your answer...</div>`;
+
+      const result = await evaluateAnswer(currentQuestion, choice);
+      renderFeedback(result, currentQuestion);
+      setStatus("Answer checked.");
+    } catch (err) {
+      setStatus(`Error: ${err.message}`);
+      document.querySelectorAll(".choice-btn").forEach(el => {
+        el.disabled = false;
+      });
+      isChecking = false;
+    }
+  }
+
   function renderChoices(choices) {
     selectedChoice = null;
+    isChecking = false;
     choicesBox.innerHTML = "";
 
     if (!Array.isArray(choices) || choices.length === 0) {
@@ -473,11 +504,7 @@
       btn.textContent = `${String.fromCharCode(65 + index)}. ${choice}`;
 
       btn.addEventListener("click", () => {
-        selectedChoice = choice;
-        document.querySelectorAll(".choice-btn").forEach(el => {
-          el.classList.remove("selected");
-        });
-        btn.classList.add("selected");
+        autoCheckAnswer(choice, btn);
       });
 
       choicesBox.appendChild(btn);
@@ -515,6 +542,8 @@
       best = score;
       bestScore.textContent = String(best);
     }
+
+    isChecking = false;
   }
 
   extractBtn.addEventListener("click", async () => {
@@ -545,7 +574,7 @@
       questionText.textContent = generated.question || "No question generated.";
 
       renderChoices(generated.choices || []);
-      feedbackBox.innerHTML = `<div class="muted">Question ready. Select one choice and click <strong>Check My Answer</strong>.</div>`;
+      feedbackBox.innerHTML = `<div class="muted">Question ready. Select one choice to answer automatically.</div>`;
       setStatus(`Question generated on topic: ${generated.topic || "General"}`);
     } catch (err) {
       setStatus(`Error: ${err.message}`);
@@ -554,23 +583,9 @@
     }
   });
 
-  checkBtn.addEventListener("click", async () => {
-    try {
-      if (!currentQuestion) throw new Error("Generate a question first.");
-      if (!selectedChoice) throw new Error("Please select an answer first.");
-
-      setStatus("Checking your answer...");
-      checkBtn.disabled = true;
-
-      const result = await evaluateAnswer(currentQuestion, selectedChoice);
-      renderFeedback(result, currentQuestion);
-      setStatus("Answer checked.");
-    } catch (err) {
-      setStatus(`Error: ${err.message}`);
-    } finally {
-      checkBtn.disabled = false;
-    }
-  });
+  if (checkBtn) {
+    checkBtn.style.display = "none";
+  }
 
   clearBtn.addEventListener("click", () => {
     sourceText.value = "";
@@ -578,6 +593,7 @@
     currentQuestion = null;
     askedCount = 0;
     best = 0;
+    isChecking = false;
 
     questionNumber.textContent = "Question 0";
     questionText.textContent = "No question yet. Click Generate Question.";
