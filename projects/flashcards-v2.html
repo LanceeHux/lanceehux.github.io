@@ -440,7 +440,7 @@
 
     const limitedText = text.slice(0, 5000);
 
-    return await callBackend("generate-question", {
+    return await callBackend("generate-question-v2", {
       text: limitedText,
       difficulty: difficulty.value,
       type: focusType.value,
@@ -450,7 +450,7 @@
   }
 
   async function evaluateAnswer(questionObj, selectedAnswer) {
-    return await callBackend("check-answer", {
+    return await callBackend("check-answer-v2", {
       question: questionObj.question,
       correctAnswer: questionObj.correct_answer,
       selectedAnswer
