@@ -349,9 +349,11 @@
       </div>
 
       <div class="answer-area">
-        <label for="userAnswer">Your answer</label>
-        <textarea id="userAnswer" placeholder="Type your answer here..."></textarea>
-      </div>
+  <label>Choose your answer</label>
+  <div id="choicesBox" class="choices-box">
+    <div class="muted">Choices will appear here after generating a question.</div>
+  </div>
+</div>
 
       <div class="feedback-box" id="feedbackBox">
         <div class="muted">AI feedback will appear here after you submit your answer.</div>
@@ -460,13 +462,6 @@
   if (score >= 80) scoreClass = "ok";
   else if (score >= 50) scoreClass = "mid";
 
-  feedbackBox.innerHTML = `
-    <div class="score ${scoreClass}">Score: ${escapeHtml(String(score))}/100</div>
-    <p style="margin-bottom:10px;"><strong>Verdict:</strong> ${escapeHtml(result.verdict || "unknown")}</p>
-    <p style="margin-bottom:10px;"><strong>Feedback:</strong> ${escapeHtml(result.feedback || "No feedback.")}</p>
-    <p style="margin-bottom:10px;"><strong>Correct answer:</strong> ${escapeHtml(questionObj.correct_answer || "")}</p>
-    <p class="muted"><strong>Expected idea:</strong> ${escapeHtml(questionObj.answer_idea || "")}</p>
-  `;
 
   document.querySelectorAll(".choice-btn").forEach(btn => {
     const rawText = btn.textContent.replace(/^[A-Z]\.\s*/, "");
@@ -479,11 +474,6 @@
     }
   });
 
-  lastScore.textContent = String(score);
-  if (score > best) {
-    best = score;
-    bestScore.textContent = String(best);
-  }
 }
 
     function renderChoices(choices) {
