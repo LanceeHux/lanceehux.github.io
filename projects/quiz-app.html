@@ -196,6 +196,10 @@
       <div class="choices" id="choicesWrap"></div>
       <div class="answer-box" id="answerBox"></div>
       <div class="meta" id="metaText"></div>
+
+      <div class="row" style="margin-top:16px;">
+        <button id="nextBtn" style="display:none;">Next Question</button>
+      </div>
     </div>
   </div>
 
@@ -207,6 +211,7 @@
     const pdfFile = document.getElementById("pdfFile");
     const extractBtn = document.getElementById("extractBtn");
     const generateBtn = document.getElementById("generateBtn");
+    const nextBtn = document.getElementById("nextBtn");
     const sourceText = document.getElementById("sourceText");
     const statusEl = document.getElementById("status");
 
@@ -217,6 +222,7 @@
     const metaText = document.getElementById("metaText");
 
     let currentQuiz = null;
+    let previousQuestions = [];
 
     function setStatus(msg) {
       statusEl.textContent = msg;
@@ -245,6 +251,18 @@
       return cleanExtractedText(fullText);
     }
 
+    function resetQuizState() {
+      currentQuiz = null;
+      previousQuestions = [];
+      quizCard.style.display = "none";
+      questionText.textContent = "";
+      choicesWrap.innerHTML = "";
+      answerBox.className = "answer-box";
+      answerBox.innerHTML = "";
+      metaText.textContent = "";
+      nextBtn.style.display = "none";
+    }
+
     extractBtn.addEventListener("click", async () => {
       const file = pdfFile.files?.[0];
 
@@ -257,6 +275,8 @@
         extractBtn.disabled = true;
         generateBtn.disabled = true;
         setStatus("Extracting text from PDF...");
+
+        resetQuizState();
 
         const text = await extractPdfText(file);
         sourceText.value = text;
@@ -293,6 +313,7 @@
       answerBox.className = "answer-box";
       answerBox.innerHTML = "";
       metaText.textContent = "Click an answer to check immediately.";
+      nextBtn.style.display = "none";
 
       const choices = Array.isArray(quiz.choices) ? quiz.choices : [];
       const shuffled = shuffleArray(choices);
@@ -303,7 +324,7 @@
         btn.textContent = choice;
 
         btn.addEventListener("click", () => {
-          const all = [...document.querySelectorAll(".choice")];
+          const all = [...choicesWrap.querySelectorAll(".choice")];
           all.forEach(b => b.disabled = true);
 
           const correct = choice.trim() === String(quiz.correctAnswer || "").trim();
@@ -324,13 +345,15 @@
           if (quiz.explanation) {
             answerBox.innerHTML += `<br><br><span>${quiz.explanation}</span>`;
           }
+
+          nextBtn.style.display = "inline-block";
         });
 
         choicesWrap.appendChild(btn);
       });
     }
 
-    generateBtn.addEventListener("click", async () => {
+    async function generateQuestion() {
       const text = sourceText.value.trim();
 
       if (!text || text.length < 200) {
@@ -340,6 +363,7 @@
 
       try {
         generateBtn.disabled = true;
+        nextBtn.disabled = true;
         setStatus("Generating question with AI...");
 
         const response = await fetch("https://personal-backend-two.vercel.app/api/generate-quiz", {
@@ -348,7 +372,8 @@
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            text
+            text,
+            previousQuestions
           })
         });
 
@@ -362,6 +387,10 @@
           throw new Error("Invalid quiz format returned by server.");
         }
 
+        if (!previousQuestions.includes(data.question)) {
+          previousQuestions.push(data.question);
+        }
+
         renderQuiz(data);
         setStatus("Question generated successfully.");
       } catch (err) {
@@ -369,8 +398,12 @@
         setStatus(err.message || "Failed to generate question.");
       } finally {
         generateBtn.disabled = false;
+        nextBtn.disabled = false;
       }
-    });
+    }
+
+    generateBtn.addEventListener("click", generateQuestion);
+    nextBtn.addEventListener("click", generateQuestion);
   </script>
 </body>
 </html>
