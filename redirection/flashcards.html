@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loading...</title>
+
+<style>
+
+:root{
+--bg:#09090f;
+--panel:#121222;
+--gold:#ffcd00;
+--text:#f5f7ff;
+--muted:#b8bdd6;
+}
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:
+radial-gradient(circle at top left, rgba(255,205,0,.12), transparent 30%),
+radial-gradient(circle at bottom right, rgba(130,80,255,.10), transparent 30%),
+var(--bg);
+font-family:Inter, Arial, sans-serif;
+color:var(--text);
+}
+
+.loader-card{
+text-align:center;
+background:var(--panel);
+padding:40px 36px;
+border-radius:24px;
+width:min(420px,90%);
+box-shadow:0 18px 40px rgba(0,0,0,.4);
+border:1px solid rgba(255,255,255,.08);
+}
+
+.logo{
+font-size:28px;
+font-weight:800;
+color:var(--gold);
+margin-bottom:8px;
+}
+
+.subtitle{
+color:var(--muted);
+font-size:14px;
+margin-bottom:26px;
+}
+
+.spinner{
+width:64px;
+height:64px;
+border-radius:50%;
+border:6px solid rgba(255,255,255,.08);
+border-top:6px solid var(--gold);
+margin:auto;
+animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+0%{transform:rotate(0deg);}
+100%{transform:rotate(360deg);}
+}
+
+.progress{
+margin-top:28px;
+height:8px;
+background:rgba(255,255,255,.06);
+border-radius:999px;
+overflow:hidden;
+}
+
+.bar{
+height:100%;
+width:0%;
+background:linear-gradient(90deg,var(--gold),#ffd93d);
+transition:width .25s;
+}
+
+.loading-text{
+margin-top:16px;
+font-size:14px;
+color:var(--muted);
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="loader-card">
+
+<div class="logo">Leeyam++</div>
+<div class="subtitle">Preparing Flashcards workspace...</div>
+
+<div class="spinner"></div>
+
+<div class="progress">
+<div class="bar" id="progressBar"></div>
+</div>
+
+<div class="loading-text" id="loadingText">Initializing...</div>
+
+</div>
+
+<script>
+
+const redirectURL = "../projects/flashcards";
+
+const bar = document.getElementById("progressBar");
+const text = document.getElementById("loadingText");
+
+let progress = 0;
+
+const messages = [
+"Initializing...",
+"Loading AI modules...",
+"Connecting to server...",
+"Preparing interface...",
+"Almost ready..."
+];
+
+function updateLoader(){
+
+progress += Math.random()*18;
+
+if(progress > 100){
+progress = 100;
+}
+
+bar.style.width = progress + "%";
+
+const msgIndex = Math.floor(progress / 20);
+text.textContent = messages[msgIndex] || "Starting...";
+
+if(progress >= 100){
+
+setTimeout(()=>{
+window.location.href = redirectURL;
+},500);
+
+}else{
+
+setTimeout(updateLoader,400);
+
+}
+
+}
+
+updateLoader();
+
+</script>
+
+</body>
+</html>
