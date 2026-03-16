@@ -411,8 +411,6 @@
     const pdfFile = document.getElementById("pdfFile");
     const fileLabel = document.getElementById("fileLabel");
     const sourceText = document.getElementById("sourceText");
-    const difficulty = document.getElementById("difficulty");
-    const focusType = document.getElementById("focusType");
 
     const extractBtn = document.getElementById("extractBtn");
     const generateBtn = document.getElementById("generateBtn");
@@ -488,8 +486,6 @@
       pdfFile.value = "";
       fileLabel.textContent = "No file selected";
       sourceText.value = "";
-      difficulty.value = "medium";
-      focusType.value = "definition";
       resetSession();
       setStatus("Cleared. Upload a PDF, extract text, then generate a question.");
     }
@@ -618,8 +614,6 @@
           },
           body: JSON.stringify({
             text,
-            difficulty: difficulty.value,
-            focusType: focusType.value,
             previousQuestions
           })
         });
