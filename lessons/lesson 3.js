@@ -11,6 +11,5 @@ function attackAll(user) {
         console.log(`${user[i].name} ${user[i].hp}`);
     }
 }
-
 attackAll(players);
 // lesson end [3]
