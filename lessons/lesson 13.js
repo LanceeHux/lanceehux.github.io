@@ -33,5 +33,4 @@ const Rico = new Mage("Rico");
  updateGame( { char: Rico, action: "castSpell", target: Lanx, value: 30 } );
  updateGame( { char: Lanx, action: "heal", value: 10 } );
  updateGame({ char: Lanx, action: "show"});
-
 // lesson end [13]
