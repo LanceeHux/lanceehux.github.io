@@ -32,5 +32,4 @@ function gameUpdate(x) {
    x.weapon[action](x.player, x.target);
 }
 gameUpdate({ weapon: Lanx.weapon, action: "attack", player: Lanx, target: Rico });
-
 // lesson end [12]
