@@ -31,4 +31,5 @@ function gameUpdate(x) {
   x.char[action](x.target, x.value);
 }
 gameUpdate({ char: Lanx, action: "castSpell", target: Rico, value: 40});
+
 // lesson end [11]
