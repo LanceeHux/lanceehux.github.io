@@ -34,4 +34,5 @@ gameUpdate({char: Lanx, action: "damage", value: 20});
 gameUpdate({char: Rico, action: "heal", value: 50});
 gameUpdate({char: Lanx, action: "show"});
 gameUpdate({char: Rico, action: "show"});
+
 // lesson end [10]
