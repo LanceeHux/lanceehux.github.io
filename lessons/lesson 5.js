@@ -33,4 +33,5 @@ gameUpdate(game, { type: "NEXT_TURN"}); // turns 1
 gameUpdate(game, { type: "ATTACK", player: 1, target: 0, dmg: 10 });
 gameUpdate(game, { type: "NEXT_TURN"});
 gameUpdate(game, { type: "ATTACK", player: 0, target: 1, dmg: -5 });
+
 // lesson end [5]
