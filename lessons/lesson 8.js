@@ -1,3 +1,4 @@
+// lesson 8
 const system = {
     turn: 0,
     players: [
@@ -50,3 +51,4 @@ gameUpdate(system, { type: "ATTACK", player: 0, target: 1, dmg: 30 });
 gameUpdate(system, { type: "NEXT_TURN" });
 gameUpdate(system, { type: "ATTACK", player: 1, target: 0, dmg: 30 });
 gameUpdate(system, { type: "LOG_STATE" });
+// lesson end [8]
