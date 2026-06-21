@@ -9,4 +9,5 @@ function attack(user) {
 }
 for(let i = 0;i < 3;i++) {
   attack(Player);
-}// lesson end [2]
+}
+// lesson end [2]
