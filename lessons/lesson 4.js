@@ -13,4 +13,5 @@ function begin() {
     console.log(game);
 }
 begin();
+
 // lesson end [4]
