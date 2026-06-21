@@ -1,3 +1,4 @@
+// lesson 9
 const system = {
     turn: 0,
     players: [
@@ -35,3 +36,4 @@ function gameUpdate(i, x) {
 gameUpdate(system, {type: "damage", player: 0, value: 30});
 gameUpdate(system, {type: "heal", player: 0, value: 10 });
 gameUpdate(system, {type: "show", player: 0})
+// lesson end [9]
