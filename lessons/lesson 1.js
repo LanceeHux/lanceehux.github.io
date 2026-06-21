@@ -11,5 +11,6 @@ function game() {
 
     console.log(JSON.stringify(player));
 }
+
 game();
 //lesson end [1]
