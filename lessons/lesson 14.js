@@ -46,5 +46,4 @@ gameUpdate( { char: Ana, action: "attack", target: Lanx } );
 gameUpdate( { char: Lanx, action: "show" } );
 gameUpdate( { char: Rico, action: "show" } );
 gameUpdate( { char: Ana, action: "show" } );
-
 // lesson end [14]
