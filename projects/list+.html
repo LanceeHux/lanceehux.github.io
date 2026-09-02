@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lee+// Academic Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ffcd00;
+            --primary-hover: #e5b800;
+            --primary-light: #fff8d6;
+            --bg-dark: #121212;
+            --bg-card: #1e1e1e;
+            --bg-card-hover: #252525;
+            --border-color: #2c2c2c;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Header Styling */
+        header {
+            background: rgba(18, 18, 18, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            background-color: var(--primary);
+            color: #000;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            box-shadow: 0 0 15px rgba(255, 205, 0, 0.2);
+        }
+
+        .logo-text h1 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-text span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-badge {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-family: 'JetBrains Mono', monospace;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-badge span {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        /* Main Layout */
+        main {
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2.5rem 2rem;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Control Panel Sidebar */
+        .control-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            height: fit-content;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .control-panel h2 {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-control {
+            width: 100%;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 205, 0, 0.15);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: #000;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 205, 0, 0.25);
+        }
+
+        /* Dashboard Workspace */
+        .workspace {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .workspace-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .workspace-header h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .filter-tabs {
+            display: flex;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 4px;
+            border-radius: 10px;
+            gap: 4px;
+        }
+
+        .filter-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: #000;
+        }
+
+        /* Subject Grid Containers */
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .subject-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .subject-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--card-accent, var(--primary));
+        }
+
+        /* Subject Accent Colors */
+        .subject-card.pr2 { --card-accent: #3b82f6; }
+        .subject-card.drrr { --card-accent: #f97316; }
+        .subject-card.chemistry { --card-accent: #10b981; }
+        .subject-card.entrep { --card-accent: #ec4899; }
+        .subject-card.philosophy { --card-accent: #8b5cf6; }
+        .subject-card.fpl { --card-accent: #06b6d4; }
+        .subject-card.physics { --card-accent: #eab308; }
+        .subject-card.english-profeciency { --card-accent: #6366f1; }
+        .subject-card.religious-ed { --card-accent: #f43f5e; }
+        .subject-card.physical-ed { --card-accent: #14b8a6; }
+
+        .subject-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .subject-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: -0.5px;
+        }
+
+        .task-count {
+            font-size: 0.75rem;
+            background: rgba(255,255,255,0.05);
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: var(--text-muted);
+        }
+
+        .tasks-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 80px;
+        }
+
+        .task-item {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            transition: var(--transition);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .task-item:hover {
+            border-color: #444;
+            transform: translateX(2px);
+        }
+
+        .task-item.completed {
+            opacity: 0.5;
+            text-decoration: line-through;
+            border-color: transparent;
+            background: rgba(255,255,255,0.02);
+        }
+
+        .task-content-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .task-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--text-muted);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .task-item.completed .task-checkbox {
+            background-color: var(--success);
+            border-color: var(--success);
+            color: #000;
+        }
+
+        .task-title {
+            font-size: 0.9rem;
+            word-break: break-word;
+        }
+
+        .delete-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-btn:hover {
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .empty-state {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 15px;
+            font-style: italic;
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-color);
+            padding: 1.5rem 2rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <div class="logo-icon">L</div>
+            <div class="logo-text">
+                <h1>Lee+</h1>
+                <span>Academic Deliverables OS (Firebase)</span>
+            </div>
+        </div>
+        <div class="header-stats">
+            <div class="stat-badge">Total Tasks: <span id="total-count">0</span></div>
+            <div class="stat-badge">Completed: <span id="completed-count">0</span></div>
+        </div>
+    </header>
+
+    <main>
+        <aside class="control-panel">
+            <h2>⚡ Quick Dispatch</h2>
+            <form id="task-form">
+                <div class="form-group">
+                    <label for="task-input">Task Description</label>
+                    <input type="text" id="task-input" class="form-control" placeholder="e.g., Finalize Chapters..." required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="subject-select">Target Subject</label>
+                    <select id="subject-select" class="form-control">
+                        <option value="pr2">Practical Research 2 (PR2)</option>
+                        <option value="drrr">Disaster Readiness (DRRR)</option>
+                        <option value="chemistry">Chemistry</option>
+                        <option value="entrep">Entrepreneurship</option>
+                        <option value="philosophy">Philosophy</option>
+                        <option value="fpl">FPL</option>
+                        <option value="physics">Physics</option>
+                        <option value="english-profeciency">English Proficiency</option>
+                        <option value="religious-ed">Religious Ed.</option>
+                        <option value="physical-ed">Physical Ed.</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Deploy Task
+                </button>
+            </form>
+        </aside>
+
+        <section class="workspace">
+            <div class="workspace-header">
+                <h2>Active Subsystem Panels</h2>
+                <div class="filter-tabs">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="pending">Pending</button>
+                    <button class="filter-btn" data-filter="completed">Completed</button>
+                </div>
+            </div>
+
+            <div class="subjects-grid" id="subjects-grid">
+                <div class="subject-card pr2" data-subject="pr2">
+                    <div class="subject-header">
+                        <span class="subject-title">Practical Research 2</span>
+                        <span class="task-count">0 items</span>
+                    </div>
+                    <div class="tasks-container" data-container="pr2"></div>
+                </div>
+
+                <div class="subject-card drrr" data-subject="drrr">
+                    <div class="subject-header">
+                        <span class="subject-title">Disaster Readiness (DRRR)</span>
+                        <span class="task-count">0 items</span>
+                    </div>
+                    <div class="tasks-container" data-container="drrr"></div>
+                </div>
+
+                <div class="subject-card chemistry" data-subject="chemistry">
+                    <div class="subject-header">
+                        <span class="subject-title">Chemistry</span>
+                        <span class="task-count">0 items</span>
+                    </div>
+                    <div class="tasks-container" data-container="chemistry"></div>
+                </div>
+
+                <div class="subject-card entrep" data-subject="entrep">
+                    <div class="subject-header">
+                        <span class="subject-title">Entrepreneurship</span>
+                        <span class="task-count">0 items</span>
+                    </div>
+                    <div class="tasks-container" data-container="entrep"></div>
+                </div>
+
+                <div class="subject-card philosophy" data-subject="philosophy">
+                    <div class="subject-header">
+                        <span class="subject-title">Philosophy</span>
+                        <span class="task-count">0 items</span>
+                    </div>
+                    <div class="tasks-container" data-container="philosophy"></div>
+                </div>
+
+                <div class="subject-card fpl" data-subject="fpl">
+                    <div class="subject-header">
+                        <span class="subject-title">FPL</span>
+                        <span class="task-count">0 items</span>
+                    </div>
+                    <div class="tasks-container" data-container="fpl"></div>
+                </div>
+
+                <div class="subject-card physics" data-subject="physics">
+                    <div class="subject-header">
+                        <span class="subject-title">Physics</span>
+                        <span class="task-count">0 items</span>
+                    </div>
+                    <div class="tasks-container" data-container="physics"></div>
+                </div>
+
+                <div class="subject-card english-profeciency" data-subject="english-profeciency">
+                    <div class="subject-header">
+                        <span class="subject-title">English Proficiency</span>
+                        <span class="task-count">0 items</span>
+                    </div>
+                    <div class="tasks-container" data-container="english-profeciency"></div>
+                </div>
+
+                <div class="subject-card religious-ed" data-subject="religious-ed">
+                    <div class="subject-header">
+                        <span class="subject-title">Religious Ed.</span>
+                        <span class="task-count">0 items</span>
+                    </div>
+                    <div class="tasks-container" data-container="religious-ed"></div>
+                </div>
+
+                <div class="subject-card physical-ed" data-subject="physical-ed">
+                    <div class="subject-header">
+                        <span class="subject-title">Physical Ed.</span>
+                        <span class="task-count">0 items</span>
+                    </div>
+                    <div class="tasks-container" data-container="physical-ed"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Lee+. Powered by Firebase Firestore.</p>
+        <div class="footer-links">
+            <a href="#">System Docs</a>
+            <a href="#">Protocols</a>
+            <a href="#">Terminal Mode</a>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // FIREBASE CREDENTIALS CONFIGURATION
+        const firebaseConfig = {
+            apiKey: "AIzaSyB2p-nRYQ6LuovFZ5zWS67JUxTs8ir1Buw",
+            authDomain: "lanx-todolist.firebaseapp.com",
+            projectId: "lanx-todolist",
+            storageBucket: "lanx-todolist.firebasestorage.app",
+            messagingSenderId: "696200717770",
+            appId: "1:696200717770:web:948947bb5a8e7134235b33"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let tasks = [];
+        let currentFilter = 'all';
+
+        const taskForm = document.getElementById('task-form');
+        const taskInput = document.getElementById('task-input');
+        const subjectSelect = document.getElementById('subject-select');
+        const totalCountEl = document.getElementById('total-count');
+        const completedCountEl = document.getElementById('completed-count');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+
+        // Real-time synchronization with Firestore Cloud Database
+        const q = query(collection(db, "tasks"));
+        onSnapshot(q, (snapshot) => {
+            tasks = [];
+            snapshot.forEach((docSnap) => {
+                tasks.push({ id: docSnap.id, ...docSnap.data() });
+            });
+            renderTasks();
+        }, (error) => {
+            console.error("Error fetching real-time data: ", error);
+        });
+
+        // Render UI
+        function renderTasks() {
+            const subjects = [
+                'pr2', 'drrr', 'chemistry', 'entrep', 
+                'philosophy', 'fpl', 'physics', 
+                'english-profeciency', 'religious-ed', 'physical-ed'
+            ];
+
+            subjects.forEach(subj => {
+                const container = document.querySelector(`[data-container="${subj}"]`);
+                const card = document.querySelector(`[data-subject="${subj}"]`);
+                if (!container || !card) return;
+
+                const countBadge = card.querySelector('.task-count');
+                
+                const subjectTasks = tasks.filter(t => t.subject === subj);
+                const filteredTasks = subjectTasks.filter(t => {
+                    if (currentFilter === 'pending') return !t.completed;
+                    if (currentFilter === 'completed') return t.completed;
+                    return true;
+                });
+
+                countBadge.textContent = `${subjectTasks.length} items`;
+
+                if (filteredTasks.length === 0) {
+                    container.innerHTML = `<div class="empty-state">No deliverables found</div>`;
+                    return;
+                }
+
+                container.innerHTML = '';
+                filteredTasks.forEach(task => {
+                    const taskEl = document.createElement('div');
+                    taskEl.className = `task-item ${task.completed ? 'completed' : ''}`;
+                    taskEl.innerHTML = `
+                        <div class="task-content-wrapper" data-id="${task.id}" data-action="toggle">
+                            <div class="task-checkbox">
+                                ${task.completed ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}
+                            </div>
+                            <span class="task-title">${escapeHTML(task.text)}</span>
+                        </div>
+                        <button class="delete-btn" data-id="${task.id}" data-action="delete" title="Purge Task">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    `;
+                    container.appendChild(taskEl);
+                });
+            });
+
+            totalCountEl.textContent = tasks.length;
+            completedCountEl.textContent = tasks.filter(t => t.completed).length;
+        }
+
+        // Add Document to Firestore
+        taskForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = taskInput.value.trim();
+            const subject = subjectSelect.value;
+
+            if (!text) return;
+
+            try {
+                await addDoc(collection(db, "tasks"), {
+                    text: text,
+                    subject: subject,
+                    completed: false,
+                    createdAt: serverTimestamp()
+                });
+                taskInput.value = '';
+            } catch (error) {
+                console.error("Error adding document: ", error);
+            }
+        });
+
+        // Event delegation for clicks (Toggle & Delete)
+        document.addEventListener('click', async (e) => {
+            const target = e.target.closest('[data-action]');
+            if (!target) return;
+
+            const id = target.getAttribute('data-id');
+            const action = target.getAttribute('data-action');
+
+            if (action === 'toggle') {
+                const task = tasks.find(t => t.id === id);
+                if (task) {
+                    const taskRef = doc(db, "tasks", id);
+                    try {
+                        await updateDoc(taskRef, { completed: !task.completed });
+                    } catch (error) {
+                        console.error("Error updating document: ", error);
+                    }
+                }
+            }
+
+            if (action === 'delete') {
+                const taskRef = doc(db, "tasks", id);
+                try {
+                    await deleteDoc(taskRef);
+                } catch (error) {
+                    console.error("Error deleting document: ", error);
+                }
+            }
+        });
+
+        // Filter Handlers
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.getAttribute('data-filter');
+                renderTasks();
+            });
+        });
+
+        // Security Utility
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+    </script>
+</body>
+</html>
