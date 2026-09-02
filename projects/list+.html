@@ -3,6 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://lynxlab.vercel.app/">
+    <meta property="og:title" content="Lee+ - Digital Portfolio | Projects Container">
+    <meta property="og:description" content="Lee+ - Digital Portfolio website contains all the updated projects of Lee.">
+    <meta property="og:image" content="https://lynxlab.vercel.app/images/thumbnail.jpeg">
+    <meta property="og:site_name" content="Lee+ - Digital Portdolio">
+    
     <title>Lee+// Academic Command Center</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -35,6 +43,65 @@
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
+        }
+
+        /* Password Overlay Styling */
+        #auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(18, 18, 18, 0.95);
+            backdrop-filter: blur(16px);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        #auth-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .auth-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        .auth-card .logo-icon {
+            display: inline-block;
+            margin-bottom: 16px;
+        }
+
+        .auth-card h2 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .auth-card p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .auth-error {
+            color: var(--danger);
+            font-size: 0.8rem;
+            margin-top: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            display: none;
         }
 
         /* Header Styling */
@@ -433,6 +500,21 @@
 </head>
 <body>
 
+    <div id="auth-overlay">
+        <div class="auth-card">
+            <div class="logo-icon">L</div>
+            <h2>Restricted Access</h2>
+            <p>Enter Passcode to Initialize OS</p>
+            <form id="auth-form">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <input type="password" id="auth-input" class="form-control" placeholder="Enter password..." required autocomplete="current-password">
+                </div>
+                <div id="auth-error" class="auth-error">Access Denied: Invalid Passcode</div>
+                <button type="submit" class="btn-primary" style="margin-top: 16px;">Authenticate</button>
+            </form>
+        </div>
+    </div>
+
     <header>
         <div class="logo-area">
             <div class="logo-icon">L</div>
@@ -583,6 +665,31 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // CHANGE THIS TO YOUR DESIRED PASSWORD
+        const APP_PASSWORD = "510"; 
+
+        // Authentication Handler
+        const authForm = document.getElementById('auth-form');
+        const authInput = document.getElementById('auth-input');
+        const authOverlay = document.getElementById('auth-overlay');
+        const authError = document.getElementById('auth-error');
+
+        authForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (authInput.value === APP_PASSWORD) {
+                authOverlay.classList.add('hidden');
+                sessionStorage.setItem('authenticated', 'true');
+            } else {
+                authError.style.display = 'block';
+                authInput.value = '';
+            }
+        });
+
+        // Check if user already authenticated in this session
+        if (sessionStorage.getItem('authenticated') === 'true') {
+            authOverlay.classList.add('hidden');
+        }
 
         // FIREBASE CREDENTIALS CONFIGURATION
         const firebaseConfig = {
