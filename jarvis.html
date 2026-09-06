@@ -902,11 +902,7 @@ class JarvisCoreSystem {
     // 6. CORE & COMPUTER VISION HELMET SUBSYSTEMS
     // =========================================================================
     registerCoreProtocols() {
-        // Add this advanced cognitive LLM integration protocol into your registerAdvancedProtocols() method in jarvis.js:
-
-        // Real-Time Generative AI API Uplink (Groq / OpenAI Compatible Endpoint)
         this.registerProtocol('ask', async (input) => {
-            // Extract the actual prompt after the command keyword
             const prompt = input.replace(/(ask jarvis|ask|query|jarvis)/g, '').trim();
             if (!prompt) {
                 const err = 'Please provide a prompt for cognitive processing, sir.';
@@ -919,18 +915,19 @@ class JarvisCoreSystem {
             this.speak('Processing query.');
 
             try {
-                // Replace with your preferred API endpoint (e.g., OpenAI, Groq, or a local Ollama instance at http://localhost:11434/v1/chat/completions)
-                // Using Groq or OpenAI API format:
-                const apiKey = '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'; // Replace with your actual API key or input mechanism
+                const apiKey = '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';
                 
-                    const response = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.groq.com/openai/v1/chat/completions'), {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${apiKey}`
-                        },
+                // Wrap the endpoint through a CORS bypass proxy for frontend client use
+                const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.groq.com/openai/v1/chat/completions');
+
+                const response = await fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
                     body: JSON.stringify({
-                        model: 'llama-3.3-70b-versatile', // Fast, highly capable open model available on Groq
+                        model: 'llama-3.3-70b-versatile',
                         messages: [
                             { role: 'system', content: 'You are J.A.R.V.I.S., Tony Stark\'s highly intelligent, sophisticated, and slightly witty AI assistant. Keep responses relatively concise, professional, and spoken from the persona of an advanced holographic HUD interface.' },
                             { role: 'user', content: prompt }
@@ -953,11 +950,9 @@ class JarvisCoreSystem {
 
             } catch (error) {
                 console.error("AI API Connection Error:", error);
-                
-                // Fallback simulation mode if API key isn't configured yet
-                const fallbackReply = `Cognitive uplink connection failed. Local heuristic synthesis: I understand you are asking about "${prompt}", but remote API authorization requires a valid key configuration.`;
+                const fallbackReply = `Cognitive uplink connection failed. Local heuristic synthesis: I understand you are asking about "${prompt}", but network security blocks direct browser requests.`;
                 this.printToLog('JARVIS', fallbackReply, 'system');
-                this.speak('Neural uplink offline. Check API credentials.');
+                this.speak('Neural uplink offline.');
             }
         });
         // Add these advanced AI-driven cognitive protocols into your registerAdvancedProtocols() method in jarvis.js:
