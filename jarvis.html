@@ -902,7 +902,7 @@ class JarvisCoreSystem {
     // 6. CORE & COMPUTER VISION HELMET SUBSYSTEMS
     // =========================================================================
     registerCoreProtocols() {
-        this.registerProtocol('ask', async (input) => {
+       this.registerProtocol('ask', async (input) => {
             const prompt = input.replace(/(ask jarvis|ask|query|jarvis)/g, '').trim();
             if (!prompt) {
                 const err = 'Please provide a prompt for cognitive processing, sir.';
@@ -915,26 +915,13 @@ class JarvisCoreSystem {
             this.speak('Processing query.');
 
             try {
-                const apiKey = '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';
-                
-                // Wrap the endpoint through a CORS bypass proxy for frontend client use
-                const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.groq.com/openai/v1/chat/completions');
-
-                const response = await fetch(proxyUrl, {
+                // Call your Vercel serverless backend route
+                const response = await fetch('/api/jarvis', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        model: 'llama-3.3-70b-versatile',
-                        messages: [
-                            { role: 'system', content: 'You are J.A.R.V.I.S., Tony Stark\'s highly intelligent, sophisticated, and slightly witty AI assistant. Keep responses relatively concise, professional, and spoken from the persona of an advanced holographic HUD interface.' },
-                            { role: 'user', content: prompt }
-                        ],
-                        temperature: 0.7,
-                        max_tokens: 150
-                    })
+                    body: JSON.stringify({ prompt })
                 });
 
                 if (!response.ok) {
@@ -950,7 +937,7 @@ class JarvisCoreSystem {
 
             } catch (error) {
                 console.error("AI API Connection Error:", error);
-                const fallbackReply = `Cognitive uplink connection failed. Local heuristic synthesis: I understand you are asking about "${prompt}", but network security blocks direct browser requests.`;
+                const fallbackReply = `Cognitive uplink connection failed. Local heuristic synthesis: I understand you are asking about "${prompt}", but the server connection encountered a runtime exception.`;
                 this.printToLog('JARVIS', fallbackReply, 'system');
                 this.speak('Neural uplink offline.');
             }
