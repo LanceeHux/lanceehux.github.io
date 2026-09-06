@@ -15,7 +15,7 @@ export default async function handler(req, res) {
                 'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: 'openai/gpt-oss-120b',
+                model: 'llama-3.3-70b-versatile',
                 messages: [
                     { role: 'system', content: 'You are J.A.R.V.I.S., Tony Stark\'s highly intelligent, sophisticated, and slightly witty AI assistant. Keep responses relatively concise, professional, and spoken from the persona of an advanced holographic HUD interface.' },
                     { role: 'user', content: prompt }
