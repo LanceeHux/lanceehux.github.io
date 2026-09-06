@@ -420,7 +420,7 @@ body {
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 @keyframes core-pulse { 0%, 100% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
 
-      /* Add these advanced holographic and moving box animations to your style.css */
+/* Full completed CSS for the advanced helmet overlay and animations */
 
 .helmet-hud-overlay {
     position: absolute;
@@ -492,6 +492,10 @@ body {
     border-bottom: 1px solid rgba(0, 243, 255, 0.3);
 }
 
+.holo-coords {
+    font-family: var(--font-mono);
+}
+
 /* Telemetry Badge */
 .hud-telemetry-badge {
     position: absolute;
@@ -510,7 +514,9 @@ body {
 /* Keyframe for moving hologram box path */
 @keyframes floatHoloBox {
     0% { top: 20%; left: 15%; transform: scale(1); }
-    50% { top: 60%
+    50% { top: 60%; left: 70%; transform: scale(1.05); }
+    100% { top: 30%; left: 75%; transform: scale(0.95); }
+}
   </style>
 </head>
 <body>
