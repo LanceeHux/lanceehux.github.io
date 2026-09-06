@@ -841,10 +841,13 @@ class JarvisCoreSystem {
         this.commands.set(keyword.toLowerCase(), callback);
     }
 
+    // Update your routeIntent() method in jarvis.js to allow smarter fuzzy matching rather than strict keyword alignment:
+
     routeIntent(inputLower) {
         let executed = false;
         const input = inputLower.toLowerCase();
 
+        // Check for direct keyword matches first
         for (let [keyword, callback] of this.commands) {
             if (input.includes(keyword)) {
                 try {
@@ -854,6 +857,26 @@ class JarvisCoreSystem {
                     this.printToLog('JARVIS', `Protocol execution exception in [${keyword}]: ${err.message}`, 'system');
                 }
                 break;
+            }
+        }
+
+        // AI-like conversational heuristics fallback if no direct command matches
+        if (!executed) {
+            if (input.includes('hello') || input.includes('hi') || input.includes('hey')) {
+                const greeting = 'Systems online and awaiting your command, sir.';
+                this.printToLog('JARVIS', greeting);
+                this.speak(greeting);
+                executed = true;
+            } else if (input.includes('thank')) {
+                const response = 'Always a pleasure to assist, sir.';
+                this.printToLog('JARVIS', response);
+                this.speak(response);
+                executed = true;
+            } else if (input.includes('who are you') || input.includes('your name')) {
+                const id = 'I am J.A.R.V.I.S., your advanced neural operating interface and tactical assistant.';
+                this.printToLog('JARVIS', id);
+                this.speak(id);
+                executed = true;
             }
         }
 
@@ -868,6 +891,70 @@ class JarvisCoreSystem {
     // 6. CORE & COMPUTER VISION HELMET SUBSYSTEMS
     // =========================================================================
     registerCoreProtocols() {
+        // Add these advanced AI-driven cognitive protocols into your registerAdvancedProtocols() method in jarvis.js:
+
+        // 1. Cognitive Memory Summarizer & Pattern Analysis (AI Buffer Extraction)
+        this.registerProtocol('analyze', () => {
+            this.printToLog('JARVIS', 'Initiating neural pattern analysis on active memory buffers...', 'system');
+            this.speak('Analyzing current data matrices.');
+
+            setTimeout(() => {
+                const noteCount = this.notes.length;
+                let summaryText = '';
+                
+                if (noteCount === 0) {
+                    summaryText = 'Cognitive scan complete. Memory buffers contain no volatile records. Systems operating at baseline efficiency.';
+                } else {
+                    const topics = this.notes.map(n => n.content).join('; ');
+                    summaryText = `Neural scan complete. Found ${noteCount} active entries in memory stack. Primary vectors include: ${topics}. All parameters remain nominal, sir.`;
+                }
+
+                this.printToLog('JARVIS', summaryText);
+                this.speak(summaryText);
+                this.logDiagnostic('COGNITIVE_CORE: Memory matrix successfully synthesized.');
+            }, 1200);
+        });
+
+        // 2. Simulated Tactical Neural Prediction Matrix
+        this.registerProtocol('simulate', async (input) => {
+            const target = input.replace(/(simulate|predict|run simulation for)/g, '').trim();
+            if (!target) {
+                const err = 'Specify simulation parameters or operational vector, sir.';
+                this.printToLog('JARVIS', err);
+                this.speak(err);
+                return;
+            }
+
+            this.printToLog('JARVIS', `Constructing predictive neural simulation for: "${target}"...`, 'system');
+            this.speak('Running quantum probability simulations.');
+
+            // Simulate multi-stage AI reasoning output stream
+            setTimeout(() => {
+                this.logDiagnostic(`SIMULATION: Evaluating threat parameters for ${target}...`);
+            }, 800);
+
+            setTimeout(() => {
+                const successRate = Math.floor(85 + Math.random * 14);
+                const report = `Simulation complete for ${target}. Calculated probability of optimal execution success is ${successRate} percent with zero critical variances detected.`;
+                this.printToLog('JARVIS', report);
+                this.speak(report);
+            }, 2500);
+        });
+
+        // 3. Autonomous System Self-Optimization Diagnostic
+        this.registerProtocol('optimize', () => {
+            this.printToLog('JARVIS', 'Executing garbage collection and neural weight pruning...', 'system');
+            this.speak('Optimizing cognitive pathways.');
+
+            setTimeout(() => {
+                const freedMem = (Math.random() * 0.4 + 0.1).toFixed(2);
+                const res = `Optimization cycle finished. Purged redundant telemetry caches and recovered ${freedMem} gigabytes of quantum cache memory.`;
+                this.printToLog('JARVIS', res);
+                this.speak('Systems optimized.');
+                this.logDiagnostic('KERNEL: Garbage collection executed successfully.');
+            }, 1500);
+        });
+        
         this.registerProtocol('time', () => {
             const timeStr = new Date().toLocaleTimeString();
             const res = `Local system time verified at ${timeStr}.`;
