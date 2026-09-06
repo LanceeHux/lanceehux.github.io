@@ -14,7 +14,7 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Missing prompt' });
         }
 
-        const apiKey = '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';
+        const apiKey = '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';
 
         const apiResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
