@@ -923,12 +923,12 @@ class JarvisCoreSystem {
                 // Using Groq or OpenAI API format:
                 const apiKey = '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'; // Replace with your actual API key or input mechanism
                 
-                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    },
+                    const response = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.groq.com/openai/v1/chat/completions'), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
                     body: JSON.stringify({
                         model: 'llama-3.3-70b-versatile', // Fast, highly capable open model available on Groq
                         messages: [
