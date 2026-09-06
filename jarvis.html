@@ -843,13 +843,15 @@ class JarvisCoreSystem {
 
     // Update your routeIntent() method in jarvis.js to allow smarter fuzzy matching rather than strict keyword alignment:
 
+    // Update your routeIntent() method fallback loop in jarvis.js so that any unhandled sentence automatically routes as an AI query instead of throwing a fallback error:
+
     routeIntent(inputLower) {
         let executed = false;
         const input = inputLower.toLowerCase();
 
-        // Check for direct keyword matches first
         for (let [keyword, callback] of this.commands) {
-            if (input.includes(keyword)) {
+            // Avoid matching 'ask' prematurely on simple words unless intentional
+            if (keyword !== 'ask' && input.includes(keyword)) {
                 try {
                     callback(input);
                     executed = true;
@@ -860,7 +862,7 @@ class JarvisCoreSystem {
             }
         }
 
-        // AI-like conversational heuristics fallback if no direct command matches
+        // Conversational short-circuit heuristics
         if (!executed) {
             if (input.includes('hello') || input.includes('hi') || input.includes('hey')) {
                 const greeting = 'Systems online and awaiting your command, sir.';
@@ -880,6 +882,15 @@ class JarvisCoreSystem {
             }
         }
 
+        // AUTO-ROUTING TO LLM: If no hardcoded command matched, treat conversational input as a live query to the AI API protocol
+        if (!executed) {
+            const askProtocol = this.commands.get('ask');
+            if (askProtocol) {
+                askProtocol(inputLower);
+                executed = true;
+            }
+        }
+
         if (!executed) {
             const fallback = "No matching heuristic match found in local routing tables. Standing by for instructions.";
             this.printToLog('JARVIS', fallback);
@@ -891,6 +902,64 @@ class JarvisCoreSystem {
     // 6. CORE & COMPUTER VISION HELMET SUBSYSTEMS
     // =========================================================================
     registerCoreProtocols() {
+        // Add this advanced cognitive LLM integration protocol into your registerAdvancedProtocols() method in jarvis.js:
+
+        // Real-Time Generative AI API Uplink (Groq / OpenAI Compatible Endpoint)
+        this.registerProtocol('ask', async (input) => {
+            // Extract the actual prompt after the command keyword
+            const prompt = input.replace(/(ask jarvis|ask|query|jarvis)/g, '').trim();
+            if (!prompt) {
+                const err = 'Please provide a prompt for cognitive processing, sir.';
+                this.printToLog('JARVIS', err);
+                this.speak(err);
+                return;
+            }
+
+            this.printToLog('JARVIS', `Transmitting cognitive query to neural uplink: "${prompt}"...`, 'system');
+            this.speak('Processing query.');
+
+            try {
+                // Replace with your preferred API endpoint (e.g., OpenAI, Groq, or a local Ollama instance at http://localhost:11434/v1/chat/completions)
+                // Using Groq or OpenAI API format:
+                const apiKey = 'YOUR_API_KEY_HERE'; // Replace with your actual API key or input mechanism
+                
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'llama-3.3-70b-versatile', // Fast, highly capable open model available on Groq
+                        messages: [
+                            { role: 'system', content: 'You are J.A.R.V.I.S., Tony Stark\'s highly intelligent, sophisticated, and slightly witty AI assistant. Keep responses relatively concise, professional, and spoken from the persona of an advanced holographic HUD interface.' },
+                            { role: 'user', content: prompt }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 150
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API handshake failed with status ${response.status}`);
+                }
+
+                const data = await response.json();
+                const aiReply = data.choices[0]?.message?.content || 'Neural response matrix returned empty payload.';
+
+                this.printToLog('JARVIS', aiReply);
+                this.speak(aiReply);
+                this.logDiagnostic('NEURAL_UPLINK: Remote generative inference successfully received.');
+
+            } catch (error) {
+                console.error("AI API Connection Error:", error);
+                
+                // Fallback simulation mode if API key isn't configured yet
+                const fallbackReply = `Cognitive uplink connection failed. Local heuristic synthesis: I understand you are asking about "${prompt}", but remote API authorization requires a valid key configuration.`;
+                this.printToLog('JARVIS', fallbackReply, 'system');
+                this.speak('Neural uplink offline. Check API credentials.');
+            }
+        });
         // Add these advanced AI-driven cognitive protocols into your registerAdvancedProtocols() method in jarvis.js:
 
         // 1. Cognitive Memory Summarizer & Pattern Analysis (AI Buffer Extraction)
