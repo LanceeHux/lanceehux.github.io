@@ -1,4 +1,3 @@
-// api/jarvis.js
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
@@ -8,7 +7,7 @@ export default async function handler(req, res) {
         const { prompt } = req.body;
         const apiKey = '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';
 
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        const apiResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -25,11 +24,10 @@ export default async function handler(req, res) {
             })
         });
 
-        const data = await response.json();
+        const data = await apiResponse.json();
         
-        // If Groq returns an error object, pass it through so you can see it in the terminal
-        if (!response.ok) {
-            return res.status(response.status).json({ error: data.error?.message || 'Groq API error' });
+        if (!apiResponse.ok) {
+            return res.status(apiResponse.status).json({ error: data.error?.message || 'Groq API failure' });
         }
 
         return res.status(200).json(data);
