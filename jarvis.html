@@ -419,12 +419,123 @@ body {
 @keyframes spin-reverse { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 @keyframes core-pulse { 0%, 100% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
+
+      /* Add these advanced holographic and moving box animations to your style.css */
+
+.helmet-hud-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.helmet-hud-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Reticle corner boxes */
+.reticle-box {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--alert-glow);
+}
+.reticle-box.top-left { top: 30px; left: 30px; border-right: none; border-bottom: none; }
+.reticle-box.top-right { top: 30px; right: 30px; border-left: none; border-bottom: none; }
+.reticle-box.bottom-left { bottom: 30px; left: 30px; border-right: none; border-top: none; }
+.reticle-box.bottom-right { bottom: 30px; right: 30px; border-left: none; border-top: none; }
+
+/* Dynamic Targeting Crosshair */
+.targeting-crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    border: 1px dashed rgba(239, 68, 68, 0.4);
+    border-radius: 50%;
+    animation: spin 10s linear infinite;
+}
+
+.cross-line {
+    position: absolute;
+    background: var(--alert-glow);
+    box-shadow: 0 0 8px var(--alert-glow);
+}
+.cross-line.h { top: 50%; left: 10px; right: 10px; height: 1px; transform: translateY(-50%); }
+.cross-line.v { left: 50%; top: 10px; bottom: 10px; width: 1px; transform: translateX(-50%); }
+
+/* Moving Hologram Box */
+.moving-holo-box {
+    position: absolute;
+    width: 160px;
+    height: 90px;
+    border: 1px solid var(--primary-glow);
+    background: rgba(0, 243, 255, 0.05);
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.2), inset 0 0 10px rgba(0, 243, 255, 0.1);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    color: var(--primary-glow);
+    animation: floatHoloBox 6s ease-in-out infinite alternate;
+}
+
+.holo-label {
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+}
+
+/* Telemetry Badge */
+.hud-telemetry-badge {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 1px solid var(--secondary-glow);
+    background: rgba(255, 183, 0, 0.05);
+    padding: 6px 15px;
+    font-size: 0.75rem;
+    color: var(--secondary-glow);
+    text-align: center;
+    box-shadow: 0 0 10px rgba(255, 183, 0, 0.2);
+}
+
+/* Keyframe for moving hologram box path */
+@keyframes floatHoloBox {
+    0% { top: 20%; left: 15%; transform: scale(1); }
+    50% { top: 60%
   </style>
 </head>
 <body>
     <div class="hud-container">
-        <div class="grid-overlay"></div>
-        <div class="scanlines"></div>
+    <div class="grid-overlay"></div>
+    <div class="scanlines"></div>
+
+    <div id="helmet-hud-overlay" class="helmet-hud-overlay hidden">
+        <div class="reticle-box top-left"></div>
+        <div class="reticle-box top-right"></div>
+        <div class="reticle-box bottom-left"></div>
+        <div class="reticle-box bottom-right"></div>
+        <div class="targeting-crosshair">
+            <div class="cross-line h"></div>
+            <div class="cross-line v"></div>
+        </div>
+        <div class="moving-holo-box" id="holo-tracker">
+            <span class="holo-label">SYS_TRACK // LOCK_ON</span>
+            <span class="holo-coords">LAT: 14.2858° N</span>
+        </div>
+        <div class="hud-telemetry-badge">
+            <p>THREAT LEVEL: ZERO</p>
+            <p>POWER FLUX: OPTIMAL</p>
+        </div>
+    </div>
 
         <!-- Header / Telemetry Bar -->
         <header class="hud-header">
