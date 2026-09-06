@@ -888,24 +888,52 @@ this.logDiagnostic(`Parsed intent string length: ${context.sanitizedInput.length
 
         // Add these advanced camera and HUD faceplate protocols to your registerCoreProtocols() or registerAdvancedProtocols() method in jarvis.js:
 
+        // Replace your 'helmet' protocol definition inside jarvis.js with this fully integrated version to ensure the overlay layer properly binds, toggles, and renders.
+
         this.registerProtocol('helmet', async () => {
             const header = document.querySelector('.hud-header');
             const footer = document.querySelector('.hud-footer');
             const mainPanels = document.querySelectorAll('.panel');
             const hudContainer = document.querySelector('.hud-container');
-            const isSealed = header.style.opacity === '0.2';
             
-            // Check if a video element already exists for the helmet feed
+            // Ensure the helmet overlay element exists in the DOM, or create it dynamically if missing
+            let helmetOverlay = document.getElementById('helmet-hud-overlay');
+            if (!helmetOverlay) {
+                helmetOverlay = document.createElement('div');
+                helmetOverlay.id = 'helmet-hud-overlay';
+                helmetOverlay.className = 'helmet-hud-overlay';
+                helmetOverlay.innerHTML = `
+                    <div class="reticle-box top-left"></div>
+                    <div class="reticle-box top-right"></div>
+                    <div class="reticle-box bottom-left"></div>
+                    <div class="reticle-box bottom-right"></div>
+                    <div class="targeting-crosshair">
+                        <div class="cross-line h"></div>
+                        <div class="cross-line v"></div>
+                    </div>
+                    <div class="moving-holo-box" id="holo-tracker">
+                        <span class="holo-label">SYS_TRACK // LOCK_ON</span>
+                        <span class="holo-coords">LAT: 14.2858° N</span>
+                    </div>
+                    <div class="hud-telemetry-badge">
+                        <p>THREAT LEVEL: ZERO</p>
+                        <p>POWER FLUX: OPTIMAL</p>
+                    </div>
+                `;
+                hudContainer.appendChild(helmetOverlay);
+            }
+
+            const isSealed = helmetOverlay.classList.contains('active');
             let videoElement = document.getElementById('helmet-cam-feed');
 
             if (!isSealed) {
-                // SEAL HELMET & INITIALIZE CAMERA FEED
+                // SEAL HELMET & ACTIVATE OVERLAYS
+                helmetOverlay.classList.add('active');
                 header.style.opacity = '0.2';
                 footer.style.opacity = '0.2';
                 mainPanels.forEach(panel => panel.style.borderColor = 'rgba(239, 68, 68, 0.6)');
                 document.getElementById('core-status-dot').style.backgroundColor = 'var(--alert-glow)';
 
-                // Create and insert live webcam feed background for Ironman view
                 if (!videoElement) {
                     videoElement = document.createElement('video');
                     videoElement.id = 'helmet-cam-feed';
@@ -916,25 +944,35 @@ this.logDiagnostic(`Parsed intent string length: ${context.sanitizedInput.length
                     videoElement.style.width = '100%';
                     videoElement.style.height = '100%';
                     videoElement.style.objectFit = 'cover';
-                    videoElement.style.zIndex = '0'; // Behind HUD grid & elements
-                    videoElement.style.filter = 'contrast(120%) brightness(90%) sepia(100%) hue-rotate(150deg)'; // Sci-fi tactical tint
+                    videoElement.style.zIndex = '0';
+                    videoElement.style.filter = 'contrast(120%) brightness(90%) sepia(100%) hue-rotate(150deg)';
                     hudContainer.prepend(videoElement);
                 }
 
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                     videoElement.srcObject = stream;
                     this.activeCameraStream = stream;
+                    
+                    const res = 'Helmet faceplate sealed. Tactical holographic overlays online.';
+                    this.printToLog('JARVIS', res);
+                    this.logDiagnostic('MARK_VII: Faceplate locked down with targeting reticles.');
+                    this.speak(res);
                 } catch (err) {
-                    this.printToLog('JARVIS', 'Biometric optical sensor link failed. Camera access denied.', 'system');
+                    console.error("Camera access error:", err);
+                    const errText = 'Optical sensor link failed. Camera permission denied.';
+                    this.printToLog('JARVIS', errText, 'system');
+                    this.speak('Camera access denied, sir.');
+                    
+                    // Revert UI if camera fails
+                    helmetOverlay.classList.remove('active');
+                    header.style.opacity = '1';
+                    footer.style.opacity = '1';
+                    if (videoElement) videoElement.remove();
                 }
-
-                const res = 'Helmet faceplate sealed. Optical tactical feed online.';
-                this.printToLog('JARVIS', res);
-                this.logDiagnostic('MARK_VII: Faceplate locked down with live telemetry overlay.');
-                this.speak(res);
             } else {
-                // RETRACT HELMET & TERMINATE CAMERA STREAM
+                // RETRACT HELMET & HIDE OVERLAYS
+                helmetOverlay.classList.remove('active');
                 header.style.opacity = '1';
                 footer.style.opacity = '1';
                 mainPanels.forEach(panel => panel.style.borderColor = 'var(--border-dim)');
@@ -948,7 +986,7 @@ this.logDiagnostic(`Parsed intent string length: ${context.sanitizedInput.length
                     videoElement.remove();
                 }
 
-                const res = 'Helmet faceplate retracted. Standard diagnostic display restored.';
+                const res = 'Helmet faceplate retracted. Standard display restored.';
                 this.printToLog('JARVIS', res);
                 this.logDiagnostic('MARK_VII: Faceplate retracted.');
                 this.speak(res);
