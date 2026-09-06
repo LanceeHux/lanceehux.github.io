@@ -1,25 +1,17 @@
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
-        res.setHeader('Allow', ['POST']);
-        return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
+        return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
-        // Handle both pre-parsed bodies and raw streams safely
         let body = req.body;
         if (typeof body === 'string') {
             body = JSON.parse(body);
-        } else if (!body) {
-            let rawData = '';
-            for await (const chunk of req) {
-                rawData += chunk;
-            }
-            body = rawData ? JSON.parse(rawData) : {};
         }
 
-        const prompt = body.prompt;
+        const prompt = body?.prompt;
         if (!prompt) {
-            return res.status(400).json({ error: 'Missing prompt in request body' });
+            return res.status(400).json({ error: 'Missing prompt' });
         }
 
         const apiKey = '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';
@@ -42,9 +34,9 @@ export default async function handler(req, res) {
         });
 
         const data = await apiResponse.json();
-        
+
         if (!apiResponse.ok) {
-            return res.status(apiResponse.status).json({ error: data.error?.message || 'Groq API failure' });
+            return res.status(apiResponse.status).json({ error: data.error?.message || 'Groq upstream error' });
         }
 
         return res.status(200).json(data);
