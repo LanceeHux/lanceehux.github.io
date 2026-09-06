@@ -627,9 +627,9 @@ body {
     </div>
 
     <script>
-      // ============================================================================
+    // ============================================================================
 // J.A.R.V.I.S. MK-VII ENTERPRISE CLIENT-SIDE NEURAL CORE ENGINE
-// Architecture: Modular Asynchronous Command Parser with Event-Driven Dispatch
+// Architecture: Modular Asynchronous Command Parser with Computer Vision Overlay
 // ============================================================================
 
 class JarvisCoreSystem {
@@ -648,6 +648,9 @@ class JarvisCoreSystem {
         this.notes = [];
         this.speechQueue = [];
         this.isSpeaking = false;
+        this.activeCameraStream = null;
+        this.activeVisionCanvas = null;
+        this.visionScanInterval = null;
         
         this.subsystems = {
             "NEURAL_LINK": "NOMINAL",
@@ -758,19 +761,16 @@ class JarvisCoreSystem {
     // 3. MIDDLEWARE PIPELINE ARCHITECTURE (Sanitization & Intent Analysis)
     // =========================================================================
     initMiddleware() {
-        // Middleware 1: Input Normalization & Security Filter
         this.use((context, next) => {
             context.rawInput = context.rawInput.trim();
-            context.sanitizedInput = context.rawInput.replace(/[<>{}]/g, ''); // Basic XSS mitigation
+            context.sanitizedInput = context.rawInput.replace(/[<>{}]/g, ''); 
             context.timestamp = performance.now();
             if (!context.sanitizedInput) return;
             next();
         });
 
-        // Middleware 2: Diagnostic Event Logger
         this.use((context, next) => {
-            // Corrected code
-this.logDiagnostic(`Parsed intent string length: ${context.sanitizedInput.length} bytes`);
+            this.logDiagnostic(`Parsed intent string length: ${context.sanitizedInput.length} bytes`);
             next();
         });
     }
@@ -865,7 +865,7 @@ this.logDiagnostic(`Parsed intent string length: ${context.sanitizedInput.length
     }
 
     // =========================================================================
-    // 6. CORE & ENTERPRISE REAL-TIME PROTOCOL DEFINITIONS
+    // 6. CORE & COMPUTER VISION HELMET SUBSYSTEMS
     // =========================================================================
     registerCoreProtocols() {
         this.registerProtocol('time', () => {
@@ -886,17 +886,13 @@ this.logDiagnostic(`Parsed intent string length: ${context.sanitizedInput.length
             this.printToLog('JARVIS', 'Buffer registers reinitialized.', 'system');
         });
 
-        // Add these advanced camera and HUD faceplate protocols to your registerCoreProtocols() or registerAdvancedProtocols() method in jarvis.js:
-
-        // Replace your 'helmet' protocol definition inside jarvis.js with this fully integrated version to ensure the overlay layer properly binds, toggles, and renders.
-
+        // Advanced Ironman Helmet Protocol with Live Computer Vision Feed & Target Analytics
         this.registerProtocol('helmet', async () => {
             const header = document.querySelector('.hud-header');
             const footer = document.querySelector('.hud-footer');
             const mainPanels = document.querySelectorAll('.panel');
             const hudContainer = document.querySelector('.hud-container');
             
-            // Ensure the helmet overlay element exists in the DOM, or create it dynamically if missing
             let helmetOverlay = document.getElementById('helmet-hud-overlay');
             if (!helmetOverlay) {
                 helmetOverlay = document.createElement('div');
@@ -912,12 +908,12 @@ this.logDiagnostic(`Parsed intent string length: ${context.sanitizedInput.length
                         <div class="cross-line v"></div>
                     </div>
                     <div class="moving-holo-box" id="holo-tracker">
-                        <span class="holo-label">SYS_TRACK // LOCK_ON</span>
-                        <span class="holo-coords">LAT: 14.2858° N</span>
+                        <span class="holo-label" id="holo-status-label">SYS_TRACK // OPTICAL_SCAN</span>
+                        <span class="holo-coords" id="holo-coords-readout">LAT: 14.2858° N</span>
                     </div>
                     <div class="hud-telemetry-badge">
-                        <p>THREAT LEVEL: ZERO</p>
-                        <p>POWER FLUX: OPTIMAL</p>
+                        <p id="threat-level-badge">THREAT LEVEL: LOW</p>
+                        <p id="pixel-flux-badge">OPTICAL ANALYSIS: STABLE</p>
                     </div>
                 `;
                 hudContainer.appendChild(helmetOverlay);
@@ -927,7 +923,7 @@ this.logDiagnostic(`Parsed intent string length: ${context.sanitizedInput.length
             let videoElement = document.getElementById('helmet-cam-feed');
 
             if (!isSealed) {
-                // SEAL HELMET & ACTIVATE OVERLAYS
+                // SEAL HELMET, ENGAGE WEBCAM & COMPUTER VISION LOOP
                 helmetOverlay.classList.add('active');
                 header.style.opacity = '0.2';
                 footer.style.opacity = '0.2';
@@ -945,18 +941,43 @@ this.logDiagnostic(`Parsed intent string length: ${context.sanitizedInput.length
                     videoElement.style.height = '100%';
                     videoElement.style.objectFit = 'cover';
                     videoElement.style.zIndex = '0';
-                    videoElement.style.filter = 'contrast(120%) brightness(90%) sepia(100%) hue-rotate(150deg)';
+                    videoElement.style.filter = 'contrast(125%) brightness(90%) sepia(100%) hue-rotate(150deg)';
                     hudContainer.prepend(videoElement);
                 }
 
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
                     videoElement.srcObject = stream;
                     this.activeCameraStream = stream;
+
+                    // Initialize Offscreen Computer Vision Frame Analysis Canvas
+                    this.activeVisionCanvas = document.createElement('canvas');
+                    const ctx = this.activeVisionCanvas.getContext('2d', { willReadFrequently: true });
                     
-                    const res = 'Helmet faceplate sealed. Tactical holographic overlays online.';
+                    // Start realtime computer vision frame tracking analysis simulation loop
+                    this.visionScanInterval = setInterval(() => {
+                        if (!videoElement.videoWidth) return;
+                        this.activeVisionCanvas.width = 160;
+                        this.activeVisionCanvas.height = 90;
+                        ctx.drawImage(videoElement, 0, 0, 160, 90);
+                        
+                        const frameData = ctx.getImageData(0, 0, 160, 90).data;
+                        let totalBrightness = 0;
+                        for (let i = 0; i < frameData.length; i += 4) {
+                            totalBrightness += (frameData[i] + frameData[i+1] + frameData[i+2]) / 3;
+                        }
+                        const avgLuma = Math.round(totalBrightness / (frameData.length / 4));
+                        
+                        // Dynamically update HUD data badges based on real-time visual light metrics
+                        const lumaBadge = document.getElementById('pixel-flux-badge');
+                        const coordsBadge = document.getElementById('holo-coords-readout');
+                        if (lumaBadge) lumaBadge.textContent = `LUMINANCE_INDEX: ${avgLuma}%`;
+                        if (coordsBadge) coordsBadge.textContent = `VECTOR: ${(Math.random() * 360).toFixed(1)}° HDG`;
+                    }, 1000);
+                    
+                    const res = 'Helmet faceplate sealed. Optical tactical feed and computer vision matrix online.';
                     this.printToLog('JARVIS', res);
-                    this.logDiagnostic('MARK_VII: Faceplate locked down with targeting reticles.');
+                    this.logDiagnostic('MARK_VII: Faceplate locked down with automated computer vision tracking.');
                     this.speak(res);
                 } catch (err) {
                     console.error("Camera access error:", err);
@@ -964,20 +985,23 @@ this.logDiagnostic(`Parsed intent string length: ${context.sanitizedInput.length
                     this.printToLog('JARVIS', errText, 'system');
                     this.speak('Camera access denied, sir.');
                     
-                    // Revert UI if camera fails
                     helmetOverlay.classList.remove('active');
                     header.style.opacity = '1';
                     footer.style.opacity = '1';
                     if (videoElement) videoElement.remove();
                 }
             } else {
-                // RETRACT HELMET & HIDE OVERLAYS
+                // RETRACT HELMET & TERMINATE VISION BUFFERS
                 helmetOverlay.classList.remove('active');
                 header.style.opacity = '1';
                 footer.style.opacity = '1';
                 mainPanels.forEach(panel => panel.style.borderColor = 'var(--border-dim)');
                 document.getElementById('core-status-dot').style.backgroundColor = 'var(--success-glow)';
 
+                if (this.visionScanInterval) {
+                    clearInterval(this.visionScanInterval);
+                    this.visionScanInterval = null;
+                }
                 if (this.activeCameraStream) {
                     this.activeCameraStream.getTracks().forEach(track => track.stop());
                     this.activeCameraStream = null;
@@ -995,7 +1019,6 @@ this.logDiagnostic(`Parsed intent string length: ${context.sanitizedInput.length
     }
 
     registerAdvancedProtocols() {
-        // Real-Time Web Data Search Engine
         this.registerProtocol('search', async (input) => {
             const query = input.replace(/(search|google|look up|find)/g, '').trim();
             if (!query) {
@@ -1027,7 +1050,6 @@ this.logDiagnostic(`Parsed intent string length: ${context.sanitizedInput.length
             }
         });
 
-        // Quick App Launcher
         this.registerProtocol('open', (input) => {
             if (input.includes('youtube')) {
                 this.printToLog('JARVIS', 'Opening YouTube stream node.');
@@ -1051,11 +1073,9 @@ this.logDiagnostic(`Parsed intent string length: ${context.sanitizedInput.length
             }
         });
 
-        // Real-Time Atmospheric Meteorology via Open-Meteo
         this.registerProtocol('weather', async () => {
             this.printToLog('JARVIS', 'Fetching meteorological satellite telemetry...', 'system');
             try {
-                // Default geolocation bounds (Coordinates corresponding to Cavite region)
                 const lat = 14.2858; 
                 const lon = 120.8672;
                 
@@ -1075,7 +1095,6 @@ this.logDiagnostic(`Parsed intent string length: ${context.sanitizedInput.length
             }
         });
 
-        // Volatile Storage Buffer & Reminders
         this.registerProtocol('note', (input) => {
             const content = input.replace('note', '').trim();
             if (content) {
