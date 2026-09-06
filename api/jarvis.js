@@ -26,6 +26,12 @@ export default async function handler(req, res) {
         });
 
         const data = await response.json();
+        
+        // If Groq returns an error object, pass it through so you can see it in the terminal
+        if (!response.ok) {
+            return res.status(response.status).json({ error: data.error?.message || 'Groq API error' });
+        }
+
         return res.status(200).json(data);
     } catch (error) {
         return res.status(500).json({ error: error.message });
