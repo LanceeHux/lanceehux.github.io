@@ -1,46 +1,43 @@
-export default async function handler(req, res) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
+this.registerProtocol('ask', async (input) => {
+    const prompt = input.replace(/(ask jarvis|ask|query|jarvis)/g, '').trim();
+    if (!prompt) {
+        const err = 'Please provide a prompt for cognitive processing, sir.';
+        this.printToLog('JARVIS', err);
+        this.speak(err);
+        return;
     }
 
+    this.printToLog('JARVIS', `Transmitting cognitive query to neural uplink: "${prompt}"...`, 'system');
+    this.speak('Processing query.');
+
     try {
-        let body = req.body;
-        if (typeof body === 'string') {
-            body = JSON.parse(body);
-        }
-
-        const prompt = body?.prompt;
-        if (!prompt) {
-            return res.status(400).json({ error: 'Missing prompt' });
-        }
-
-        const apiKey = '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';
-
-        const apiResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
+                'Authorization': 'Bearer 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' // Paste your key right here
             },
             body: JSON.stringify({
-                model: 'llama-3.3-70b-versatile',
-                messages: [
-                    { role: 'system', content: 'You are J.A.R.V.I.S., Tony Stark\'s highly intelligent, sophisticated, and slightly witty AI assistant. Keep responses relatively concise, professional, and spoken from the persona of an advanced holographic HUD interface.' },
-                    { role: 'user', content: prompt }
-                ],
-                temperature: 0.7,
-                max_tokens: 150
+                model: "llama-3.3-70b-versatile",
+                messages: [{ role: "user", content: prompt }]
             })
         });
 
-        const data = await apiResponse.json();
-
-        if (!apiResponse.ok) {
-            return res.status(apiResponse.status).json({ error: data.error?.message || 'Groq upstream error' });
+        if (!response.ok) {
+            throw new Error(`API handshake failed with status ${response.status}`);
         }
 
-        return res.status(200).json(data);
+        const data = await response.json();
+        const aiReply = data.choices[0]?.message?.content || 'Neural response matrix returned empty payload.';
+
+        this.printToLog('JARVIS', aiReply);
+        this.speak(aiReply);
+        this.logDiagnostic('NEURAL_UPLINK: Remote generative inference successfully received.');
+
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        console.error("AI API Connection Error:", error);
+        const fallbackReply = `Cognitive uplink connection failed. Local heuristic synthesis: I understand you are asking about "${prompt}", but the server connection encountered a runtime exception.`;
+        this.printToLog('JARVIS', fallbackReply, 'system');
+        this.speak('Neural uplink offline.');
     }
-}
+});
