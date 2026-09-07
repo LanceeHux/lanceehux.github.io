@@ -730,32 +730,26 @@ class JarvisCoreSystem {
     // 2. ADVANCED SPEECH SYNTHESIS BUFFER QUEUE
     // =========================================================================
     speak(text) {
-        if (!('speechSynthesis' in window)) return;
-        this.speechQueue.push(text);
-        this.processSpeechQueue();
-    }
+    if (!window.speechSynthesis) return;
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voices = window.speechSynthesis.getVoices();
+    
+    // Target a British English male voice (common identifiers include 'UK English Male', 'GB English', or 'en-GB')
+    const jarvisVoice = voices.find(voice => 
+        (voice.lang === 'en-GB' || voice.lang === 'en_GB') && 
+        (voice.name.toLowerCase().includes('male') || voice.name.toLowerCase().includes('george') || voice.name.toLowerCase().includes('oliver') || voice.name.toLowerCase().includes('brian'))
+    ) || voices.find(voice => voice.lang.startsWith('en')); // Fallback to any English voice
 
-    processSpeechQueue() {
-        if (this.isSpeaking || this.speechQueue.length === 0) return;
-        this.isSpeaking = true;
-        const textToSpeech = this.speechQueue.shift();
-        
-        const utterance = new SpeechSynthesisUtterance(textToSpeech);
-        utterance.rate = 1.05;
-        utterance.pitch = 0.85;
-        
-        utterance.onend = () => {
-            this.isSpeaking = false;
-            this.processSpeechQueue();
-        };
-        
-        utterance.onerror = () => {
-            this.isSpeaking = false;
-            this.processSpeechQueue();
-        };
-
-        window.speechSynthesis.speak(utterance);
+    if (jarvisVoice) {
+        utterance.voice = jarvisVoice;
     }
+    
+    utterance.pitch = 0.9; // Slightly lower pitch for a more masculine, grounded tone
+    utterance.rate = 1.0;  // Crisp, controlled delivery speed
+    
+    window.speechSynthesis.speak(utterance);
+}
 
     // =========================================================================
     // 3. MIDDLEWARE PIPELINE ARCHITECTURE (Sanitization & Intent Analysis)
