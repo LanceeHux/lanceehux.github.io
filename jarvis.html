@@ -729,24 +729,26 @@ class JarvisCoreSystem {
     // =========================================================================
     // 2. ADVANCED SPEECH SYNTHESIS BUFFER QUEUE
     // =========================================================================
-    speak(text) {
+   speak(text) {
     if (!window.speechSynthesis) return;
     
+    window.speechSynthesis.cancel(); // Clear any queued speech
     const utterance = new SpeechSynthesisUtterance(text);
     const voices = window.speechSynthesis.getVoices();
     
-    // Target a British English male voice (common identifiers include 'UK English Male', 'GB English', or 'en-GB')
+    // Look for standard British English or generic male system voices
     const jarvisVoice = voices.find(voice => 
-        (voice.lang === 'en-GB' || voice.lang === 'en_GB') && 
-        (voice.name.toLowerCase().includes('male') || voice.name.toLowerCase().includes('george') || voice.name.toLowerCase().includes('oliver') || voice.name.toLowerCase().includes('brian'))
-    ) || voices.find(voice => voice.lang.startsWith('en')); // Fallback to any English voice
+        (voice.lang.includes('en-GB') || voice.lang.includes('en_GB')) && 
+        (voice.name.toLowerCase().includes('male') || voice.name.toLowerCase().includes('david') || voice.name.toLowerCase().includes('george') || voice.name.toLowerCase().includes('daniel'))
+    ) || voices.find(voice => voice.name.toLowerCase().includes('male')) || voices.find(voice => voice.lang.startsWith('en'));
 
     if (jarvisVoice) {
         utterance.voice = jarvisVoice;
     }
     
-    utterance.pitch = 0.9; // Slightly lower pitch for a more masculine, grounded tone
-    utterance.rate = 1.0;  // Crisp, controlled delivery speed
+    // Deepen the pitch heavily and keep the cadence crisp
+    utterance.pitch = 0.3; // Drops the synthesizer register deep into masculine range
+    utterance.rate = 1.05; // Slightly brisk, controlled delivery
     
     window.speechSynthesis.speak(utterance);
 }
