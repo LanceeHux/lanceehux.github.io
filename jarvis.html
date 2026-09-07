@@ -912,7 +912,7 @@ class JarvisCoreSystem {
 
             try {
                 // Call your Vercel serverless backend route
-                const response = await fetch('/api/script', {
+                const response = await fetch('https://lynxlab.vercel.app/api/script', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
