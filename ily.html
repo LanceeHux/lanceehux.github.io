@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aether Nexus: 4-Player Multiplayer Arena</title>
+    <title>Aether Nexus: Online 4-Player Multiplayer Arena</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap');
 
@@ -176,20 +176,20 @@
             font-size: 0.6rem;
         }
     </style>
-    <!-- PeerJS for direct P2P multiplayer across different devices -->
+    <!-- PeerJS CDN -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
 
     <div id="lobbyScreen" class="lobby-screen">
-        <h1>AETHER NEXUS 4P</h1>
-        <div style="font-size: 13px; color: #8b9bb4; text-align: center;">Multiplayer via PeerJS (No Server Needed)</div>
-        <button id="hostBtn">CREATE ROOM (HOST)</button>
+        <h1>AETHER NEXUS ONLINE</h1>
+        <div style="font-size: 13px; color: #8b9bb4; text-align: center;">Global P2P Multiplayer Lobby</div>
+        <button id="hostBtn">CREATE ONLINE ROOM</button>
         <div style="display: flex; gap: 8px; width: 100%;">
-            <input type="text" id="roomIdInput" placeholder="Enter Host ID...">
+            <input type="text" id="roomIdInput" placeholder="Paste Host ID here...">
             <button id="joinBtn" style="width: 120px;">JOIN</button>
         </div>
-        <div id="lobbyStatus" style="font-size: 12px; color: #00f2fe; min-height: 16px;"></div>
+        <div id="lobbyStatus" style="font-size: 12px; color: #00f2fe; min-height: 16px; text-align: center;"></div>
     </div>
 
     <div class="game-wrapper">
@@ -224,8 +224,6 @@
         <div>Dash: <span>S + A/D</span></div>
         <div>Slash: <span>J</span></div>
         <div>Plasma: <span>K</span></div>
-        <div>Storm: <span>I</span></div>
-        <div>Teleport: <span>U</span></div>
         <div>Ultimate: <span>L</span></div>
     </div>
 
@@ -234,8 +232,8 @@
         const ctx = canvas.getContext('2d');
 
         let peer = null;
-        let connections = []; // Host holds client connections, Client holds host connection
-        let myPlayerIndex = 0; // 0 = Host, 1, 2, 3 = Clients
+        let connections = []; 
+        let myPlayerIndex = 0; 
         let isHost = false;
 
         const keys = {};
@@ -309,7 +307,7 @@
                 this.hitStun = 0;
             }
 
-            update(fightersArr, projectilesArr, effectsArr) {
+            update(fightersArr, projectilesArr) {
                 if (this.hitStun > 0) {
                     this.hitStun--;
                     this.x += this.vx; this.vy += this.gravity; this.y += this.vy;
@@ -323,7 +321,11 @@
                 this.x += this.vx;
 
                 const floorY = canvas.height - 90 - this.height;
-                if (this.y > floorY) { this.y = floorY; this.vy = 0; this.isGrounded = true; }
+                if (this.y > floorY) {
+                    this.y = floorY;
+                    this.vy = 0;
+                    this.isGrounded = true;
+                }
 
                 if (this.x < 35) this.x = 35;
                 if (this.x + this.width > canvas.width - 35) this.x = canvas.width - 35 - this.width;
@@ -435,18 +437,29 @@
         ];
         let projectiles = [];
 
-        // --- P2P Networking setup ---
+        // Peer configuration utilizing public STUN servers for reliable traversal across external internet networks
+        const peerOptions = {
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
+                ]
+            }
+        };
+
         document.getElementById('hostBtn').addEventListener('click', () => {
             isHost = true; myPlayerIndex = 0;
-            peer = new Peer();
+            peer = new Peer(peerOptions);
+
             peer.on('open', id => {
-                document.getElementById('lobbyStatus').innerText = `Host ID: ${id} (Waiting for P2, P3, P4...)`;
-                prompt("Copy this Room ID and send it to your friends:", id);
+                document.getElementById('lobbyStatus').innerText = `Room Ready! Send this ID to friends: ${id}`;
+                navigator.clipboard.writeText(id).catch(() => {});
             });
+
             peer.on('connection', conn => {
                 connections.push(conn);
-                const assignedIndex = connections.length; // 1, 2, 3
-                document.getElementById('lobbyStatus').innerText = `Players Connected: ${connections.length + 1}/4`;
+                const assignedIndex = connections.length; // 1, 2, or 3
+                document.getElementById('lobbyStatus').innerText = `Connected Players: ${connections.length + 1}/4`;
                 
                 conn.on('open', () => {
                     conn.send({ type: 'INIT', playerIndex: assignedIndex });
@@ -454,15 +467,11 @@
 
                 conn.on('data', data => {
                     if (data.type === 'INPUT') {
-                        fighters[data.index].vx = data.vx;
-                        fighters[data.index].vy = data.vy;
-                        fighters[data.index].facing = data.facing;
-                        fighters[data.index].actionState = data.actionState;
-                        fighters[data.index].x = data.x;
-                        fighters[data.index].y = data.y;
-                        if (data.attack) fighters[data.index].attack(fighters);
-                        if (data.skill) fighters[data.index].skill(projectiles);
-                        if (data.ultimate) fighters[data.index].ultimate(projectiles);
+                        const f = fighters[data.index];
+                        f.vx = data.vx; f.vy = data.vy; f.facing = data.facing; f.actionState = data.actionState; f.x = data.x; f.y = data.y;
+                        if (data.attack) f.attack(fighters);
+                        if (data.skill) f.skill(projectiles);
+                        if (data.ultimate) f.ultimate(projectiles);
                     }
                 });
             });
@@ -471,17 +480,22 @@
 
         document.getElementById('joinBtn').addEventListener('click', () => {
             const hostId = document.getElementById('roomIdInput').value.trim();
-            if (!hostId) return alert('Enter Host ID');
-            peer = new Peer();
+            if (!hostId) return alert('Please enter a Host ID');
+            
+            peer = new Peer(peerOptions);
             peer.on('open', () => {
                 const conn = peer.connect(hostId);
                 connections = [conn];
+
+                conn.on('open', () => {
+                    document.getElementById('lobbyStatus').innerText = 'Connected to Host! Waiting to start...';
+                });
+
                 conn.on('data', data => {
                     if (data.type === 'INIT') {
                         myPlayerIndex = data.playerIndex;
                         document.getElementById('lobbyScreen').classList.add('hidden');
                     } else if (data.type === 'STATE') {
-                        // Sync state from host
                         data.fightersState.forEach((fs, i) => {
                             fighters[i].x = fs.x; fighters[i].y = fs.y;
                             fighters[i].health = fs.health; fighters[i].energy = fs.energy;
@@ -498,14 +512,12 @@
             camera.update();
             camera.apply();
 
-            // Stage Background
             ctx.fillStyle = '#03050d'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '#050918'; ctx.fillRect(0, canvas.height - 90, canvas.width, 90);
             ctx.fillStyle = '#05d9e8'; ctx.shadowColor = '#05d9e8'; ctx.shadowBlur = 10;
             ctx.fillRect(0, canvas.height - 95, canvas.width, 4); ctx.shadowBlur = 0;
 
             if (isHost || connections.length === 0) {
-                // Local input for current player
                 const me = fighters[myPlayerIndex];
                 me.vx = 0;
                 if (keys['a']) { if (keys['s']) me.dash(-1); else { me.vx = -me.speed; me.facing = -1; me.actionState = 'walk'; } }
@@ -521,16 +533,14 @@
                 fx.update();
 
                 if (isHost && connections.length > 0) {
-                    // Host broadcasts authoritative state to clients
                     const gameState = {
                         type: 'STATE',
                         fightersState: fighters.map(f => ({ x: f.x, y: f.y, health: f.health, energy: f.energy })),
                         projectiles: projectiles
                     };
-                    connections.forEach(c => c.send(gameState));
+                    connections.forEach(c => { if (c.open) c.send(gameState); });
                 }
             } else {
-                // Client sends input to host
                 const me = fighters[myPlayerIndex];
                 me.vx = 0;
                 let didAttack = false, didSkill = false, didUlt = false;
@@ -558,7 +568,6 @@
             projectiles.forEach(p => p.draw());
             ctx.restore();
 
-            // Update UI Health Bars
             fighters.forEach((f, i) => {
                 const bar = document.getElementById(`p${i+1}-health`);
                 if (bar) bar.style.width = `${(f.health / f.maxHealth) * 100}%`;
