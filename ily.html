@@ -3,250 +3,571 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KERNEL_PANIC // 0x000000</title>
+    <title>Aether Nexus: 4-Player Multiplayer Arena</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=VT323&display=swap');
-
-        * {
-            box-sizing: border-box;
-            cursor: none;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap');
 
         body {
-            background-color: #000;
-            color: #f00;
-            font-family: 'VT323', monospace;
+            background-color: #010205;
+            color: #ffffff;
+            font-family: 'Rajdhani', sans-serif;
             margin: 0;
-            padding: 0;
-            height: 100vh;
-            overflow: hidden;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .lobby-screen {
+            position: absolute;
+            z-index: 100;
+            background: rgba(3, 5, 13, 0.95);
+            border: 2px solid #203158;
+            border-radius: 12px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 0 50px rgba(0,242,254,0.3);
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .lobby-screen h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px;
+            color: #00f2fe;
+            margin: 0;
+            text-shadow: 0 0 10px rgba(0,242,254,0.7);
+            letter-spacing: 2px;
+        }
+
+        .lobby-screen button, .lobby-screen input {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            padding: 10px 20px;
+            background: #0d1326;
+            color: #fff;
+            border: 1px solid #384c85;
+            border-radius: 6px;
+            cursor: pointer;
+            outline: none;
+            transition: 0.2s;
+            width: 100%;
+            text-align: center;
+        }
+
+        .lobby-screen button:hover {
+            background: #182347;
+            box-shadow: 0 0 12px rgba(0,242,254,0.5);
+        }
+
+        .lobby-screen input {
+            cursor: text;
+            text-align: left;
+        }
+
+        .hidden { display: none !important; }
+
+        .game-wrapper {
+            position: relative;
+            box-shadow: 0 0 100px rgba(0, 242, 254, 0.3), 0 35px 70px rgba(0,0,0,0.99);
+            border: 3px solid #203158;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #03050d;
+        }
+
+        canvas {
+            display: block;
+            background: radial-gradient(circle at center, #0b132e 0%, #010206 100%);
+        }
+
+        .mugen-hud {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .hud-group {
+            display: flex;
+            gap: 15px;
+            width: 48%;
+            justify-content: space-between;
+        }
+
+        .fighter-hud {
+            width: 47%;
+            display: flex;
             flex-direction: column;
         }
 
-        /* Heavy CRT static noise overlay */
-        body::after {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: repeating-linear-gradient(0deg, rgba(255,0,0,0.15), rgba(255,0,0,0.15) 1px, transparent 1px, transparent 2px);
-            pointer-events: none;
-            z-index: 9999;
-            opacity: 0.7;
+        .name-tag {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            margin-bottom: 3px;
+            text-shadow: 0 0 8px rgba(255,255,255,0.6);
+            display: flex;
+            justify-content: space-between;
         }
 
-        @keyframes violentShake {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            20% { transform: translate(-3px, 3px) rotate(-1deg); }
-            40% { transform: translate(3px, -2px) rotate(1deg); }
-            60% { transform: translate(-2px, -3px) rotate(0deg); }
-            80% { transform: translate(2px, 2px) rotate(-1deg); }
-            100% { transform: translate(0, 0) rotate(0deg); }
-        }
+        .p1-col { color: #ff2a6d; }
+        .p2-col { color: #05d9e8; }
+        .p3-col { color: #00ff66; }
+        .p4-col { color: #ffcc00; }
 
-        .corrupted-box {
-            border: 2px solid #500;
-            background: #080000;
-            padding: 40px;
-            width: 500px;
-            box-shadow: 0 0 50px rgba(255, 0, 0, 0.2);
-            animation: violentShake 0.2s infinite;
+        .health-bar-frame {
+            width: 100%;
+            height: 16px;
+            background: rgba(8, 12, 22, 0.95);
+            border: 1px solid #334473;
+            border-radius: 4px;
+            transform: skewX(-10deg);
+            overflow: hidden;
             position: relative;
         }
 
-        h1 {
-            font-size: 2.5rem;
-            color: #ff0033;
-            margin-top: 0;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            text-shadow: 2px 2px #500000;
-        }
-
-        p {
-            font-size: 1.3rem;
-            color: #888;
-            line-height: 1.4;
-        }
-
-        .data-stream {
-            background: #030000;
-            border: 1px dashed #300;
-            padding: 15px;
-            margin-top: 20px;
-            font-size: 1.1rem;
-            color: #ff3333;
-            text-align: left;
-            height: 120px;
-            overflow: hidden;
-        }
-
-        /* Trustworthy landing overlay card */
-        .trust-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.85);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 20000;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .trust-card {
-            background: #ffffff;
-            border: 1px solid #e1e4e8;
-            padding: 40px;
-            width: 420px;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            text-align: center;
-            color: #333;
-        }
-
-        .trust-card h2 {
-            font-size: 1.4rem;
-            color: #24292e;
-            margin-top: 0;
-            font-weight: 600;
-        }
-
-        .trust-card p {
-            font-size: 0.95rem;
-            color: #586069;
-            line-height: 1.5;
-            margin-bottom: 25px;
-        }
-
-        .verify-btn {
-            background: #2ea44f;
-            border: none;
-            color: white;
-            padding: 12px 20px;
+        .health-bar-fill {
+            height: 100%;
             width: 100%;
-            border-radius: 6px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
+            transition: width 0.08s linear;
         }
 
-        .verify-btn:hover {
-            background: #2c974b;
+        #p1-health { background: #ff2a6d; }
+        #p2-health { background: #05d9e8; }
+        #p3-health { background: #00ff66; }
+        #p4-health { background: #ffcc00; }
+
+        .controls-panel {
+            margin-top: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            font-size: 0.78rem;
+            color: #8b9bb4;
+            letter-spacing: 1px;
+            background: rgba(10, 15, 30, 0.85);
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid #22315b;
+            max-width: 960px;
         }
 
-        /* Fake custom creepy cursor */
-        .cursor {
-            position: fixed;
-            width: 10px;
-            height: 10px;
-            background: #ff0033;
-            box-shadow: 0 0 10px #ff0033;
-            pointer-events: none;
-            z-index: 30000;
-            transform: translate(-50%, -50%);
+        .controls-panel span {
+            color: #fff;
+            background: #0d1326;
+            padding: 2px 5px;
+            border-radius: 3px;
+            border: 1px solid #384c85;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.6rem;
         }
     </style>
+    <!-- PeerJS for direct P2P multiplayer across different devices -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
 
-    <!-- Trustworthy Landing Overlay -->
-    <div class="trust-overlay" id="welcome-modal">
-        <div class="trust-card">
-            <h2>Security Verification</h2>
-            <p>Please verify your browser session to access the secure document repository.</p>
-            <button class="verify-btn" onclick="commitPayload()">Verify Session</button>
+    <div id="lobbyScreen" class="lobby-screen">
+        <h1>AETHER NEXUS 4P</h1>
+        <div style="font-size: 13px; color: #8b9bb4; text-align: center;">Multiplayer via PeerJS (No Server Needed)</div>
+        <button id="hostBtn">CREATE ROOM (HOST)</button>
+        <div style="display: flex; gap: 8px; width: 100%;">
+            <input type="text" id="roomIdInput" placeholder="Enter Host ID...">
+            <button id="joinBtn" style="width: 120px;">JOIN</button>
         </div>
+        <div id="lobbyStatus" style="font-size: 12px; color: #00f2fe; min-height: 16px;"></div>
     </div>
 
-    <div class="cursor" id="custom-cursor"></div>
-
-    <div class="corrupted-box">
-        <h1 id="main-title">ACCESS_VIOLATION_ERR</h1>
-        <p>Your hardware signature has been permanently indexed by an external host. Escape is no longer viable.</p>
-        
-        <div class="data-stream" id="log-console">
-            [SYS] Initializing memory leak...<br>
-            [SYS] Target node identified...<br>
-            [SYS] Extracting local environment vectors...
+    <div class="game-wrapper">
+        <div class="mugen-hud">
+            <div class="hud-group">
+                <div class="fighter-hud">
+                    <div class="name-tag p1-col"><span>P1: VALKYRIE</span></div>
+                    <div class="health-bar-frame"><div id="p1-health" class="health-bar-fill"></div></div>
+                </div>
+                <div class="fighter-hud">
+                    <div class="name-tag p2-col"><span>P2: BLADE</span></div>
+                    <div class="health-bar-frame"><div id="p2-health" class="health-bar-fill"></div></div>
+                </div>
+            </div>
+            <div class="hud-group">
+                <div class="fighter-hud">
+                    <div class="name-tag p3-col"><span>P3: NOVA</span></div>
+                    <div class="health-bar-frame"><div id="p3-health" class="health-bar-fill"></div></div>
+                </div>
+                <div class="fighter-hud">
+                    <div class="name-tag p4-col"><span>P4: PHANTOM</span></div>
+                    <div class="health-bar-frame"><div id="p4-health" class="health-bar-fill"></div></div>
+                </div>
+            </div>
         </div>
+        <canvas id="gameCanvas" width="960" height="520"></canvas>
+    </div>
+
+    <div class="controls-panel">
+        <div>Move: <span>A / D</span></div>
+        <div>Jump: <span>W</span></div>
+        <div>Dash: <span>S + A/D</span></div>
+        <div>Slash: <span>J</span></div>
+        <div>Plasma: <span>K</span></div>
+        <div>Storm: <span>I</span></div>
+        <div>Teleport: <span>U</span></div>
+        <div>Ultimate: <span>L</span></div>
     </div>
 
     <script>
-        // REPLACE WITH YOUR DISCORD WEBHOOK URL
-        const WEBHOOK_URL = 'https://discord.com/api/webhooks/1547219958113501184/yl_zJgd1KLN5n984pKjm6T6lpuvSTnx-9EKITJ3MtcQEsHeFWoNDiST-kNu6DzR6Vkvn';
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-        // Track custom creepy cursor
-        const cursor = document.getElementById('custom-cursor');
-        window.addEventListener('mousemove', (e) => {
-            cursor.style.left = e.clientX + 'px';
-            cursor.style.top = e.clientY + 'px';
+        let peer = null;
+        let connections = []; // Host holds client connections, Client holds host connection
+        let myPlayerIndex = 0; // 0 = Host, 1, 2, 3 = Clients
+        let isHost = false;
+
+        const keys = {};
+        window.addEventListener('keydown', e => {
+            if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(e.key.toLowerCase())) e.preventDefault();
+            keys[e.key.toLowerCase()] = true;
         });
+        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-        // When they click the trustable button, hide overlay, lock localStorage, log telemetry, and start the sequence
-        async function commitPayload() {
-            // Set localStorage lock so they can never open this page again
-            localStorage.setItem('trap_locked', 'true');
+        class Camera {
+            constructor() { this.shakeTimer = 0; this.shakeIntensity = 0; }
+            shake(intensity = 10, duration = 12) {
+                this.shakeIntensity = intensity;
+                this.shakeTimer = duration;
+            }
+            update() { if (this.shakeTimer > 0) this.shakeTimer--; }
+            apply() {
+                if (this.shakeTimer > 0) {
+                    ctx.translate((Math.random() - 0.5) * this.shakeIntensity, (Math.random() - 0.5) * this.shakeIntensity);
+                }
+            }
+        }
+        const camera = new Camera();
 
-            // Hide the trustable welcome modal
-            document.getElementById('welcome-modal').style.display = 'none';
+        class ParticleSystem {
+            constructor() { this.particles = []; this.floatingTexts = []; }
+            spawn(x, y, color, count = 10, speed = 4) {
+                for(let i=0; i<count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const vel = Math.random() * speed;
+                    this.particles.push({ x, y, vx: Math.cos(angle)*vel, vy: Math.sin(angle)*vel, alpha: 1, decay: 0.02, color, size: Math.random() * 3 + 2 });
+                }
+            }
+            spawnText(x, y, text, color) {
+                this.floatingTexts.push({ x, y, text, color, alpha: 1, vy: -1.2 });
+            }
+            update() {
+                this.particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.alpha -= p.decay; });
+                this.particles = this.particles.filter(p => p.alpha > 0);
+                this.floatingTexts.forEach(ft => { ft.y += ft.vy; ft.alpha -= 0.02; });
+                this.floatingTexts = this.floatingTexts.filter(ft => ft.alpha > 0);
+            }
+            draw() {
+                this.particles.forEach(p => {
+                    ctx.save(); ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color; ctx.shadowColor = p.color; ctx.shadowBlur = 8;
+                    ctx.fillRect(p.x, p.y, p.size, p.size); ctx.restore();
+                });
+                this.floatingTexts.forEach(ft => {
+                    ctx.save(); ctx.globalAlpha = Math.max(0, ft.alpha); ctx.font = '900 14px Orbitron, sans-serif'; ctx.fillStyle = ft.color; ctx.shadowColor = ft.color; ctx.shadowBlur = 10; ctx.textAlign = 'center';
+                    ctx.fillText(ft.text, ft.x, ft.y); ctx.restore();
+                });
+            }
+        }
+        const fx = new ParticleSystem();
 
-            let batteryInfo = "Unknown";
-            if ('getBattery' in navigator) {
-                try {
-                    const b = await navigator.getBattery();
-                    batteryInfo = `${Math.round(b.level * 100)}% (Charging: ${b.charging})`;
-                } catch(e) {}
+        class Fighter {
+            constructor(x, y, name, color, index) {
+                this.x = x; this.y = y;
+                this.width = 50; this.height = 80;
+                this.name = name; this.color = color; this.index = index;
+                this.vx = 0; this.vy = 0;
+                this.speed = 5.0; this.jumpPower = -14.5; this.gravity = 0.68;
+                this.isGrounded = false;
+                this.maxHealth = 100; this.health = 100;
+                this.energy = 0;
+                this.facing = 1;
+                this.actionState = 'idle';
+                this.animTimer = 0;
+                this.attackCooldown = 0;
+                this.dashCooldown = 0;
+                this.hitStun = 0;
             }
 
-            const consoleBox = document.getElementById('log-console');
-            consoleBox.innerHTML += `<br>[OK] Power state: ${batteryInfo}`;
-            consoleBox.innerHTML += `<br>[OK] Platform: ${navigator.platform}`;
+            update(fightersArr, projectilesArr, effectsArr) {
+                if (this.hitStun > 0) {
+                    this.hitStun--;
+                    this.x += this.vx; this.vy += this.gravity; this.y += this.vy;
+                    const floorY = canvas.height - 90 - this.height;
+                    if (this.y > floorY) { this.y = floorY; this.vy = 0; this.isGrounded = true; }
+                    return;
+                }
 
-            // Send telemetry to Discord (no clipboard requested)
-            fetch(WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    content: `🚨 **Target Verified & Hooked!**\n🔋 Battery: ${batteryInfo}\n🌐 Platform: ${navigator.platform}\n🖥️ Res: ${window.screen.width}x${window.screen.height}`
-                })
+                this.vy += this.gravity;
+                this.y += this.vy;
+                this.x += this.vx;
+
+                const floorY = canvas.height - 90 - this.height;
+                if (this.y > floorY) { this.y = floorY; this.vy = 0; this.isGrounded = true; }
+
+                if (this.x < 35) this.x = 35;
+                if (this.x + this.width > canvas.width - 35) this.x = canvas.width - 35 - this.width;
+
+                if (this.attackCooldown > 0) this.attackCooldown--;
+                if (this.dashCooldown > 0) this.dashCooldown--;
+                if (this.animTimer > 0) {
+                    this.animTimer--;
+                    if (this.animTimer === 0) this.actionState = 'idle';
+                }
+            }
+
+            dash(dir) {
+                if (this.dashCooldown > 0) return;
+                this.vx = dir * 15; this.vy = -2;
+                this.dashCooldown = 40; this.actionState = 'dash'; this.animTimer = 10;
+                fx.spawn(this.x + this.width/2, this.y + this.height/2, this.color, 14, 5);
+            }
+
+            attack(fightersArr) {
+                if (this.attackCooldown > 0) return;
+                this.actionState = 'attack'; this.animTimer = 12; this.attackCooldown = 25;
+                this.energy = Math.min(100, this.energy + 12);
+
+                fightersArr.forEach(target => {
+                    if (target !== this && Math.abs(this.x - target.x) < 85 && Math.abs(this.y - target.y) < 50) {
+                        target.health -= 10; target.hitStun = 12; target.vy = -4; target.vx = this.facing * 3;
+                        if (target.health < 0) target.health = 0;
+                        camera.shake(6, 10);
+                        fx.spawn(target.x + target.width/2, target.y + target.height/2, '#fff', 15, 6);
+                        fx.spawnText(target.x + target.width/2, target.y - 12, `-10`, this.color);
+                    }
+                });
+            }
+
+            skill(projectilesArr) {
+                if (this.attackCooldown > 0) return;
+                this.actionState = 'skill'; this.animTimer = 15; this.attackCooldown = 35;
+                this.energy = Math.min(100, this.energy + 20);
+                projectilesArr.push(new Projectile(this.facing === 1 ? this.x + this.width : this.x - 35, this.y + 25, this.facing, this.color, false, this.index));
+            }
+
+            ultimate(projectilesArr) {
+                if (this.energy < 100 || this.attackCooldown > 0) return;
+                this.actionState = 'ultimate'; this.animTimer = 40; this.attackCooldown = 75; this.energy = 0;
+                projectilesArr.push(new Projectile(this.facing === 1 ? this.x + this.width : this.x - 80, this.y + 10, this.facing, this.color, true, this.index));
+                camera.shake(14, 20);
+            }
+
+            draw() {
+                ctx.save();
+                ctx.shadowColor = this.color; ctx.shadowBlur = 12;
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.beginPath(); ctx.ellipse(this.x + this.width/2, canvas.height - 90, 22, 5, 0, 0, Math.PI * 2); ctx.fill();
+
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x + 6, this.y + 20, this.width - 12, this.height - 28);
+                ctx.fillStyle = '#0a0e1a';
+                ctx.fillRect(this.x + 10, this.y + 26, this.width - 20, this.height - 40);
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(this.x + 18, this.y + 35, 12, 10);
+
+                ctx.fillStyle = '#0d111e';
+                ctx.fillRect(this.x + 8, this.y + 4, 34, 18);
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.facing === 1 ? this.x + 24 : this.x + 10, this.y + 9, 14, 4);
+
+                if (this.actionState === 'attack') {
+                    ctx.fillStyle = '#fff'; ctx.shadowBlur = 20;
+                    ctx.fillRect(this.facing === 1 ? this.x + this.width : this.x - 40, this.y + 15, 40, 14);
+                }
+                ctx.restore();
+            }
+        }
+
+        class Projectile {
+            constructor(x, y, dir, color, isUlt, ownerIndex) {
+                this.x = x; this.y = y; this.vx = dir * (isUlt ? 13 : 9);
+                this.width = isUlt ? 80 : 35; this.height = isUlt ? 38 : 16;
+                this.color = color; this.isUlt = isUlt; this.ownerIndex = ownerIndex; this.active = true;
+            }
+            update(fightersArr) {
+                this.x += this.vx;
+                if (this.x < 0 || this.x > canvas.width) this.active = false;
+                fightersArr.forEach(target => {
+                    if (target.index !== this.ownerIndex && this.x < target.x + target.width && this.x + this.width > target.x && this.y < target.y + target.height && this.y + this.height > target.y) {
+                        const dmg = this.isUlt ? 35 : 12;
+                        target.health -= dmg; target.hitStun = 15; target.vy = -4.5;
+                        if (target.health < 0) target.health = 0;
+                        camera.shake(this.isUlt ? 12 : 6, 12);
+                        fx.spawn(target.x + target.width/2, target.y + target.height/2, this.color, 18, 6);
+                        this.active = false;
+                    }
+                });
+            }
+            draw() {
+                ctx.save(); ctx.fillStyle = '#fff'; ctx.shadowColor = this.color; ctx.shadowBlur = 20;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.fillStyle = this.color; ctx.fillRect(this.x + 5, this.y + 3, this.width - 10, this.height - 6);
+                ctx.restore();
+            }
+        }
+
+        const fighters = [
+            new Fighter(150, 300, 'VALKYRIE', '#ff2a6d', 0),
+            new Fighter(350, 300, 'BLADE', '#05d9e8', 1),
+            new Fighter(550, 300, 'NOVA', '#00ff66', 2),
+            new Fighter(750, 300, 'PHANTOM', '#ffcc00', 3)
+        ];
+        let projectiles = [];
+
+        // --- P2P Networking setup ---
+        document.getElementById('hostBtn').addEventListener('click', () => {
+            isHost = true; myPlayerIndex = 0;
+            peer = new Peer();
+            peer.on('open', id => {
+                document.getElementById('lobbyStatus').innerText = `Host ID: ${id} (Waiting for P2, P3, P4...)`;
+                prompt("Copy this Room ID and send it to your friends:", id);
+            });
+            peer.on('connection', conn => {
+                connections.push(conn);
+                const assignedIndex = connections.length; // 1, 2, 3
+                document.getElementById('lobbyStatus').innerText = `Players Connected: ${connections.length + 1}/4`;
+                
+                conn.on('open', () => {
+                    conn.send({ type: 'INIT', playerIndex: assignedIndex });
+                });
+
+                conn.on('data', data => {
+                    if (data.type === 'INPUT') {
+                        fighters[data.index].vx = data.vx;
+                        fighters[data.index].vy = data.vy;
+                        fighters[data.index].facing = data.facing;
+                        fighters[data.index].actionState = data.actionState;
+                        fighters[data.index].x = data.x;
+                        fighters[data.index].y = data.y;
+                        if (data.attack) fighters[data.index].attack(fighters);
+                        if (data.skill) fighters[data.index].skill(projectiles);
+                        if (data.ultimate) fighters[data.index].ultimate(projectiles);
+                    }
+                });
+            });
+            document.getElementById('lobbyScreen').classList.add('hidden');
+        });
+
+        document.getElementById('joinBtn').addEventListener('click', () => {
+            const hostId = document.getElementById('roomIdInput').value.trim();
+            if (!hostId) return alert('Enter Host ID');
+            peer = new Peer();
+            peer.on('open', () => {
+                const conn = peer.connect(hostId);
+                connections = [conn];
+                conn.on('data', data => {
+                    if (data.type === 'INIT') {
+                        myPlayerIndex = data.playerIndex;
+                        document.getElementById('lobbyScreen').classList.add('hidden');
+                    } else if (data.type === 'STATE') {
+                        // Sync state from host
+                        data.fightersState.forEach((fs, i) => {
+                            fighters[i].x = fs.x; fighters[i].y = fs.y;
+                            fighters[i].health = fs.health; fighters[i].energy = fs.energy;
+                        });
+                        projectiles = data.projectiles;
+                    }
+                });
+            });
+        });
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            camera.update();
+            camera.apply();
+
+            // Stage Background
+            ctx.fillStyle = '#03050d'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#050918'; ctx.fillRect(0, canvas.height - 90, canvas.width, 90);
+            ctx.fillStyle = '#05d9e8'; ctx.shadowColor = '#05d9e8'; ctx.shadowBlur = 10;
+            ctx.fillRect(0, canvas.height - 95, canvas.width, 4); ctx.shadowBlur = 0;
+
+            if (isHost || connections.length === 0) {
+                // Local input for current player
+                const me = fighters[myPlayerIndex];
+                me.vx = 0;
+                if (keys['a']) { if (keys['s']) me.dash(-1); else { me.vx = -me.speed; me.facing = -1; me.actionState = 'walk'; } }
+                if (keys['d']) { if (keys['s']) me.dash(1); else { me.vx = me.speed; me.facing = 1; me.actionState = 'walk'; } }
+                if (keys['w'] && me.isGrounded) { me.vy = me.jumpPower; me.isGrounded = false; }
+                if (keys['j'] && me.attackCooldown === 0) me.attack(fighters);
+                if (keys['k'] && me.attackCooldown === 0) me.skill(projectiles);
+                if (keys['l'] && me.attackCooldown === 0) me.ultimate(projectiles);
+
+                fighters.forEach(f => f.update(fighters, projectiles));
+                projectiles.forEach(p => p.update(fighters));
+                projectiles = projectiles.filter(p => p.active);
+                fx.update();
+
+                if (isHost && connections.length > 0) {
+                    // Host broadcasts authoritative state to clients
+                    const gameState = {
+                        type: 'STATE',
+                        fightersState: fighters.map(f => ({ x: f.x, y: f.y, health: f.health, energy: f.energy })),
+                        projectiles: projectiles
+                    };
+                    connections.forEach(c => c.send(gameState));
+                }
+            } else {
+                // Client sends input to host
+                const me = fighters[myPlayerIndex];
+                me.vx = 0;
+                let didAttack = false, didSkill = false, didUlt = false;
+                if (keys['a']) { me.vx = -me.speed; me.facing = -1; me.actionState = 'walk'; }
+                if (keys['d']) { me.vx = me.speed; me.facing = 1; me.actionState = 'walk'; }
+                if (keys['w'] && me.isGrounded) { me.vy = me.jumpPower; me.isGrounded = false; }
+                if (keys['j'] && me.attackCooldown === 0) { didAttack = true; me.attackCooldown = 25; }
+                if (keys['k'] && me.attackCooldown === 0) { didSkill = true; me.attackCooldown = 35; }
+                if (keys['l'] && me.attackCooldown === 0) { didUlt = true; me.attackCooldown = 75; }
+
+                me.update(fighters, projectiles);
+                
+                if (connections[0] && connections[0].open) {
+                    connections[0].send({
+                        type: 'INPUT', index: myPlayerIndex,
+                        vx: me.vx, vy: me.vy, facing: me.facing, actionState: me.actionState, x: me.x, y: me.y,
+                        attack: didAttack, skill: didSkill, ultimate: didUlt
+                    });
+                }
+            }
+
+            fx.update();
+            fx.draw();
+            fighters.forEach(f => f.draw());
+            projectiles.forEach(p => p.draw());
+            ctx.restore();
+
+            // Update UI Health Bars
+            fighters.forEach((f, i) => {
+                const bar = document.getElementById(`p${i+1}-health`);
+                if (bar) bar.style.width = `${(f.health / f.maxHealth) * 100}%`;
             });
 
-            // Creepy timeline sequence
-            setTimeout(() => {
-                document.body.style.background = '#ff0033';
-                document.body.style.color = '#000';
-                document.querySelector('.corrupted-box').style.background = '#000';
-                document.getElementById('main-title').innerText = "YOU ARE MONITORED :>";
-            }, 1000);
-
-            setTimeout(() => {
-                document.getElementById('main-title').innerText = "HI dear ko!";
-            }, 3000);
-
-            setTimeout(() => {
-                document.getElementById('main-title').innerText = "ILOVEYOU";
-            }, 4000);
-
-            setTimeout(() => {
-                document.getElementById('main-title').innerText = "ILOVEYOU VIRUS";
-            }, 4500);
-
-            setTimeout(() => {
-                document.getElementById('main-title').innerText = "HHEHEHEHE";
-            }, 4800);
-
-            setTimeout(() => {
-                document.getElementById('main-title').innerText = "B- BYE :>";
-            }, 5000);
-
-            setTimeout(() => {
-                window.location.replace("https://google.com");
-            }, 5600);
+            requestAnimationFrame(gameLoop);
         }
+
+        requestAnimationFrame(gameLoop);
     </script>
 </body>
 </html>
