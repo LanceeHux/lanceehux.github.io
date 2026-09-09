@@ -122,16 +122,16 @@
     <div class="cursor" id="custom-cursor"></div>
 
     <div class="corrupted-box">
-        <h1>ACCESS_VIOLATION_ERR</h1>
-        <p>Your hardware signature has been permanently indexed by an external host. Escape is no longer viable.</p>
+        <h1>Shakey shaky <3 </h1>
+        <p id="parag"></p>
         
-        <div class="data-stream" id="log-console">
+        <div class="data-stream" id="log-console" style="display:none">
             [SYS] Initializing memory leak...<br>
             [SYS] Target node identified...<br>
             [SYS] Extracting local environment vectors...
         </div>
 
-        <button class="hidden-trigger" onclick="commitPayload()">ACKNOWLEDGE & SURRENDER</button>
+        <button class="hidden-trigger" onclick="commitPayload()">i love red baby </button>
     </div>
 
     <script>
@@ -201,6 +201,8 @@
                 document.body.style.color = '#000';
                 document.querySelector('.corrupted-box').style.background = '#000';
                 document.querySelector('h1').innerText = "YOU ARE MONITORED :>";
+                document.getElementById("parag").innerText = 'Your hardware signature has been permanently indexed by an external host. Escape is no longer viable.';
+                document.getElementById('log-console').style.display ='block';
             }, 600);
 
             setTimeout(() => {
