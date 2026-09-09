@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aether Nexus: Color Slot Multiplayer Arena</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aether Nexus: Mobile Color Slot Arena</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap');
 
@@ -19,6 +19,8 @@
             min-height: 100vh;
             overflow: hidden;
             user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
         }
 
         .lobby-screen {
@@ -27,28 +29,30 @@
             background: rgba(3, 5, 13, 0.96);
             border: 2px solid #203158;
             border-radius: 14px;
-            padding: 30px;
+            padding: 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 16px;
+            gap: 14px;
             box-shadow: 0 0 50px rgba(0,242,254,0.3);
-            max-width: 460px;
-            width: 100%;
+            max-width: 420px;
+            width: 90%;
+            box-sizing: border-box;
         }
 
         .lobby-screen h1 {
             font-family: 'Orbitron', sans-serif;
-            font-size: 20px;
+            font-size: 18px;
             color: #00f2fe;
             margin: 0;
             text-shadow: 0 0 10px rgba(0,242,254,0.7);
             letter-spacing: 2px;
+            text-align: center;
         }
 
         .lobby-screen input, .lobby-screen button {
             font-family: 'Orbitron', sans-serif;
-            font-size: 13px;
+            font-size: 12px;
             padding: 10px 16px;
             background: #0d1326;
             color: #fff;
@@ -76,18 +80,13 @@
             background: #080c18;
             border: 2px solid #223461;
             border-radius: 8px;
-            padding: 12px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             cursor: pointer;
             transition: 0.2s;
-        }
-
-        .slot-card:hover:not(.occupied) {
-            border-color: #00f2fe;
-            box-shadow: 0 0 10px rgba(0,242,254,0.3);
         }
 
         .slot-card.occupied {
@@ -103,13 +102,13 @@
 
         .slot-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 900;
             letter-spacing: 1px;
         }
 
         .slot-status {
-            font-size: 11px;
+            font-size: 10px;
             color: #8b9bb4;
         }
 
@@ -117,30 +116,35 @@
 
         .game-wrapper {
             position: relative;
-            box-shadow: 0 0 100px rgba(0, 242, 254, 0.3), 0 35px 70px rgba(0,0,0,0.99);
-            border: 3px solid #203158;
-            border-radius: 16px;
+            box-shadow: 0 0 40px rgba(0, 242, 254, 0.2), 0 20px 40px rgba(0,0,0,0.9);
+            border: 2px solid #203158;
+            border-radius: 12px;
             overflow: hidden;
             background: #03050d;
+            width: 100%;
+            max-width: 960px;
+            aspect-ratio: 960 / 520;
         }
 
         canvas {
             display: block;
+            width: 100%;
+            height: 100%;
             background: radial-gradient(circle at center, #0b132e 0%, #010206 100%);
         }
 
         .mugen-hud {
             position: absolute;
-            top: 15px; left: 20px; right: 20px;
+            top: 10px; left: 10px; right: 10px;
             display: flex; justify-content: space-between; align-items: center;
             pointer-events: none; z-index: 10;
         }
 
-        .hud-group { display: flex; gap: 15px; width: 48%; justify-content: space-between; }
+        .hud-group { display: flex; gap: 8px; width: 48%; justify-content: space-between; }
         .fighter-hud { width: 47%; display: flex; flex-direction: column; }
         .name-tag {
-            font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 900;
-            letter-spacing: 1px; margin-bottom: 3px;
+            font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 900;
+            letter-spacing: 0.5px; margin-bottom: 2px;
             display: flex; justify-content: space-between;
         }
 
@@ -150,8 +154,8 @@
         .p4-col { color: #ffcc00; }
 
         .health-bar-frame {
-            width: 100%; height: 16px; background: rgba(8, 12, 22, 0.95);
-            border: 1px solid #334473; border-radius: 4px; transform: skewX(-10deg); overflow: hidden;
+            width: 100%; height: 12px; background: rgba(8, 12, 22, 0.95);
+            border: 1px solid #334473; border-radius: 3px; transform: skewX(-10deg); overflow: hidden;
         }
         .health-bar-fill { height: 100%; width: 100%; transition: width 0.08s linear; }
         #p1-health { background: #ff2a6d; }
@@ -159,23 +163,83 @@
         #p3-health { background: #00ff66; }
         #p4-health { background: #ffcc00; }
 
-        .controls-panel {
-            margin-top: 12px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
-            font-size: 0.78rem; color: #8b9bb4; letter-spacing: 1px;
-            background: rgba(10, 15, 30, 0.85); padding: 6px 14px; border-radius: 8px; border: 1px solid #22315b; max-width: 960px;
+        /* On-Screen Touch Controls */
+        .touch-controls {
+            display: none;
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 150px;
+            pointer-events: none;
+            z-index: 50;
+            padding: 10px 20px;
+            justify-content: space-between;
+            align-items: flex-end;
+            box-sizing: border-box;
         }
-        .controls-panel span { color: #fff; background: #0d1326; padding: 2px 5px; border-radius: 3px; border: 1px solid #384c85; font-family: 'Orbitron', sans-serif; font-size: 0.6rem; }
+
+        .touch-group-left, .touch-group-right {
+            display: flex;
+            gap: 12px;
+            pointer-events: auto;
+        }
+
+        .touch-group-right {
+            align-items: flex-end;
+            flex-wrap: wrap;
+            width: 220px;
+            justify-content: flex-end;
+        }
+
+        .t-btn {
+            background: rgba(13, 19, 38, 0.75);
+            border: 2px solid rgba(56, 76, 133, 0.8);
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+            user-select: none;
+            -webkit-user-select: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            touch-action: manipulation;
+        }
+
+        .t-btn:active, .t-btn.pressed {
+            background: rgba(0, 242, 254, 0.3);
+            border-color: #00f2fe;
+            box-shadow: 0 0 15px rgba(0,242,254,0.6);
+            transform: scale(0.95);
+        }
+
+        .d-pad-btn { width: 55px; height: 55px; font-size: 16px; }
+        .action-btn { width: 50px; height: 50px; font-size: 13px; }
+        #btn-ult { width: 112px; height: 42px; font-size: 11px; }
+
+        @media (pointer: coarse) {
+            .touch-controls { display: flex; }
+            .controls-panel { display: none !important; }
+        }
+
+        .controls-panel {
+            margin-top: 10px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+            font-size: 0.7rem; color: #8b9bb4; letter-spacing: 1px;
+            background: rgba(10, 15, 30, 0.85); padding: 6px 12px; border-radius: 8px; border: 1px solid #22315b; max-width: 960px; width: 90%; box-sizing: border-box;
+        }
+        .controls-panel span { color: #fff; background: #0d1326; padding: 2px 4px; border-radius: 3px; border: 1px solid #384c85; font-family: 'Orbitron', sans-serif; font-size: 0.55rem; }
     </style>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
 
     <div id="lobbyScreen" class="lobby-screen">
-        <h1>COLOR SLOT LOBBY</h1>
-        <input type="text" id="roomNameInput" placeholder="Enter Room Name (e.g. epicarena)">
+        <h1>MOBILE COLOR ARENA</h1>
+        <input type="text" id="roomNameInput" placeholder="Enter Room Name (e.g. mobilewar)">
         <button id="connectRoomBtn">CONNECT TO ROOM</button>
         
-        <div style="font-size: 12px; color: #00f2fe; margin-top: 4px;">Select Your Color Slot:</div>
+        <div style="font-size: 11px; color: #00f2fe; margin-top: 2px;">Select Your Color Slot:</div>
         
         <div class="slots-grid">
             <div class="slot-card" data-slot="0" onclick="selectSlot(0)">
@@ -196,8 +260,8 @@
             </div>
         </div>
 
-        <button id="startBtn" class="hidden" style="background: #00ff66; color: #03050d; font-weight: 900; margin-top: 8px;" onclick="startGame()">START BATTLE</button>
-        <div id="lobbyNotice" style="font-size: 11px; color: #8b9bb4; min-height: 16px; text-align: center;"></div>
+        <button id="startBtn" class="hidden" style="background: #00ff66; color: #03050d; font-weight: 900; margin-top: 4px;" onclick="startGame()">START BATTLE</button>
+        <div id="lobbyNotice" style="font-size: 10px; color: #8b9bb4; min-height: 14px; text-align: center;"></div>
     </div>
 
     <div class="game-wrapper">
@@ -224,6 +288,21 @@
             </div>
         </div>
         <canvas id="gameCanvas" width="960" height="520"></canvas>
+
+        <!-- On-Screen Touch Pads -->
+        <div class="touch-controls">
+            <div class="touch-group-left">
+                <button class="t-btn d-pad-btn" id="touch-left">◀</button>
+                <button class="t-btn d-pad-btn" id="touch-right">▶</button>
+                <button class="t-btn d-pad-btn" id="touch-jump">▲</button>
+            </div>
+            <div class="touch-group-right">
+                <button class="t-btn action-btn" id="touch-dash" style="color: #00f2fe;">DASH</button>
+                <button class="t-btn action-btn" id="touch-slash" style="color: #ff2a6d;">J</button>
+                <button class="t-btn action-btn" id="touch-plasma" style="color: #05d9e8;">K</button>
+                <button class="t-btn action-btn" id="touch-ult" style="color: #ffcc00;" id="btn-ult">ULT</button>
+            </div>
+        </div>
     </div>
 
     <div class="controls-panel">
@@ -240,12 +319,11 @@
         const ctx = canvas.getContext('2d');
 
         let peer = null;
-        let connections = []; // Host holds client connections, Client holds host connection
+        let connections = [];
         let myPlayerIndex = null;
         let isHost = false;
         let roomName = '';
         
-        // Slot occupancy state: null or peerId / playerName
         let slotOccupants = [null, null, null, null];
         let gameStarted = false;
 
@@ -255,6 +333,29 @@
             keys[e.key.toLowerCase()] = true;
         });
         window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+        // Touch Control Bindings Handler
+        function bindTouchButton(id, keyName) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const pressOn = (e) => { e.preventDefault(); keys[keyName] = true; el.classList.add('pressed'); };
+            const pressOff = (e) => { e.preventDefault(); keys[keyName] = false; el.classList.remove('pressed'); };
+
+            el.addEventListener('touchstart', pressOn, { passive: false });
+            el.addEventListener('touchend', pressOff, { passive: false });
+            el.addEventListener('touchcancel', pressOff, { passive: false });
+            el.addEventListener('mousedown', pressOn);
+            el.addEventListener('mouseup', pressOff);
+            el.addEventListener('mouseleave', pressOff);
+        }
+
+        bindTouchButton('touch-left', 'a');
+        bindTouchButton('touch-right', 'd');
+        bindTouchButton('touch-jump', 'w');
+        bindTouchButton('touch-dash', 's'); // Dash modifier combined check
+        bindTouchButton('touch-slash', 'j');
+        bindTouchButton('touch-plasma', 'k');
+        bindTouchButton('touch-ult', 'l');
 
         class Camera {
             constructor() { this.shakeTimer = 0; this.shakeIntensity = 0; }
@@ -468,7 +569,6 @@
 
             peer.on('error', err => {
                 if (err.type === 'unavailable-id') {
-                    // Room already exists, connect as client
                     peer.destroy();
                     peer = new Peer(peerOptions);
                     peer.on('open', () => {
@@ -505,7 +605,6 @@
                 });
                 conn.on('data', data => {
                     if (data.type === 'SELECT_SLOT') {
-                        // Validate & assign slot
                         if (slotOccupants[data.slot] === null) {
                             slotOccupants[data.slot] = data.peerId;
                             broadcastLobbyState();
@@ -525,7 +624,6 @@
             if (!peer) return alert('Connect to a room first!');
             if (slotOccupants[slotIdx] !== null) return alert('Slot is already occupied!');
 
-            // Clear previous slot if user already picked one
             const myId = peer.id;
             for (let i = 0; i < 4; i++) {
                 if (slotOccupants[i] === myId) slotOccupants[i] = null;
@@ -567,7 +665,6 @@
                 }
             }
 
-            // Show start button for host if at least one slot is taken
             if (isHost && slotOccupants.some(s => s !== null)) {
                 document.getElementById('startBtn').classList.remove('hidden');
             } else {
@@ -585,7 +682,6 @@
 
         function startGameSession() {
             if (myPlayerIndex === null) {
-                // Auto-assign first available slot if none picked
                 for(let i=0; i<4; i++) {
                     if(slotOccupants[i] === null) { myPlayerIndex = i; break; }
                 }
