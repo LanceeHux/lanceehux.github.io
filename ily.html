@@ -239,17 +239,45 @@
             transform: scale(0.93);
         }
 
-        /* Ergonomic D-Pad Placement */
         #touch-left { position: absolute; left: 0; bottom: 0; width: 64px; height: 64px; font-size: 20px; border-radius: 18px; }
         #touch-right { position: absolute; left: 74px; bottom: 0; width: 64px; height: 64px; font-size: 20px; border-radius: 18px; }
         #touch-jump { position: absolute; left: 37px; top: 0; width: 64px; height: 64px; font-size: 20px; border-radius: 18px; }
         #touch-dash { position: absolute; left: 144px; bottom: 8px; width: 44px; height: 44px; font-size: 10px; border-radius: 12px; color: #00f2fe; }
 
-        /* Action Buttons Grid */
         .action-btn { width: 62px; height: 62px; font-size: 15px; border-radius: 18px; }
         #touch-ult { width: 134px; height: 46px; font-size: 12px; border-radius: 14px; margin-top: 4px; }
 
-        .controls-panel { display: none; }
+        /* Victory Overlay Banner */
+        .victory-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 5, 13, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            backdrop-filter: blur(4px);
+        }
+        .victory-screen h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            color: #00ff66;
+            text-shadow: 0 0 20px rgba(0,255,102,0.8);
+            margin: 0 0 10px 0;
+            letter-spacing: 3px;
+        }
+        .victory-screen button {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            padding: 10px 20px;
+            background: #0d1326;
+            color: #fff;
+            border: 2px solid #00ff66;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0,255,102,0.4);
+        }
     </style>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
@@ -288,6 +316,11 @@
     </div>
 
     <div class="game-wrapper">
+        <div id="victoryOverlay" class="victory-screen hidden">
+            <h2 id="victoryText">VICTORY!</h2>
+            <button onclick="location.reload()">PLAY AGAIN</button>
+        </div>
+
         <div class="mugen-hud">
             <div class="hud-group">
                 <div class="fighter-hud">
@@ -312,7 +345,6 @@
         </div>
         <canvas id="gameCanvas" width="960" height="520"></canvas>
 
-        <!-- Ergonomic Mobile Touch Controls -->
         <div class="touch-controls">
             <div class="touch-group-left">
                 <button class="t-btn" id="touch-left">◀</button>
@@ -340,6 +372,7 @@
         
         let slotOccupants = [null, null, null, null];
         let gameStarted = false;
+        let matchEnded = false;
 
         const keys = {};
         window.addEventListener('keydown', e => {
@@ -432,6 +465,8 @@
             }
 
             update(fightersArr, projectilesArr) {
+                if (this.health <= 0) return;
+
                 if (this.hitStun > 0) {
                     this.hitStun--;
                     this.x += this.vx; this.vy += this.gravity; this.y += this.vy;
@@ -463,19 +498,19 @@
             }
 
             dash(dir) {
-                if (this.dashCooldown > 0) return;
+                if (this.dashCooldown > 0 || this.health <= 0) return;
                 this.vx = dir * 15; this.vy = -2;
                 this.dashCooldown = 40; this.actionState = 'dash'; this.animTimer = 10;
                 fx.spawn(this.x + this.width/2, this.y + this.height/2, this.color, 14, 5);
             }
 
             attack(fightersArr) {
-                if (this.attackCooldown > 0) return;
+                if (this.attackCooldown > 0 || this.health <= 0) return;
                 this.actionState = 'attack'; this.animTimer = 12; this.attackCooldown = 25;
                 this.energy = Math.min(100, this.energy + 12);
 
                 fightersArr.forEach(target => {
-                    if (target !== this && Math.abs(this.x - target.x) < 85 && Math.abs(this.y - target.y) < 50) {
+                    if (target !== this && target.health > 0 && Math.abs(this.x - target.x) < 85 && Math.abs(this.y - target.y) < 50) {
                         target.health -= 10; target.hitStun = 12; target.vy = -4; target.vx = this.facing * 3;
                         if (target.health < 0) target.health = 0;
                         camera.shake(6, 10);
@@ -486,20 +521,21 @@
             }
 
             skill(projectilesArr) {
-                if (this.attackCooldown > 0) return;
+                if (this.attackCooldown > 0 || this.health <= 0) return;
                 this.actionState = 'skill'; this.animTimer = 15; this.attackCooldown = 35;
                 this.energy = Math.min(100, this.energy + 20);
                 projectilesArr.push(new Projectile(this.facing === 1 ? this.x + this.width : this.x - 35, this.y + 25, this.facing, this.color, false, this.index));
             }
 
             ultimate(projectilesArr) {
-                if (this.energy < 100 || this.attackCooldown > 0) return;
+                if (this.energy < 100 || this.attackCooldown > 0 || this.health <= 0) return;
                 this.actionState = 'ultimate'; this.animTimer = 40; this.attackCooldown = 75; this.energy = 0;
                 projectilesArr.push(new Projectile(this.facing === 1 ? this.x + this.width : this.x - 80, this.y + 10, this.facing, this.color, true, this.index));
                 camera.shake(14, 20);
             }
 
             draw() {
+                if (this.health <= 0) return;
                 ctx.save();
                 ctx.shadowColor = this.color; ctx.shadowBlur = 12;
                 ctx.fillStyle = 'rgba(0,0,0,0.5)';
@@ -535,7 +571,7 @@
                 this.x += this.vx;
                 if (this.x < 0 || this.x > canvas.width) this.active = false;
                 fightersArr.forEach(target => {
-                    if (target.index !== this.ownerIndex && this.x < target.x + target.width && this.x + this.width > target.x && this.y < target.y + target.height && this.y + this.height > target.y) {
+                    if (target.index !== this.ownerIndex && target.health > 0 && this.x < target.x + target.width && this.x + this.width > target.x && this.y < target.y + target.height && this.y + this.height > target.y) {
                         const dmg = this.isUlt ? 35 : 12;
                         target.health -= dmg; target.hitStun = 15; target.vy = -4.5;
                         if (target.health < 0) target.health = 0;
@@ -705,6 +741,29 @@
             requestAnimationFrame(gameLoop);
         }
 
+        function checkWinCondition() {
+            if (matchEnded) return;
+            const me = fighters[myPlayerIndex];
+            
+            if (me.health <= 0) {
+                matchEnded = true;
+                document.getElementById('victoryText').innerText = 'DEFEATED';
+                document.getElementById('victoryText').style.color = '#ff2a6d';
+                document.getElementById('victoryOverlay').classList.remove('hidden');
+                return;
+            }
+
+            const opponents = fighters.filter((f, i) => i !== myPlayerIndex);
+            const allOpponentsDead = opponents.every(f => f.health <= 0);
+
+            if (allOpponentsDead) {
+                matchEnded = true;
+                document.getElementById('victoryText').innerText = 'VICTORY!';
+                document.getElementById('victoryText').style.color = '#00ff66';
+                document.getElementById('victoryOverlay').classList.remove('hidden');
+            }
+        }
+
         function gameLoop() {
             if (!gameStarted) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -732,6 +791,8 @@
                 projectiles = projectiles.filter(p => p.active);
                 fx.update();
 
+                checkWinCondition();
+
                 if (isHost && connections.length > 0) {
                     const gameState = {
                         type: 'STATE',
@@ -752,6 +813,7 @@
                 if (keys['l'] && me.attackCooldown === 0) { didUlt = true; me.attackCooldown = 75; }
 
                 me.update(fighters, projectiles);
+                checkWinCondition();
                 
                 if (connections[0] && connections[0].open) {
                     connections[0].send({
@@ -770,10 +832,12 @@
 
             fighters.forEach((f, i) => {
                 const bar = document.getElementById(`p${i+1}-health`);
-                if (bar) bar.style.width = `${(f.health / f.maxHealth) * 100}%`;
+                if (bar) bar.style.width = `${Math.max(0, (f.health / f.maxHealth) * 100)}%`;
             });
 
-            requestAnimationFrame(gameLoop);
+            if (!matchEnded) {
+                requestAnimationFrame(gameLoop);
+            }
         }
     </script>
 </body>
