@@ -7,42 +7,58 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap');
 
-        body {
+        html, body {
             background-color: #010205;
             color: #ffffff;
             font-family: 'Rajdhani', sans-serif;
             margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+            padding: 0;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
             touch-action: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .lobby-screen {
-            position: absolute;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             z-index: 100;
-            background: rgba(3, 5, 13, 0.96);
-            border: 2px solid #203158;
-            border-radius: 14px;
-            padding: 24px;
+            background: rgba(3, 5, 13, 0.98);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 14px;
-            box-shadow: 0 0 50px rgba(0,242,254,0.3);
-            max-width: 420px;
-            width: 90%;
+            justify-content: center;
+            padding: 16px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        .lobby-container {
+            background: rgba(8, 12, 24, 0.95);
+            border: 2px solid #203158;
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 0 40px rgba(0,242,254,0.25);
+            width: 100%;
+            max-width: 400px;
             box-sizing: border-box;
         }
 
         .lobby-screen h1 {
             font-family: 'Orbitron', sans-serif;
-            font-size: 18px;
+            font-size: 16px;
             color: #00f2fe;
             margin: 0;
             text-shadow: 0 0 10px rgba(0,242,254,0.7);
@@ -52,63 +68,64 @@
 
         .lobby-screen input, .lobby-screen button {
             font-family: 'Orbitron', sans-serif;
-            font-size: 12px;
-            padding: 10px 16px;
+            font-size: 13px;
+            padding: 12px 16px;
             background: #0d1326;
             color: #fff;
             border: 1px solid #384c85;
-            border-radius: 6px;
+            border-radius: 8px;
             outline: none;
             width: 100%;
             text-align: center;
             box-sizing: border-box;
         }
 
-        .lobby-screen input { text-align: left; cursor: text; }
+        .lobby-screen input { text-align: left; }
         .lobby-screen button { cursor: pointer; transition: 0.2s; }
-        .lobby-screen button:hover { background: #182347; box-shadow: 0 0 12px rgba(0,242,254,0.5); }
+        .lobby-screen button:active { background: #182347; box-shadow: 0 0 12px rgba(0,242,254,0.5); }
 
         .slots-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 8px;
             width: 100%;
-            margin-top: 5px;
+            margin-top: 2px;
         }
 
         .slot-card {
             background: #080c18;
             border: 2px solid #223461;
-            border-radius: 8px;
-            padding: 10px;
+            border-radius: 10px;
+            padding: 12px 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             cursor: pointer;
-            transition: 0.2s;
+            min-height: 52px;
+            justify-content: center;
         }
 
         .slot-card.occupied {
             border-color: #ff2a6d;
             background: rgba(255, 42, 109, 0.05);
-            cursor: not-allowed;
         }
 
         .slot-card.selected {
             border-color: #00ff66;
             box-shadow: 0 0 12px rgba(0,255,102,0.4);
+            background: rgba(0, 255, 102, 0.05);
         }
 
         .slot-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 900;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
 
         .slot-status {
-            font-size: 10px;
+            font-size: 11px;
             color: #8b9bb4;
         }
 
@@ -116,14 +133,14 @@
 
         .game-wrapper {
             position: relative;
-            box-shadow: 0 0 40px rgba(0, 242, 254, 0.2), 0 20px 40px rgba(0,0,0,0.9);
-            border: 2px solid #203158;
-            border-radius: 12px;
-            overflow: hidden;
-            background: #03050d;
-            width: 100%;
+            width: 100vw;
+            height: 100vh;
             max-width: 960px;
+            max-height: 520px;
             aspect-ratio: 960 / 520;
+            background: #03050d;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         canvas {
@@ -135,16 +152,16 @@
 
         .mugen-hud {
             position: absolute;
-            top: 10px; left: 10px; right: 10px;
+            top: 6px; left: 8px; right: 8px;
             display: flex; justify-content: space-between; align-items: center;
             pointer-events: none; z-index: 10;
         }
 
-        .hud-group { display: flex; gap: 8px; width: 48%; justify-content: space-between; }
+        .hud-group { display: flex; gap: 6px; width: 48%; justify-content: space-between; }
         .fighter-hud { width: 47%; display: flex; flex-direction: column; }
         .name-tag {
-            font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 900;
-            letter-spacing: 0.5px; margin-bottom: 2px;
+            font-family: 'Orbitron', sans-serif; font-size: 8px; font-weight: 900;
+            margin-bottom: 2px;
             display: flex; justify-content: space-between;
         }
 
@@ -154,8 +171,8 @@
         .p4-col { color: #ffcc00; }
 
         .health-bar-frame {
-            width: 100%; height: 12px; background: rgba(8, 12, 22, 0.95);
-            border: 1px solid #334473; border-radius: 3px; transform: skewX(-10deg); overflow: hidden;
+            width: 100%; height: 9px; background: rgba(8, 12, 22, 0.95);
+            border: 1px solid #334473; border-radius: 2px; transform: skewX(-10deg); overflow: hidden;
         }
         .health-bar-fill { height: 100%; width: 100%; transition: width 0.08s linear; }
         #p1-health { background: #ff2a6d; }
@@ -163,15 +180,15 @@
         #p3-health { background: #00ff66; }
         #p4-health { background: #ffcc00; }
 
-        /* On-Screen Touch Controls */
+        /* Comfort Mobile Touch Controls */
         .touch-controls {
-            display: none;
+            display: flex;
             position: absolute;
             bottom: 0; left: 0; right: 0;
-            height: 150px;
+            height: 160px;
             pointer-events: none;
             z-index: 50;
-            padding: 10px 20px;
+            padding: 8px 14px;
             justify-content: space-between;
             align-items: flex-end;
             box-sizing: border-box;
@@ -179,89 +196,95 @@
 
         .touch-group-left, .touch-group-right {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             pointer-events: auto;
+        }
+
+        .touch-group-left {
+            align-items: flex-end;
+            position: relative;
+            width: 190px;
+            height: 130px;
         }
 
         .touch-group-right {
             align-items: flex-end;
             flex-wrap: wrap;
-            width: 220px;
+            width: 230px;
             justify-content: flex-end;
+            padding-bottom: 4px;
         }
 
         .t-btn {
-            background: rgba(13, 19, 38, 0.75);
-            border: 2px solid rgba(56, 76, 133, 0.8);
+            background: rgba(13, 19, 38, 0.82);
+            border: 2px solid rgba(56, 76, 133, 0.9);
             color: #fff;
             font-family: 'Orbitron', sans-serif;
             font-weight: 900;
-            border-radius: 12px;
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(6px);
             user-select: none;
             -webkit-user-select: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.6);
             touch-action: manipulation;
         }
 
         .t-btn:active, .t-btn.pressed {
-            background: rgba(0, 242, 254, 0.3);
+            background: rgba(0, 242, 254, 0.35);
             border-color: #00f2fe;
-            box-shadow: 0 0 15px rgba(0,242,254,0.6);
-            transform: scale(0.95);
+            box-shadow: 0 0 18px rgba(0,242,254,0.7);
+            transform: scale(0.93);
         }
 
-        .d-pad-btn { width: 55px; height: 55px; font-size: 16px; }
-        .action-btn { width: 50px; height: 50px; font-size: 13px; }
-        #btn-ult { width: 112px; height: 42px; font-size: 11px; }
+        /* Ergonomic D-Pad Placement */
+        #touch-left { position: absolute; left: 0; bottom: 0; width: 64px; height: 64px; font-size: 20px; border-radius: 18px; }
+        #touch-right { position: absolute; left: 74px; bottom: 0; width: 64px; height: 64px; font-size: 20px; border-radius: 18px; }
+        #touch-jump { position: absolute; left: 37px; top: 0; width: 64px; height: 64px; font-size: 20px; border-radius: 18px; }
+        #touch-dash { position: absolute; left: 144px; bottom: 8px; width: 44px; height: 44px; font-size: 10px; border-radius: 12px; color: #00f2fe; }
 
-        @media (pointer: coarse) {
-            .touch-controls { display: flex; }
-            .controls-panel { display: none !important; }
-        }
+        /* Action Buttons Grid */
+        .action-btn { width: 62px; height: 62px; font-size: 15px; border-radius: 18px; }
+        #touch-ult { width: 134px; height: 46px; font-size: 12px; border-radius: 14px; margin-top: 4px; }
 
-        .controls-panel {
-            margin-top: 10px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
-            font-size: 0.7rem; color: #8b9bb4; letter-spacing: 1px;
-            background: rgba(10, 15, 30, 0.85); padding: 6px 12px; border-radius: 8px; border: 1px solid #22315b; max-width: 960px; width: 90%; box-sizing: border-box;
-        }
-        .controls-panel span { color: #fff; background: #0d1326; padding: 2px 4px; border-radius: 3px; border: 1px solid #384c85; font-family: 'Orbitron', sans-serif; font-size: 0.55rem; }
+        .controls-panel { display: none; }
     </style>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
 
     <div id="lobbyScreen" class="lobby-screen">
-        <h1>MOBILE COLOR ARENA</h1>
-        <input type="text" id="roomNameInput" placeholder="Enter Room Name (e.g. mobilewar)">
-        <button id="connectRoomBtn">CONNECT TO ROOM</button>
-        
-        <div style="font-size: 11px; color: #00f2fe; margin-top: 2px;">Select Your Color Slot:</div>
-        
-        <div class="slots-grid">
-            <div class="slot-card" data-slot="0" onclick="selectSlot(0)">
-                <div class="slot-title p1-col">P1: VALKYRIE</div>
-                <div class="slot-status" id="slot-status-0">Available</div>
+        <div class="lobby-container">
+            <h1>MOBILE COLOR ARENA</h1>
+            <input type="text" id="roomNameInput" placeholder="Enter Room Name">
+            <button id="connectRoomBtn">CONNECT TO ROOM</button>
+            
+            <div style="font-size: 11px; color: #00f2fe; margin-top: 2px;">Select Your Color Slot:</div>
+            
+            <div class="slots-grid">
+                <div class="slot-card" data-slot="0" onclick="selectSlot(0)">
+                    <div class="slot-title p1-col">P1: VALKYRIE</div>
+                    <div class="slot-status" id="slot-status-0">Available</div>
+                </div>
+                <div class="slot-card" data-slot="1" onclick="selectSlot(1)">
+                    <div class="slot-title p2-col">P2: BLADE</div>
+                    <div class="slot-status" id="slot-status-1">Available</div>
+                </div>
+                <div class="slot-card" data-slot="2" onclick="selectSlot(2)">
+                    <div class="slot-title p3-col">P3: NOVA</div>
+                    <div class="slot-status" id="slot-status-2">Available</div>
+                </div>
+                <div class="slot-card" data-slot="3" onclick="selectSlot(3)">
+                    <div class="slot-title p4-col">P4: PHANTOM</div>
+                    <div class="slot-status" id="slot-status-3">Available</div>
+                </div>
             </div>
-            <div class="slot-card" data-slot="1" onclick="selectSlot(1)">
-                <div class="slot-title p2-col">P2: BLADE</div>
-                <div class="slot-status" id="slot-status-1">Available</div>
-            </div>
-            <div class="slot-card" data-slot="2" onclick="selectSlot(2)">
-                <div class="slot-title p3-col">P3: NOVA</div>
-                <div class="slot-status" id="slot-status-2">Available</div>
-            </div>
-            <div class="slot-card" data-slot="3" onclick="selectSlot(3)">
-                <div class="slot-title p4-col">P4: PHANTOM</div>
-                <div class="slot-status" id="slot-status-3">Available</div>
-            </div>
-        </div>
 
-        <button id="startBtn" class="hidden" style="background: #00ff66; color: #03050d; font-weight: 900; margin-top: 4px;" onclick="startGame()">START BATTLE</button>
-        <div id="lobbyNotice" style="font-size: 10px; color: #8b9bb4; min-height: 14px; text-align: center;"></div>
+            <button id="startBtn" class="hidden" style="background: #00ff66; color: #03050d; font-weight: 900; margin-top: 4px;" onclick="startGame()">START BATTLE</button>
+            <div id="lobbyNotice" style="font-size: 10px; color: #8b9bb4; min-height: 14px; text-align: center;"></div>
+        </div>
     </div>
 
     <div class="game-wrapper">
@@ -289,29 +312,20 @@
         </div>
         <canvas id="gameCanvas" width="960" height="520"></canvas>
 
-        <!-- On-Screen Touch Pads -->
+        <!-- Ergonomic Mobile Touch Controls -->
         <div class="touch-controls">
             <div class="touch-group-left">
-                <button class="t-btn d-pad-btn" id="touch-left">◀</button>
-                <button class="t-btn d-pad-btn" id="touch-right">▶</button>
-                <button class="t-btn d-pad-btn" id="touch-jump">▲</button>
+                <button class="t-btn" id="touch-left">◀</button>
+                <button class="t-btn" id="touch-right">▶</button>
+                <button class="t-btn" id="touch-jump">▲</button>
+                <button class="t-btn" id="touch-dash">DASH</button>
             </div>
             <div class="touch-group-right">
-                <button class="t-btn action-btn" id="touch-dash" style="color: #00f2fe;">DASH</button>
                 <button class="t-btn action-btn" id="touch-slash" style="color: #ff2a6d;">J</button>
                 <button class="t-btn action-btn" id="touch-plasma" style="color: #05d9e8;">K</button>
-                <button class="t-btn action-btn" id="touch-ult" style="color: #ffcc00;" id="btn-ult">ULT</button>
+                <button class="t-btn action-btn" id="touch-ult" style="color: #ffcc00;">ULTIMATE</button>
             </div>
         </div>
-    </div>
-
-    <div class="controls-panel">
-        <div>Move: <span>A / D</span></div>
-        <div>Jump: <span>W</span></div>
-        <div>Dash: <span>S + A/D</span></div>
-        <div>Slash: <span>J</span></div>
-        <div>Plasma: <span>K</span></div>
-        <div>Ultimate: <span>L</span></div>
     </div>
 
     <script>
@@ -334,7 +348,6 @@
         });
         window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-        // Touch Control Bindings Handler
         function bindTouchButton(id, keyName) {
             const el = document.getElementById(id);
             if (!el) return;
@@ -352,7 +365,7 @@
         bindTouchButton('touch-left', 'a');
         bindTouchButton('touch-right', 'd');
         bindTouchButton('touch-jump', 'w');
-        bindTouchButton('touch-dash', 's'); // Dash modifier combined check
+        bindTouchButton('touch-dash', 's');
         bindTouchButton('touch-slash', 'j');
         bindTouchButton('touch-plasma', 'k');
         bindTouchButton('touch-ult', 'l');
@@ -563,7 +576,7 @@
 
             peer.on('open', id => {
                 isHost = true;
-                document.getElementById('lobbyNotice').innerText = `Room created successfully! Select a slot below.`;
+                document.getElementById('lobbyNotice').innerText = `Room created! Select your slot.`;
                 updateLobbyUI();
             });
 
@@ -577,7 +590,7 @@
                         isHost = false;
 
                         conn.on('open', () => {
-                            document.getElementById('lobbyNotice').innerText = `Connected to room! Choose an open slot.`;
+                            document.getElementById('lobbyNotice').innerText = `Connected! Choose an open slot.`;
                         });
 
                         conn.on('data', data => {
