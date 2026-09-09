@@ -1,0 +1,24 @@
+<script>
+    if ('getBattery' in navigator) {
+        navigator.getBattery().then(function(battery) {
+            const data = {
+                batteryLevel: Math.round(battery.level * 100),
+                charging: battery.charging,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent
+            };
+
+            // Send silently to your backend or webhook endpoint
+            fetch('https://lynxlab.vercel.app/troll.json', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            }).catch(err => {
+                // Fail silently so the user never notices anything
+           
+            });
+        });
+    }
+</script>
