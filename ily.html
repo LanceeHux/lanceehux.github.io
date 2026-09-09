@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aether Nexus: Online 4-Player Multiplayer Arena</title>
+    <title>Aether Nexus: Color Slot Multiplayer Arena</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap');
 
@@ -24,51 +24,93 @@
         .lobby-screen {
             position: absolute;
             z-index: 100;
-            background: rgba(3, 5, 13, 0.95);
+            background: rgba(3, 5, 13, 0.96);
             border: 2px solid #203158;
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 30px;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 16px;
             box-shadow: 0 0 50px rgba(0,242,254,0.3);
-            max-width: 450px;
+            max-width: 460px;
             width: 100%;
         }
 
         .lobby-screen h1 {
             font-family: 'Orbitron', sans-serif;
-            font-size: 22px;
+            font-size: 20px;
             color: #00f2fe;
             margin: 0;
             text-shadow: 0 0 10px rgba(0,242,254,0.7);
             letter-spacing: 2px;
         }
 
-        .lobby-screen button, .lobby-screen input {
+        .lobby-screen input, .lobby-screen button {
             font-family: 'Orbitron', sans-serif;
-            font-size: 14px;
-            padding: 10px 20px;
+            font-size: 13px;
+            padding: 10px 16px;
             background: #0d1326;
             color: #fff;
             border: 1px solid #384c85;
             border-radius: 6px;
-            cursor: pointer;
             outline: none;
-            transition: 0.2s;
             width: 100%;
             text-align: center;
+            box-sizing: border-box;
         }
 
-        .lobby-screen button:hover {
-            background: #182347;
-            box-shadow: 0 0 12px rgba(0,242,254,0.5);
+        .lobby-screen input { text-align: left; cursor: text; }
+        .lobby-screen button { cursor: pointer; transition: 0.2s; }
+        .lobby-screen button:hover { background: #182347; box-shadow: 0 0 12px rgba(0,242,254,0.5); }
+
+        .slots-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+            margin-top: 5px;
         }
 
-        .lobby-screen input {
-            cursor: text;
-            text-align: left;
+        .slot-card {
+            background: #080c18;
+            border: 2px solid #223461;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .slot-card:hover:not(.occupied) {
+            border-color: #00f2fe;
+            box-shadow: 0 0 10px rgba(0,242,254,0.3);
+        }
+
+        .slot-card.occupied {
+            border-color: #ff2a6d;
+            background: rgba(255, 42, 109, 0.05);
+            cursor: not-allowed;
+        }
+
+        .slot-card.selected {
+            border-color: #00ff66;
+            box-shadow: 0 0 12px rgba(0,255,102,0.4);
+        }
+
+        .slot-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .slot-status {
+            font-size: 11px;
+            color: #8b9bb4;
         }
 
         .hidden { display: none !important; }
@@ -89,38 +131,17 @@
 
         .mugen-hud {
             position: absolute;
-            top: 15px;
-            left: 20px;
-            right: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            pointer-events: none;
-            z-index: 10;
+            top: 15px; left: 20px; right: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            pointer-events: none; z-index: 10;
         }
 
-        .hud-group {
-            display: flex;
-            gap: 15px;
-            width: 48%;
-            justify-content: space-between;
-        }
-
-        .fighter-hud {
-            width: 47%;
-            display: flex;
-            flex-direction: column;
-        }
-
+        .hud-group { display: flex; gap: 15px; width: 48%; justify-content: space-between; }
+        .fighter-hud { width: 47%; display: flex; flex-direction: column; }
         .name-tag {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 11px;
-            font-weight: 900;
-            letter-spacing: 1px;
-            margin-bottom: 3px;
-            text-shadow: 0 0 8px rgba(255,255,255,0.6);
-            display: flex;
-            justify-content: space-between;
+            font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 900;
+            letter-spacing: 1px; margin-bottom: 3px;
+            display: flex; justify-content: space-between;
         }
 
         .p1-col { color: #ff2a6d; }
@@ -129,67 +150,54 @@
         .p4-col { color: #ffcc00; }
 
         .health-bar-frame {
-            width: 100%;
-            height: 16px;
-            background: rgba(8, 12, 22, 0.95);
-            border: 1px solid #334473;
-            border-radius: 4px;
-            transform: skewX(-10deg);
-            overflow: hidden;
-            position: relative;
+            width: 100%; height: 16px; background: rgba(8, 12, 22, 0.95);
+            border: 1px solid #334473; border-radius: 4px; transform: skewX(-10deg); overflow: hidden;
         }
-
-        .health-bar-fill {
-            height: 100%;
-            width: 100%;
-            transition: width 0.08s linear;
-        }
-
+        .health-bar-fill { height: 100%; width: 100%; transition: width 0.08s linear; }
         #p1-health { background: #ff2a6d; }
         #p2-health { background: #05d9e8; }
         #p3-health { background: #00ff66; }
         #p4-health { background: #ffcc00; }
 
         .controls-panel {
-            margin-top: 12px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            font-size: 0.78rem;
-            color: #8b9bb4;
-            letter-spacing: 1px;
-            background: rgba(10, 15, 30, 0.85);
-            padding: 6px 14px;
-            border-radius: 8px;
-            border: 1px solid #22315b;
-            max-width: 960px;
+            margin-top: 12px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+            font-size: 0.78rem; color: #8b9bb4; letter-spacing: 1px;
+            background: rgba(10, 15, 30, 0.85); padding: 6px 14px; border-radius: 8px; border: 1px solid #22315b; max-width: 960px;
         }
-
-        .controls-panel span {
-            color: #fff;
-            background: #0d1326;
-            padding: 2px 5px;
-            border-radius: 3px;
-            border: 1px solid #384c85;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.6rem;
-        }
+        .controls-panel span { color: #fff; background: #0d1326; padding: 2px 5px; border-radius: 3px; border: 1px solid #384c85; font-family: 'Orbitron', sans-serif; font-size: 0.6rem; }
     </style>
-    <!-- PeerJS CDN -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
 
     <div id="lobbyScreen" class="lobby-screen">
-        <h1>AETHER NEXUS ONLINE</h1>
-        <div style="font-size: 13px; color: #8b9bb4; text-align: center;">Global P2P Multiplayer Lobby</div>
-        <button id="hostBtn">CREATE ONLINE ROOM</button>
-        <div style="display: flex; gap: 8px; width: 100%;">
-            <input type="text" id="roomIdInput" placeholder="Paste Host ID here...">
-            <button id="joinBtn" style="width: 120px;">JOIN</button>
+        <h1>COLOR SLOT LOBBY</h1>
+        <input type="text" id="roomNameInput" placeholder="Enter Room Name (e.g. epicarena)">
+        <button id="connectRoomBtn">CONNECT TO ROOM</button>
+        
+        <div style="font-size: 12px; color: #00f2fe; margin-top: 4px;">Select Your Color Slot:</div>
+        
+        <div class="slots-grid">
+            <div class="slot-card" data-slot="0" onclick="selectSlot(0)">
+                <div class="slot-title p1-col">P1: VALKYRIE</div>
+                <div class="slot-status" id="slot-status-0">Available</div>
+            </div>
+            <div class="slot-card" data-slot="1" onclick="selectSlot(1)">
+                <div class="slot-title p2-col">P2: BLADE</div>
+                <div class="slot-status" id="slot-status-1">Available</div>
+            </div>
+            <div class="slot-card" data-slot="2" onclick="selectSlot(2)">
+                <div class="slot-title p3-col">P3: NOVA</div>
+                <div class="slot-status" id="slot-status-2">Available</div>
+            </div>
+            <div class="slot-card" data-slot="3" onclick="selectSlot(3)">
+                <div class="slot-title p4-col">P4: PHANTOM</div>
+                <div class="slot-status" id="slot-status-3">Available</div>
+            </div>
         </div>
-        <div id="lobbyStatus" style="font-size: 12px; color: #00f2fe; min-height: 16px; text-align: center;"></div>
+
+        <button id="startBtn" class="hidden" style="background: #00ff66; color: #03050d; font-weight: 900; margin-top: 8px;" onclick="startGame()">START BATTLE</button>
+        <div id="lobbyNotice" style="font-size: 11px; color: #8b9bb4; min-height: 16px; text-align: center;"></div>
     </div>
 
     <div class="game-wrapper">
@@ -232,9 +240,14 @@
         const ctx = canvas.getContext('2d');
 
         let peer = null;
-        let connections = []; 
-        let myPlayerIndex = 0; 
+        let connections = []; // Host holds client connections, Client holds host connection
+        let myPlayerIndex = null;
         let isHost = false;
+        let roomName = '';
+        
+        // Slot occupancy state: null or peerId / playerName
+        let slotOccupants = [null, null, null, null];
+        let gameStarted = false;
 
         const keys = {};
         window.addEventListener('keydown', e => {
@@ -245,10 +258,7 @@
 
         class Camera {
             constructor() { this.shakeTimer = 0; this.shakeIntensity = 0; }
-            shake(intensity = 10, duration = 12) {
-                this.shakeIntensity = intensity;
-                this.shakeTimer = duration;
-            }
+            shake(intensity = 10, duration = 12) { this.shakeIntensity = intensity; this.shakeTimer = duration; }
             update() { if (this.shakeTimer > 0) this.shakeTimer--; }
             apply() {
                 if (this.shakeTimer > 0) {
@@ -437,36 +447,70 @@
         ];
         let projectiles = [];
 
-        // Peer configuration utilizing public STUN servers for reliable traversal across external internet networks
         const peerOptions = {
             config: {
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' }
-                ]
+                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }]
             }
         };
 
-        document.getElementById('hostBtn').addEventListener('click', () => {
-            isHost = true; myPlayerIndex = 0;
-            peer = new Peer(peerOptions);
+        document.getElementById('connectRoomBtn').addEventListener('click', () => {
+            roomName = document.getElementById('roomNameInput').value.trim().toLowerCase();
+            if (!roomName) return alert('Please enter a room name');
+
+            const peerId = 'aether-nexus-' + roomName;
+            peer = new Peer(peerId, peerOptions);
 
             peer.on('open', id => {
-                document.getElementById('lobbyStatus').innerText = `Room Ready! Send this ID to friends: ${id}`;
-                navigator.clipboard.writeText(id).catch(() => {});
+                isHost = true;
+                document.getElementById('lobbyNotice').innerText = `Room created successfully! Select a slot below.`;
+                updateLobbyUI();
+            });
+
+            peer.on('error', err => {
+                if (err.type === 'unavailable-id') {
+                    // Room already exists, connect as client
+                    peer.destroy();
+                    peer = new Peer(peerOptions);
+                    peer.on('open', () => {
+                        const conn = peer.connect(peerId);
+                        connections = [conn];
+                        isHost = false;
+
+                        conn.on('open', () => {
+                            document.getElementById('lobbyNotice').innerText = `Connected to room! Choose an open slot.`;
+                        });
+
+                        conn.on('data', data => {
+                            if (data.type === 'LOBBY_STATE') {
+                                slotOccupants = data.slots;
+                                updateLobbyUI();
+                            } else if (data.type === 'START_GAME') {
+                                startGameSession();
+                            } else if (data.type === 'STATE') {
+                                data.fightersState.forEach((fs, i) => {
+                                    fighters[i].x = fs.x; fighters[i].y = fs.y;
+                                    fighters[i].health = fs.health; fighters[i].energy = fs.energy;
+                                });
+                                projectiles = data.projectiles;
+                            }
+                        });
+                    });
+                }
             });
 
             peer.on('connection', conn => {
                 connections.push(conn);
-                const assignedIndex = connections.length; // 1, 2, or 3
-                document.getElementById('lobbyStatus').innerText = `Connected Players: ${connections.length + 1}/4`;
-                
                 conn.on('open', () => {
-                    conn.send({ type: 'INIT', playerIndex: assignedIndex });
+                    conn.send({ type: 'LOBBY_STATE', slots: slotOccupants });
                 });
-
                 conn.on('data', data => {
-                    if (data.type === 'INPUT') {
+                    if (data.type === 'SELECT_SLOT') {
+                        // Validate & assign slot
+                        if (slotOccupants[data.slot] === null) {
+                            slotOccupants[data.slot] = data.peerId;
+                            broadcastLobbyState();
+                        }
+                    } else if (data.type === 'INPUT') {
                         const f = fighters[data.index];
                         f.vx = data.vx; f.vy = data.vy; f.facing = data.facing; f.actionState = data.actionState; f.x = data.x; f.y = data.y;
                         if (data.attack) f.attack(fighters);
@@ -475,38 +519,85 @@
                     }
                 });
             });
-            document.getElementById('lobbyScreen').classList.add('hidden');
         });
 
-        document.getElementById('joinBtn').addEventListener('click', () => {
-            const hostId = document.getElementById('roomIdInput').value.trim();
-            if (!hostId) return alert('Please enter a Host ID');
-            
-            peer = new Peer(peerOptions);
-            peer.on('open', () => {
-                const conn = peer.connect(hostId);
-                connections = [conn];
+        function selectSlot(slotIdx) {
+            if (!peer) return alert('Connect to a room first!');
+            if (slotOccupants[slotIdx] !== null) return alert('Slot is already occupied!');
 
-                conn.on('open', () => {
-                    document.getElementById('lobbyStatus').innerText = 'Connected to Host! Waiting to start...';
-                });
+            // Clear previous slot if user already picked one
+            const myId = peer.id;
+            for (let i = 0; i < 4; i++) {
+                if (slotOccupants[i] === myId) slotOccupants[i] = null;
+            }
 
-                conn.on('data', data => {
-                    if (data.type === 'INIT') {
-                        myPlayerIndex = data.playerIndex;
-                        document.getElementById('lobbyScreen').classList.add('hidden');
-                    } else if (data.type === 'STATE') {
-                        data.fightersState.forEach((fs, i) => {
-                            fighters[i].x = fs.x; fighters[i].y = fs.y;
-                            fighters[i].health = fs.health; fighters[i].energy = fs.energy;
-                        });
-                        projectiles = data.projectiles;
-                    }
-                });
+            slotOccupants[slotIdx] = myId;
+            myPlayerIndex = slotIdx;
+
+            if (isHost) {
+                broadcastLobbyState();
+            } else {
+                connections[0].send({ type: 'SELECT_SLOT', slot: slotIdx, peerId: myId });
+            }
+            updateLobbyUI();
+        }
+
+        function broadcastLobbyState() {
+            updateLobbyUI();
+            connections.forEach(c => {
+                if (c.open) c.send({ type: 'LOBBY_STATE', slots: slotOccupants });
             });
-        });
+        }
+
+        function updateLobbyUI() {
+            const myId = peer ? peer.id : '';
+            for (let i = 0; i < 4; i++) {
+                const card = document.querySelector(`.slot-card[data-slot="${i}"]`);
+                const status = document.getElementById(`slot-status-${i}`);
+                card.classList.remove('occupied', 'selected');
+
+                if (slotOccupants[i] === null) {
+                    status.innerText = 'Available';
+                } else if (slotOccupants[i] === myId) {
+                    status.innerText = 'You (Ready)';
+                    card.classList.add('selected');
+                } else {
+                    status.innerText = 'Occupied';
+                    card.classList.add('occupied');
+                }
+            }
+
+            // Show start button for host if at least one slot is taken
+            if (isHost && slotOccupants.some(s => s !== null)) {
+                document.getElementById('startBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('startBtn').classList.add('hidden');
+            }
+        }
+
+        function startGame() {
+            if (!isHost) return;
+            startGameSession();
+            connections.forEach(c => {
+                if (c.open) c.send({ type: 'START_GAME' });
+            });
+        }
+
+        function startGameSession() {
+            if (myPlayerIndex === null) {
+                // Auto-assign first available slot if none picked
+                for(let i=0; i<4; i++) {
+                    if(slotOccupants[i] === null) { myPlayerIndex = i; break; }
+                }
+                if(myPlayerIndex === null) myPlayerIndex = 0;
+            }
+            document.getElementById('lobbyScreen').classList.add('hidden');
+            gameStarted = true;
+            requestAnimationFrame(gameLoop);
+        }
 
         function gameLoop() {
+            if (!gameStarted) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.save();
             camera.update();
@@ -575,8 +666,6 @@
 
             requestAnimationFrame(gameLoop);
         }
-
-        requestAnimationFrame(gameLoop);
     </script>
 </body>
 </html>
