@@ -153,13 +153,6 @@
 </head>
 <body>
 
-    <!-- LOCKOUT CHECK: If already triggered, instantly redirect -->
-    <script>
-        if (localStorage.getItem('trap_locked') === 'true') {
-            window.location.replace("https://google.com");
-        }
-    </script>
-
     <!-- Trustworthy Landing Overlay -->
     <div class="trust-overlay" id="welcome-modal">
         <div class="trust-card">
