@@ -203,6 +203,7 @@
                 document.querySelector('h1').innerText = "YOU ARE MONITORED :>";
                 document.getElementById("parag").innerText = 'Your hardware signature has been permanently indexed by an external host. Escape is no longer viable.';
                 document.getElementById('log-console').style.display ='block';
+                localStorage.setItem("opened", "true");
             }, 600);
 
             setTimeout(() => {
@@ -268,6 +269,9 @@
                 document.querySelector('h1').innerText = "B- BYE :>";
                 window.location.href = "https://google.com";
             }, 6000);
+        }
+        if (localStorage.getItem("opened") === "true") {
+          window.location.href = 'https://google.com';
         }
     </script>
 </body>
