@@ -742,21 +742,19 @@
                                 updateLobbyUI();
                             } else if (data.type === 'START_GAME') {
                                 startGameSession();
-                            } else if (data.type === 'STATE') {
-                                // Interpolate data smoothly to eliminate jitter/bugginess
-                                data.fightersState.forEach((fs, i) => {
-                                    if (i !== myPlayerIndex) {
-                                        fighters[i].x += (fs.x - fighters[i].x) * 0.4;
-                                        fighters[i].y += (fs.y - fighters[i].y) * 0.4;
-                                        fighters[i].z += (fs.z - fighters[i].z) * 0.4;
-                                        fighters[i].facingAngle = fs.ang;
-                                    }
-                                    fighters[i].health = fs.health;
-                                    fighters[i].energy = fs.energy;
-                                    fighters[i].shieldActive = fs.shield;
-                                    if (fs.shield) fighters[i].shieldMesh.setEnabled(true);
-                                    else fighters[i].shieldMesh.setEnabled(false);
-                                });
+                            } else if (data.type === 'SYNC_STATE') {
+                                const remoteF = fighters[data.index];
+                                if (remoteF && data.index !== myPlayerIndex) {
+                                    remoteF.x = data.state.x;
+                                    remoteF.y = data.state.y;
+                                    remoteF.z = data.state.z;
+                                    remoteF.facingAngle = data.state.ang;
+                                    remoteF.health = data.state.health;
+                                    remoteF.energy = data.state.energy;
+                                    remoteF.shieldActive = data.state.shield;
+                                    if (data.state.shield) remoteF.shieldMesh.setEnabled(true);
+                                    else remoteF.shieldMesh.setEnabled(false);
+                                }
                             }
                         });
                     });
@@ -905,7 +903,7 @@
                 down: !!keys['s'],
                 left: !!keys['a'],
                 right: !!keys['d'],
-                jump: !!keys[' '],
+                jump: !!keys[' '] ,
                 dash: !!keys['shift'],
                 shield: !!keys['i'],
                 attack: !!keys['j'],
@@ -913,8 +911,8 @@
                 ultimate: !!keys['l']
             };
 
-            if (isHost || connections.length === 0) {
-                const me = fighters[myPlayerIndex];
+            const me = fighters[myPlayerIndex];
+            if (me && me.health > 0) {
                 let moveX = 0, moveZ = 0;
                 if (currentInputs.up) moveZ += 1;
                 if (currentInputs.down) moveZ -= 1;
@@ -934,60 +932,34 @@
                 if (currentInputs.attack) me.attackTarget(fighters);
                 if (currentInputs.skill) me.fireSkill(projectiles);
                 if (currentInputs.ultimate) me.fireUltimate(projectiles);
+            }
 
-                fighters.forEach(f => f.update());
-                projectiles.forEach(p => p.update(fighters));
-                projectiles = projectiles.filter(p => p.active);
+            fighters.forEach(f => f.update());
+            projectiles.forEach(p => p.update(fighters));
+            projectiles = projectiles.filter(p => p.active);
 
-                checkWinCondition();
+            checkWinCondition();
 
-                // Throttled Network Sync (Sends data every 2 frames to clear out network bandwidth bottlenecks)
-                if (isHost && connections.length > 0) {
-                    networkTickTimer++;
-                    if (networkTickTimer >= 2) {
-                        networkTickTimer = 0;
-                        const gameState = {
-                            type: 'STATE',
-                            fightersState: fighters.map(f => ({ x: f.x, y: f.y, z: f.z, ang: f.facingAngle, health: f.health, energy: f.energy, shield: f.shieldActive }))
-                        };
-                        connections.forEach(c => { if (c.open) c.send(gameState); });
+            // Broadcast your live position and actions to other peers instantly
+            networkTickTimer++;
+            if (networkTickTimer >= 2) {
+                networkTickTimer = 0;
+                const myStatePayload = {
+                    type: 'SYNC_STATE',
+                    index: myPlayerIndex,
+                    state: {
+                        x: me.x, y: me.y, z: me.z,
+                        ang: me.facingAngle,
+                        health: me.health,
+                        energy: me.energy,
+                        shield: me.shieldActive
                     }
-                }
-            } else {
-                const me = fighters[myPlayerIndex];
-                let moveX = 0, moveZ = 0;
-                if (currentInputs.up) moveZ += 1;
-                if (currentInputs.down) moveZ -= 1;
-                if (currentInputs.left) moveX -= 1;
-                if (currentInputs.right) moveX += 1;
+                };
 
-                if (moveX !== 0 || moveZ !== 0) {
-                    me.facingAngle = Math.atan2(moveX, moveZ);
-                    if (currentInputs.dash) me.dash(moveX, moveZ);
-                    else {
-                        me.vx = moveX * me.speed;
-                        me.vz = moveZ * me.speed;
-                    }
-                }
-                if (currentInputs.jump && me.isGrounded) { me.vy = me.jumpPower; me.isGrounded = false; }
-                if (currentInputs.shield) me.activateShield();
-                if (currentInputs.attack) me.attackTarget(fighters);
-                if (currentInputs.skill) me.fireSkill(projectiles);
-                if (currentInputs.ultimate) me.fireUltimate(projectiles);
-
-                me.update();
-                projectiles.forEach(p => p.update(fighters));
-                projectiles = projectiles.filter(p => p.active);
-
-                checkWinCondition();
-
-                if (connections[0] && connections[0].open) {
-                    connections[0].send({
-                        type: 'INPUT', index: myPlayerIndex,
-                        up: currentInputs.up, down: currentInputs.down, left: currentInputs.left, right: currentInputs.right,
-                        jump: currentInputs.jump, dash: currentInputs.dash, shield: currentInputs.shield,
-                        attack: currentInputs.attack, skill: currentInputs.skill, ultimate: currentInputs.ultimate
-                    });
+                if (isHost) {
+                    connections.forEach(c => { if (c.open) c.send(myStatePayload); });
+                } else if (connections[0] && connections[0].open) {
+                    connections[0].send(myStatePayload);
                 }
             }
 
