@@ -975,7 +975,6 @@
                 if (currentInputs.skill) me.fireSkill(projectiles);
                 if (currentInputs.ultimate) me.fireUltimate(projectiles);
 
-                // Run immediate local update so the laptop screen doesn't freeze in place
                 me.update();
                 projectiles.forEach(p => p.update(fighters));
                 projectiles = projectiles.filter(p => p.active);
