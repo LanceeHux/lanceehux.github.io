@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Aether Nexus: Mobile Color Slot Arena</title>
+    <title>Aether Nexus: Advanced 3D Arena</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap');
 
@@ -135,19 +135,15 @@
             position: relative;
             width: 100vw;
             height: 100vh;
-            max-width: 960px;
-            max-height: 520px;
-            aspect-ratio: 960 / 520;
             background: #03050d;
             box-sizing: border-box;
             overflow: hidden;
         }
 
-        canvas {
+        #renderCanvas {
             display: block;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at center, #0b132e 0%, #010206 100%);
         }
 
         .mugen-hud {
@@ -210,7 +206,7 @@
         .touch-group-right {
             align-items: flex-end;
             flex-wrap: wrap;
-            width: 230px;
+            width: 250px;
             justify-content: flex-end;
             padding-bottom: 4px;
         }
@@ -239,13 +235,16 @@
             transform: scale(0.93);
         }
 
-        #touch-left { position: absolute; left: 0; bottom: 0; width: 64px; height: 64px; font-size: 20px; border-radius: 18px; }
-        #touch-right { position: absolute; left: 74px; bottom: 0; width: 64px; height: 64px; font-size: 20px; border-radius: 18px; }
-        #touch-jump { position: absolute; left: 37px; top: 0; width: 64px; height: 64px; font-size: 20px; border-radius: 18px; }
+        #touch-up { position: absolute; left: 37px; top: 0; width: 54px; height: 54px; font-size: 16px; border-radius: 16px; }
+        #touch-down { position: absolute; left: 37px; bottom: 0; width: 54px; height: 54px; font-size: 16px; border-radius: 16px; }
+        #touch-left { position: absolute; left: 0; top: 37px; width: 54px; height: 54px; font-size: 16px; border-radius: 16px; }
+        #touch-right { position: absolute; right: 34px; top: 37px; width: 54px; height: 54px; font-size: 16px; border-radius: 16px; }
+        #touch-jump { position: absolute; right: 0; bottom: 0; width: 44px; height: 44px; font-size: 12px; border-radius: 12px; color: #00ff66; }
         #touch-dash { position: absolute; left: 144px; bottom: 8px; width: 44px; height: 44px; font-size: 10px; border-radius: 12px; color: #00f2fe; }
 
-        .action-btn { width: 62px; height: 62px; font-size: 15px; border-radius: 18px; }
-        #touch-ult { width: 134px; height: 46px; font-size: 12px; border-radius: 14px; margin-top: 4px; }
+        .action-btn { width: 58px; height: 58px; font-size: 14px; border-radius: 16px; }
+        #touch-ult { width: 120px; height: 42px; font-size: 11px; border-radius: 14px; margin-top: 4px; }
+        #touch-shield { width: 58px; height: 58px; font-size: 12px; border-radius: 16px; color: #05d9e8; }
 
         /* Victory Overlay Banner */
         .victory-screen {
@@ -279,17 +278,19 @@
             box-shadow: 0 0 15px rgba(0,255,102,0.4);
         }
     </style>
+    <!-- Include PeerJS & Babylon.js 3D Engine ecosystem -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babylonjs/6.30.0/babylon.js"></script>
 </head>
 <body>
 
     <div id="lobbyScreen" class="lobby-screen">
         <div class="lobby-container">
-            <h1>MOBILE COLOR ARENA</h1>
+            <h1>AETHER NEXUS 3D ARENA</h1>
             <input type="text" id="roomNameInput" placeholder="Enter Room Name">
             <button id="connectRoomBtn">CONNECT TO ROOM</button>
             
-            <div style="font-size: 11px; color: #00f2fe; margin-top: 2px;">Select Your Color Slot:</div>
+            <div style="font-size: 11px; color: #00f2fe; margin-top: 2px;">Select Your Color Fighter:</div>
             
             <div class="slots-grid">
                 <div class="slot-card" data-slot="0" onclick="selectSlot(0)">
@@ -310,7 +311,7 @@
                 </div>
             </div>
 
-            <button id="startBtn" class="hidden" style="background: #00ff66; color: #03050d; font-weight: 900; margin-top: 4px;" onclick="startGame()">START BATTLE</button>
+            <button id="startBtn" class="hidden" style="background: #00ff66; color: #03050d; font-weight: 900; margin-top: 4px;" onclick="startGame()">START 3D BATTLE</button>
             <div id="lobbyNotice" style="font-size: 10px; color: #8b9bb4; min-height: 14px; text-align: center;"></div>
         </div>
     </div>
@@ -343,524 +344,653 @@
                 </div>
             </div>
         </div>
-        <canvas id="gameCanvas" width="960" height="520"></canvas>
+        
+        <canvas id="renderCanvas"></canvas>
 
         <div class="touch-controls">
             <div class="touch-group-left">
+                <button class="t-btn" id="touch-up">▲</button>
+                <button class="t-btn" id="touch-down">▼</button>
                 <button class="t-btn" id="touch-left">◀</button>
                 <button class="t-btn" id="touch-right">▶</button>
-                <button class="t-btn" id="touch-jump">▲</button>
+                <button class="t-btn" id="touch-jump">JUMP</button>
                 <button class="t-btn" id="touch-dash">DASH</button>
             </div>
             <div class="touch-group-right">
                 <button class="t-btn action-btn" id="touch-slash" style="color: #ff2a6d;">J</button>
                 <button class="t-btn action-btn" id="touch-plasma" style="color: #05d9e8;">K</button>
+                <button class="t-btn action-btn" id="touch-shield" style="color: #00ff66;">SHLD</button>
                 <button class="t-btn action-btn" id="touch-ult" style="color: #ffcc00;">ULTIMATE</button>
             </div>
         </div>
     </div>
 
-    
-   <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+    <script>
+        let peer = null;
+        let connections = [];
+        let myPlayerIndex = null;
+        let isHost = false;
+        let roomName = '';
+        let slotOccupants = [null, null, null, null];
+        let gameStarted = false;
+        let matchEnded = false;
 
-    let peer = null;
-    let connections = [];
-    let myPlayerIndex = null;
-    let isHost = false;
-    let roomName = '';
+        const keys = {};
+        window.addEventListener('keydown', e => {
+            if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(e.key.toLowerCase())) e.preventDefault();
+            keys[e.key.toLowerCase()] = true;
+        });
+        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-    let slotOccupants = [null, null, null, null];
-    let gameStarted = false;
-    let matchEnded = false;
+        function bindTouchButton(id, keyName) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const pressOn = (e) => { e.preventDefault(); keys[keyName] = true; el.classList.add('pressed'); };
+            const pressOff = (e) => { e.preventDefault(); keys[keyName] = false; el.classList.remove('pressed'); };
 
-    const keys = {};
-    window.addEventListener('keydown', e => {
-        if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(e.key.toLowerCase())) e.preventDefault();
-        keys[e.key.toLowerCase()] = true;
-    });
-    window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+            el.addEventListener('touchstart', pressOn, { passive: false });
+            el.addEventListener('touchend', pressOff, { passive: false });
+            el.addEventListener('touchcancel', pressOff, { passive: false });
+            el.addEventListener('mousedown', pressOn);
+            el.addEventListener('mouseup', pressOff);
+            el.addEventListener('mouseleave', pressOff);
+        }
 
-    function bindTouchButton(id, keyName) {
-        const el = document.getElementById(id);
-        if (!el) return;
-        const pressOn = (e) => { e.preventDefault(); keys[keyName] = true; el.classList.add('pressed'); };
-        const pressOff = (e) => { e.preventDefault(); keys[keyName] = false; el.classList.remove('pressed'); };
+        bindTouchButton('touch-up', 'w');
+        bindTouchButton('touch-down', 's');
+        bindTouchButton('touch-left', 'a');
+        bindTouchButton('touch-right', 'd');
+        bindTouchButton('touch-jump', ' ');
+        bindTouchButton('touch-dash', 'shift');
+        bindTouchButton('touch-slash', 'j');
+        bindTouchButton('touch-plasma', 'k');
+        bindTouchButton('touch-shield', 'i');
+        bindTouchButton('touch-ult', 'l');
 
-        el.addEventListener('touchstart', pressOn, { passive: false });
-        el.addEventListener('touchend', pressOff, { passive: false });
-        el.addEventListener('touchcancel', pressOff, { passive: false });
-        el.addEventListener('mousedown', pressOn);
-        el.addEventListener('mouseup', pressOff);
-        el.addEventListener('mouseleave', pressOff);
-    }
+        // Babylon.js 3D Engine Setup
+        const canvas = document.getElementById('renderCanvas');
+        const engine = new BABYLON.Engine(canvas, true);
+        let scene = null;
+        let followCamera = null;
 
-    bindTouchButton('touch-left', 'a');
-    bindTouchButton('touch-right', 'd');
-    bindTouchButton('touch-jump', 'w');
-    bindTouchButton('touch-dash', 's');
-    bindTouchButton('touch-slash', 'j');
-    bindTouchButton('touch-plasma', 'k');
-    bindTouchButton('touch-ult', 'l');
+        function createScene() {
+            scene = new BABYLON.Scene(engine);
+            scene.clearColor = new BABYLON.Color3(0.01, 0.02, 0.04);
+            scene.gravity = new BABYLON.Vector3(0, -0.6, 0);
 
-    class Camera {
-        constructor() { this.shakeTimer = 0; this.shakeIntensity = 0; }
-        shake(intensity = 10, duration = 12) { this.shakeIntensity = intensity; this.shakeTimer = duration; }
-        update() { if (this.shakeTimer > 0) this.shakeTimer--; }
-        apply() {
-            if (this.shakeTimer > 0) {
-                ctx.translate((Math.random() - 0.5) * this.shakeIntensity, (Math.random() - 0.5) * this.shakeIntensity);
+            // Setup a dynamic following camera (FreeCamera or FollowCamera) positioned behind/above the user's fighter
+            followCamera = new BABYLON.UniversalCamera("followCam", new BABYLON.Vector3(0, 30, -45), scene);
+            followCamera.setTarget(BABYLON.Vector3.Zero());
+
+            // Lights & Neon Ambiance
+            const ambientLight = new BABYLON.HemisphericLight("ambientLight", new BABYLON.Vector3(0, 1, 0), scene);
+            ambientLight.intensity = 0.4;
+            ambientLight.groundColor = new BABYLON.Color3(0.05, 0.08, 0.15);
+
+            const pointLight = new BABYLON.PointLight("neonGlow", new BABYLON.Vector3(0, 30, 0), scene);
+            pointLight.intensity = 1.2;
+            pointLight.diffuse = new BABYLON.Color3(0, 0.95, 1);
+
+            // Big Map Arena Floor
+            const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 140, height: 140}, scene);
+            const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
+            groundMat.diffuseColor = new BABYLON.Color3(0.02, 0.04, 0.09);
+            groundMat.specularColor = new BABYLON.Color3(0.2, 0.4, 0.8);
+            ground.material = groundMat;
+
+            // Grid border lines for sci-fi arena aesthetic
+            const arenaBorder = BABYLON.MeshBuilder.CreateBox("border", {width: 140, height: 12, depth: 140}, scene);
+            arenaBorder.position.y = 6;
+            const borderMat = new BABYLON.StandardMaterial("borderMat", scene);
+            borderMat.wireframe = true;
+            borderMat.diffuseColor = new BABYLON.Color3(0, 0.6, 1);
+            arenaBorder.material = borderMat;
+
+            // Obstacles Setup
+            const obstacleMat = new BABYLON.StandardMaterial("obsMat", scene);
+            obstacleMat.diffuseColor = new BABYLON.Color3(0.08, 0.12, 0.25);
+            obstacleMat.specularColor = new BABYLON.Color3(0.5, 0.8, 1);
+
+            const obstaclePositions = [
+                {x: -30, z: -30, w: 12, h: 16, d: 12},
+                {x: 30, z: 30, w: 12, h: 16, d: 12},
+                {x: -30, z: 30, w: 16, h: 10, d: 8},
+                {x: 30, z: -30, w: 8, h: 10, d: 16},
+                {x: 0, z: 0, w: 10, h: 22, d: 10}
+            ];
+
+            window.obstacles = obstaclePositions.map((pos, idx) => {
+                const obs = BABYLON.MeshBuilder.CreateBox(`obs_${idx}`, {width: pos.w, height: pos.h, depth: pos.d}, scene);
+                obs.position = new BABYLON.Vector3(pos.x, pos.h / 2, pos.z);
+                obs.material = obstacleMat;
+                return { x: pos.x, z: pos.z, w: pos.w, d: pos.d, h: pos.h };
+            });
+
+            return scene;
+        }
+
+        scene = createScene();
+
+        class Fighter3D {
+            constructor(x, z, name, colorHex, index) {
+                this.index = index;
+                this.name = name;
+                this.colorHex = colorHex;
+                this.x = x; this.y = 0; this.z = z;
+                this.vx = 0; this.vz = 0; this.vy = 0;
+                this.speed = 0.55; this.jumpPower = 1.2; this.gravity = 0.05;
+                this.isGrounded = true;
+                this.maxHealth = 100; this.health = 100;
+                this.energy = 0;
+                this.shieldActive = false;
+                this.shieldTimer = 0;
+                this.attackCooldown = 0;
+                this.dashCooldown = 0;
+                this.facingAngle = 0;
+
+                this.mesh = BABYLON.MeshBuilder.CreateBox(`fighter_${index}`, {width: 4, height: 7, depth: 3}, scene);
+                this.mesh.position = new BABYLON.Vector3(this.x, 3.5, this.z);
+
+                const mat = new BABYLON.StandardMaterial(`fMat_${index}`, scene);
+                mat.diffuseColor = BABYLON.Color3.FromHexString(colorHex);
+                mat.emissiveColor = BABYLON.Color3.FromHexString(colorHex).scale(0.3);
+                this.mesh.material = mat;
+
+                this.shieldMesh = BABYLON.MeshBuilder.CreateSphere(`shield_${index}`, {diameter: 9}, scene);
+                const shieldMat = new BABYLON.StandardMaterial(`sMat_${index}`, scene);
+                shieldMat.diffuseColor = new BABYLON.Color3(0, 0.9, 1);
+                shieldMat.alpha = 0.25;
+                this.shieldMesh.material = shieldMat;
+                this.shieldMesh.parent = this.mesh;
+                this.shieldMesh.setEnabled(false);
+            }
+
+            update() {
+                if (this.health <= 0) {
+                    this.mesh.setEnabled(false);
+                    return;
+                }
+
+                this.vy -= this.gravity;
+                this.y += this.vy;
+
+                if (this.y <= 0) {
+                    this.y = 0;
+                    this.vy = 0;
+                    this.isGrounded = true;
+                }
+
+                if (this.x < -65) this.x = -65;
+                if (this.x > 65) this.x = 65;
+                if (this.z < -65) this.z = -65;
+                if (this.z > 65) this.z = 65;
+
+                window.obstacles.forEach(obs => {
+                    const minX = obs.x - obs.w / 2 - 2.5;
+                    const maxX = obs.x + obs.w / 2 + 2.5;
+                    const minZ = obs.z - obs.d / 2 - 2.5;
+                    const maxZ = obs.z + obs.d / 2 + 2.5;
+
+                    if (this.x > minX && this.x < maxX && this.z > minZ && this.z < maxZ) {
+                        const overlapX = Math.min(Math.abs(this.x - minX), Math.abs(this.x - maxX));
+                        const overlapZ = Math.min(Math.abs(this.z - minZ), Math.abs(this.z - maxZ));
+                        if (overlapX < overlapZ) {
+                            this.x = this.x < obs.x ? minX : maxX;
+                        } else {
+                            this.z = this.z < obs.z ? minZ : maxZ;
+                        }
+                    }
+                });
+
+                this.x += this.vx;
+                this.z += this.vz;
+                this.vx *= 0.85;
+                this.vz *= 0.85;
+
+                if (this.attackCooldown > 0) this.attackCooldown--;
+                if (this.dashCooldown > 0) this.dashCooldown--;
+                if (this.shieldTimer > 0) {
+                    this.shieldTimer--;
+                    if (this.shieldTimer === 0) {
+                        this.shieldActive = false;
+                        this.shieldMesh.setEnabled(false);
+                    }
+                }
+
+                this.mesh.position.x = this.x;
+                this.mesh.position.y = this.y + 3.5;
+                this.mesh.position.z = this.z;
+                this.mesh.rotation.y = this.facingAngle;
+            }
+
+            dash(dirX, dirZ) {
+                if (this.dashCooldown > 0 || this.health <= 0) return;
+                const len = Math.hypot(dirX, dirZ) || 1;
+                this.vx = (dirX / len) * 3.5;
+                this.vz = (dirZ / len) * 3.5;
+                this.dashCooldown = 45;
+                this.spawnSparks(8);
+            }
+
+            activateShield() {
+                if (this.energy < 25 || this.health <= 0) return;
+                this.energy -= 25;
+                this.shieldActive = true;
+                this.shieldTimer = 90;
+                this.shieldMesh.setEnabled(true);
+            }
+
+            attackTarget(fightersArr) {
+                if (this.attackCooldown > 0 || this.health <= 0) return;
+                this.attackCooldown = 25;
+                this.energy = Math.min(100, this.energy + 12);
+
+                fightersArr.forEach(target => {
+                    if (target !== this && target.health > 0) {
+                        const dist = Math.hypot(this.x - target.x, this.z - target.z);
+                        if (dist < 10) {
+                            const dmg = target.shieldActive ? 3 : 12;
+                            target.health -= dmg;
+                            target.vy = 0.6;
+                            if (target.health < 0) target.health = 0;
+                            target.spawnSparks(6);
+                        }
+                    }
+                });
+            }
+
+            fireSkill(projectilesArr) {
+                if (this.attackCooldown > 0 || this.health <= 0) return;
+                this.attackCooldown = 35;
+                this.energy = Math.min(100, this.energy + 20);
+
+                const pDirX = Math.sin(this.facingAngle);
+                const pDirZ = Math.cos(this.facingAngle);
+                projectilesArr.push(new Projectile3D(this.x + pDirX * 4, this.y + 3.5, this.z + pDirZ * 4, pDirX, pDirZ, this.colorHex, false, this.index));
+            }
+
+            fireUltimate(projectilesArr) {
+                if (this.energy < 100 || this.attackCooldown > 0 || this.health <= 0) return;
+                this.attackCooldown = 60;
+                this.energy = 0;
+
+                const pDirX = Math.sin(this.facingAngle);
+                const pDirZ = Math.cos(this.facingAngle);
+                projectilesArr.push(new Projectile3D(this.x + pDirX * 5, this.y + 3.5, this.z + pDirZ * 5, pDirX, pDirZ, this.colorHex, true, this.index));
+            }
+
+            spawnSparks(count) {
+                for(let i=0; i<count; i++) {
+                    const spark = BABYLON.MeshBuilder.CreateBox("spark", {size: 0.6}, scene);
+                    spark.position = new BABYLON.Vector3(this.x, this.y + 3, this.z);
+                    const mat = new BABYLON.StandardMaterial("sparkMat", scene);
+                    mat.emissiveColor = BABYLON.Color3.FromHexString(this.colorHex);
+                    spark.material = mat;
+
+                    const ang = Math.random() * Math.PI * 2;
+                    const spd = Math.random() * 0.8 + 0.2;
+                    let life = 20;
+
+                    scene.registerBeforeRender(() => {
+                        if (life > 0) {
+                            spark.position.x += Math.cos(ang) * spd;
+                            spark.position.z += Math.sin(ang) * spd;
+                            spark.position.y += 0.2;
+                            life--;
+                        } else {
+                            spark.dispose();
+                        }
+                    });
+                }
             }
         }
-    }
-    const camera = new Camera();
 
-    class ParticleSystem {
-        constructor() { this.particles = []; this.floatingTexts = []; }
-        spawn(x, y, color, count = 8, speed = 3) {
-            for(let i=0; i<count; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const vel = Math.random() * speed;
-                this.particles.push({ x, y, vx: Math.cos(angle)*vel, vy: Math.sin(angle)*vel, alpha: 1, decay: 0.03, color, size: Math.random() * 3 + 2 });
+        class Projectile3D {
+            constructor(x, y, z, dirX, dirZ, colorHex, isUlt, ownerIndex) {
+                this.x = x; this.y = y; this.z = z;
+                this.dirX = dirX; this.dirZ = dirZ;
+                this.speed = isUlt ? 1.4 : 1.0;
+                this.colorHex = colorHex;
+                this.isUlt = isUlt;
+                this.ownerIndex = ownerIndex;
+                this.active = true;
+                this.life = 120;
+
+                const size = isUlt ? 5 : 2;
+                this.mesh = BABYLON.MeshBuilder.CreateSphere("proj", {diameter: size}, scene);
+                this.mesh.position = new BABYLON.Vector3(x, y, z);
+                const mat = new BABYLON.StandardMaterial("pMat", scene);
+                mat.emissiveColor = BABYLON.Color3.FromHexString(colorHex);
+                this.mesh.material = mat;
+            }
+
+            update(fightersArr) {
+                if (!this.active) return;
+                this.x += this.dirX * this.speed * 2;
+                this.z += this.dirZ * this.speed * 2;
+                this.mesh.position.x = this.x;
+                this.mesh.position.z = this.z;
+
+                this.life--;
+                if (this.life <= 0 || Math.abs(this.x) > 75 || Math.abs(this.z) > 75) {
+                    this.destroy();
+                    return;
+                }
+
+                fightersArr.forEach(target => {
+                    if (target.index !== this.ownerIndex && target.health > 0) {
+                        const dist = Math.hypot(this.x - target.x, this.z - target.z);
+                        if (dist < (this.isUlt ? 6 : 3.5)) {
+                            const dmg = this.isUlt ? 35 : 14;
+                            const finalDmg = target.shieldActive ? Math.floor(dmg * 0.25) : dmg;
+                            target.health -= finalDmg;
+                            if (target.health < 0) target.health = 0;
+                            target.spawnSparks(8);
+                            this.destroy();
+                        }
+                    }
+                });
+            }
+
+            destroy() {
+                this.active = false;
+                this.mesh.dispose();
             }
         }
-        spawnText(x, y, text, color) {
-            this.floatingTexts.push({ x, y, text, color, alpha: 1, vy: -1.2 });
-        }
-        update() {
-            this.particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.alpha -= p.decay; });
-            this.particles = this.particles.filter(p => p.alpha > 0);
-            this.floatingTexts.forEach(ft => { ft.y += ft.vy; ft.alpha -= 0.03; });
-            this.floatingTexts = this.floatingTexts.filter(ft => ft.alpha > 0);
-        }
-        draw() {
-            this.particles.forEach(p => {
-                ctx.save(); ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color; ctx.shadowColor = p.color; ctx.shadowBlur = 6;
-                ctx.fillRect(p.x, p.y, p.size, p.size); ctx.restore();
+
+        const fighters = [
+            new Fighter3D(-35, -35, 'VALKYRIE', '#ff2a6d', 0),
+            new Fighter3D(35, -35, 'BLADE', '#05d9e8', 1),
+            new Fighter3D(-35, 35, 'NOVA', '#00ff66', 2),
+            new Fighter3D(35, 35, 'PHANTOM', '#ffcc00', 3)
+        ];
+        let projectiles = [];
+
+        const peerOptions = {
+            config: {
+                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }]
+            }
+        };
+
+        document.getElementById('connectRoomBtn').addEventListener('click', () => {
+            roomName = document.getElementById('roomNameInput').value.trim().toLowerCase();
+            if (!roomName) return alert('Please enter a room name');
+
+            const peerId = 'aether-nexus-3d-' + roomName;
+            peer = new Peer(peerId, peerOptions);
+
+            peer.on('open', id => {
+                isHost = true;
+                document.getElementById('lobbyNotice').innerText = `Room created! Choose your slot.`;
+                updateLobbyUI();
             });
-            this.floatingTexts.forEach(ft => {
-                ctx.save(); ctx.globalAlpha = Math.max(0, ft.alpha); ctx.font = '900 14px Orbitron, sans-serif'; ctx.fillStyle = ft.color; ctx.shadowColor = ft.color; ctx.shadowBlur = 8; ctx.textAlign = 'center';
-                ctx.fillText(ft.text, ft.x, ft.y); ctx.restore();
+
+            peer.on('error', err => {
+                if (err.type === 'unavailable-id') {
+                    peer.destroy();
+                    peer = new Peer(peerOptions);
+                    peer.on('open', () => {
+                        const conn = peer.connect(peerId);
+                        connections = [conn];
+                        isHost = false;
+
+                        conn.on('open', () => {
+                            document.getElementById('lobbyNotice').innerText = `Connected! Choose an open slot.`;
+                        });
+
+                        conn.on('data', data => {
+                            if (data.type === 'LOBBY_STATE') {
+                                slotOccupants = data.slots;
+                                updateLobbyUI();
+                            } else if (data.type === 'START_GAME') {
+                                startGameSession();
+                            } else if (data.type === 'STATE') {
+                                data.fightersState.forEach((fs, i) => {
+                                    fighters[i].x = fs.x; fighters[i].y = fs.y; fighters[i].z = fs.z;
+                                    fighters[i].health = fs.health; fighters[i].energy = fs.energy;
+                                    fighters[i].shieldActive = fs.shield;
+                                    if (fs.shield) fighters[i].shieldMesh.setEnabled(true);
+                                    else fighters[i].shieldMesh.setEnabled(false);
+                                });
+                            }
+                        });
+                    });
+                }
+            });
+
+            peer.on('connection', conn => {
+                connections.push(conn);
+                conn.on('open', () => {
+                    conn.send({ type: 'LOBBY_STATE', slots: slotOccupants });
+                });
+                conn.on('data', data => {
+                    if (data.type === 'SELECT_SLOT') {
+                        if (slotOccupants[data.slot] === null) {
+                            slotOccupants[data.slot] = data.peerId;
+                            broadcastLobbyState();
+                        }
+                    } else if (data.type === 'INPUT') {
+                        const f = fighters[data.index];
+                        if (f && f.health > 0) {
+                            let moveX = 0, moveZ = 0;
+                            if (data.up) moveZ += 1;
+                            if (data.down) moveZ -= 1;
+                            if (data.left) moveX -= 1;
+                            if (data.right) moveX += 1;
+
+                            if (moveX !== 0 || moveZ !== 0) {
+                                f.facingAngle = Math.atan2(moveX, moveZ);
+                                if (data.dash) f.dash(moveX, moveZ);
+                                else {
+                                    f.vx = moveX * f.speed;
+                                    f.vz = moveZ * f.speed;
+                                }
+                            }
+                            if (data.jump && f.isGrounded) { f.vy = f.jumpPower; f.isGrounded = false; }
+                            if (data.shield) f.activateShield();
+                            if (data.attack) f.attackTarget(fighters);
+                            if (data.skill) f.fireSkill(projectiles);
+                            if (data.ultimate) f.fireUltimate(projectiles);
+                        }
+                    }
+                });
+            });
+        });
+
+        function selectSlot(slotIdx) {
+            if (!peer) return alert('Connect to a room first!');
+            if (slotOccupants[slotIdx] !== null) return alert('Slot is already occupied!');
+
+            const myId = peer.id;
+            for (let i = 0; i < 4; i++) {
+                if (slotOccupants[i] === myId) slotOccupants[i] = null;
+            }
+
+            slotOccupants[slotIdx] = myId;
+            myPlayerIndex = slotIdx;
+
+            if (isHost) {
+                broadcastLobbyState();
+            } else {
+                connections[0].send({ type: 'SELECT_SLOT', slot: slotIdx, peerId: myId });
+            }
+            updateLobbyUI();
+        }
+
+        function broadcastLobbyState() {
+            updateLobbyUI();
+            connections.forEach(c => {
+                if (c.open) c.send({ type: 'LOBBY_STATE', slots: slotOccupants });
             });
         }
-    }
-    const fx = new ParticleSystem();
 
-    class Fighter {
-        constructor(x, y, name, color, index) {
-            this.x = x; this.y = y;
-            this.width = 50; this.height = 80;
-            this.name = name; this.color = color; this.index = index;
-            this.vx = 0; this.vy = 0;
-            this.speed = 5.0; this.jumpPower = -14.5; this.gravity = 0.68;
-            this.isGrounded = false;
-            this.maxHealth = 100; this.health = 100;
-            this.energy = 0;
-            this.facing = 1;
-            this.actionState = 'idle';
-            this.animTimer = 0;
-            this.attackCooldown = 0;
-            this.dashCooldown = 0;
-            this.hitStun = 0;
+        function updateLobbyUI() {
+            const myId = peer ? peer.id : '';
+            for (let i = 0; i < 4; i++) {
+                const card = document.querySelector(`.slot-card[data-slot="${i}"]`);
+                const status = document.getElementById(`slot-status-${i}`);
+                card.classList.remove('occupied', 'selected');
+
+                if (slotOccupants[i] === null) {
+                    status.innerText = 'Available';
+                } else if (slotOccupants[i] === myId) {
+                    status.innerText = 'You (Ready)';
+                    card.classList.add('selected');
+                } else {
+                    status.innerText = 'Occupied';
+                    card.classList.add('occupied');
+                }
+            }
+
+            if (isHost && slotOccupants.some(s => s !== null)) {
+                document.getElementById('startBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('startBtn').classList.add('hidden');
+            }
         }
 
-        update() {
-            if (this.health <= 0) return;
+        function startGame() {
+            if (!isHost) return;
+            startGameSession();
+            connections.forEach(c => {
+                if (c.open) c.send({ type: 'START_GAME' });
+            });
+        }
 
-            if (this.hitStun > 0) {
-                this.hitStun--;
-                this.x += this.vx; this.vy += this.gravity; this.y += this.vy;
-                const floorY = canvas.height - 90 - this.height;
-                if (this.y > floorY) { this.y = floorY; this.vy = 0; this.isGrounded = true; }
+        function startGameSession() {
+            if (myPlayerIndex === null) {
+                for(let i=0; i<4; i++) {
+                    if(slotOccupants[i] === null) { myPlayerIndex = i; break; }
+                }
+                if(myPlayerIndex === null) myPlayerIndex = 0;
+            }
+            document.getElementById('lobbyScreen').classList.add('hidden');
+            gameStarted = true;
+        }
+
+        function checkWinCondition() {
+            if (matchEnded) return;
+            const me = fighters[myPlayerIndex];
+
+            if (me.health <= 0) {
+                matchEnded = true;
+                document.getElementById('victoryText').innerText = 'DEFEATED';
+                document.getElementById('victoryText').style.color = '#ff2a6d';
+                document.getElementById('victoryOverlay').classList.remove('hidden');
                 return;
             }
 
-            this.vy += this.gravity;
-            this.y += this.vy;
-            this.x += this.vx;
-
-            const floorY = canvas.height - 90 - this.height;
-            if (this.y > floorY) {
-                this.y = floorY;
-                this.vy = 0;
-                this.isGrounded = true;
-            }
-
-            if (this.x < 35) this.x = 35;
-            if (this.x + this.width > canvas.width - 35) this.x = canvas.width - 35 - this.width;
-
-            if (this.attackCooldown > 0) this.attackCooldown--;
-            if (this.dashCooldown > 0) this.dashCooldown--;
-            if (this.animTimer > 0) {
-                this.animTimer--;
-                if (this.animTimer === 0) this.actionState = 'idle';
+            const opponents = fighters.filter((f, i) => i !== myPlayerIndex);
+            if (opponents.every(f => f.health <= 0)) {
+                matchEnded = true;
+                document.getElementById('victoryText').innerText = 'VICTORY!';
+                document.getElementById('victoryText').style.color = '#00ff66';
+                document.getElementById('victoryOverlay').classList.remove('hidden');
             }
         }
 
-        dash(dir) {
-            if (this.dashCooldown > 0 || this.health <= 0) return;
-            this.vx = dir * 15; this.vy = -2;
-            this.dashCooldown = 40; this.actionState = 'dash'; this.animTimer = 10;
-            fx.spawn(this.x + this.width/2, this.y + this.height/2, this.color, 10, 4);
-        }
-
-        attack(fightersArr) {
-            if (this.attackCooldown > 0 || this.health <= 0) return;
-            this.actionState = 'attack'; this.animTimer = 12; this.attackCooldown = 25;
-            this.energy = Math.min(100, this.energy + 12);
-
-            fightersArr.forEach(target => {
-                if (target !== this && target.health > 0 && Math.abs(this.x - target.x) < 85 && Math.abs(this.y - target.y) < 50) {
-                    target.health -= 10; target.hitStun = 12; target.vy = -4; target.vx = this.facing * 3;
-                    if (target.health < 0) target.health = 0;
-                    camera.shake(6, 10);
-                    fx.spawn(target.x + target.width/2, target.y + target.height/2, '#fff', 10, 5);
-                    fx.spawnText(target.x + target.width/2, target.y - 12, `-10`, this.color);
-                }
-            });
-        }
-
-        skill(projectilesArr) {
-            if (this.attackCooldown > 0 || this.health <= 0) return;
-            this.actionState = 'skill'; this.animTimer = 15; this.attackCooldown = 35;
-            this.energy = Math.min(100, this.energy + 20);
-            projectilesArr.push(new Projectile(this.facing === 1 ? this.x + this.width : this.x - 35, this.y + 25, this.facing, this.color, false, this.index));
-        }
-
-        ultimate(projectilesArr) {
-            if (this.energy < 100 || this.attackCooldown > 0 || this.health <= 0) return;
-            this.actionState = 'ultimate'; this.animTimer = 40; this.attackCooldown = 75; this.energy = 0;
-            projectilesArr.push(new Projectile(this.facing === 1 ? this.x + this.width : this.x - 80, this.y + 10, this.facing, this.color, true, this.index));
-            camera.shake(14, 20);
-        }
-
-        draw() {
-            if (this.health <= 0) return;
-            ctx.save();
-            ctx.shadowColor = this.color; ctx.shadowBlur = 12;
-            ctx.fillStyle = 'rgba(0,0,0,0.5)';
-            ctx.beginPath(); ctx.ellipse(this.x + this.width/2, canvas.height - 90, 22, 5, 0, 0, Math.PI * 2); ctx.fill();
-
-            ctx.fillStyle = this.color;
-            ctx.fillRect(this.x + 6, this.y + 20, this.width - 12, this.height - 28);
-            ctx.fillStyle = '#0a0e1a';
-            ctx.fillRect(this.x + 10, this.y + 26, this.width - 20, this.height - 40);
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(this.x + 18, this.y + 35, 12, 10);
-
-            ctx.fillStyle = '#0d111e';
-            ctx.fillRect(this.x + 8, this.y + 4, 34, 18);
-            ctx.fillStyle = this.color;
-            ctx.fillRect(this.facing === 1 ? this.x + 24 : this.x + 10, this.y + 9, 14, 4);
-
-            if (this.actionState === 'attack') {
-                ctx.fillStyle = '#fff'; ctx.shadowBlur = 20;
-                ctx.fillRect(this.facing === 1 ? this.x + this.width : this.x - 40, this.y + 15, 40, 14);
+        engine.runRenderLoop(() => {
+            if (!gameStarted) {
+                scene.render();
+                return;
             }
-            ctx.restore();
-        }
-    }
 
-    class Projectile {
-        constructor(x, y, dir, color, isUlt, ownerIndex) {
-            this.x = x; this.y = y; this.vx = dir * (isUlt ? 13 : 9);
-            this.width = isUlt ? 80 : 35; this.height = isUlt ? 38 : 16;
-            this.color = color; this.isUlt = isUlt; this.ownerIndex = ownerIndex; this.active = true;
-        }
-        update(fightersArr) {
-            this.x += this.vx;
-            if (this.x < 0 || this.x > canvas.width) this.active = false;
-            fightersArr.forEach(target => {
-                if (target.index !== this.ownerIndex && target.health > 0 && this.x < target.x + target.width && this.x + this.width > target.x && this.y < target.y + target.height && this.y + this.height > target.y) {
-                    const dmg = this.isUlt ? 35 : 12;
-                    target.health -= dmg; target.hitStun = 15; target.vy = -4.5;
-                    if (target.health < 0) target.health = 0;
-                    camera.shake(this.isUlt ? 12 : 6, 12);
-                    fx.spawn(target.x + target.width/2, target.y + target.height/2, this.color, 12, 5);
-                    this.active = false;
-                }
-            });
-        }
-        draw() {
-            ctx.save(); ctx.fillStyle = '#fff'; ctx.shadowColor = this.color; ctx.shadowBlur = 15;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
-            ctx.fillStyle = this.color; ctx.fillRect(this.x + 5, this.y + 3, this.width - 10, this.height - 6);
-            ctx.restore();
-        }
-    }
+            const currentInputs = {
+                up: !!keys['w'],
+                down: !!keys['s'],
+                left: !!keys['a'],
+                right: !!keys['d'],
+                jump: !!keys[' '],
+                dash: !!keys['shift'],
+                shield: !!keys['i'],
+                attack: !!keys['j'],
+                skill: !!keys['k'],
+                ultimate: !!keys['l']
+            };
 
-    const fighters = [
-        new Fighter(150, 300, 'VALKYRIE', '#ff2a6d', 0),
-        new Fighter(350, 300, 'BLADE', '#05d9e8', 1),
-        new Fighter(550, 300, 'NOVA', '#00ff66', 2),
-        new Fighter(750, 300, 'PHANTOM', '#ffcc00', 3)
-    ];
-    let projectiles = [];
-    let clientInputs = { left: false, right: false, jump: false, dash: false, attack: false, skill: false, ultimate: false };
+            if (isHost || connections.length === 0) {
+                const me = fighters[myPlayerIndex];
+                let moveX = 0, moveZ = 0;
+                if (currentInputs.up) moveZ += 1;
+                if (currentInputs.down) moveZ -= 1;
+                if (currentInputs.left) moveX -= 1;
+                if (currentInputs.right) moveX += 1;
 
-    const peerOptions = {
-        config: {
-            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }]
-        }
-    };
-
-    document.getElementById('connectRoomBtn').addEventListener('click', () => {
-        roomName = document.getElementById('roomNameInput').value.trim().toLowerCase();
-        if (!roomName) return alert('Please enter a room name');
-
-        const peerId = 'aether-nexus-' + roomName;
-        peer = new Peer(peerId, peerOptions);
-
-        peer.on('open', id => {
-            isHost = true;
-            document.getElementById('lobbyNotice').innerText = `Room created! Select your slot.`;
-            updateLobbyUI();
-        });
-
-        peer.on('error', err => {
-            if (err.type === 'unavailable-id') {
-                peer.destroy();
-                peer = new Peer(peerOptions);
-                peer.on('open', () => {
-                    const conn = peer.connect(peerId);
-                    connections = [conn];
-                    isHost = false;
-
-                    conn.on('open', () => {
-                        document.getElementById('lobbyNotice').innerText = `Connected! Choose an open slot.`;
-                    });
-
-                    conn.on('data', data => {
-                        if (data.type === 'LOBBY_STATE') {
-                            slotOccupants = data.slots;
-                            updateLobbyUI();
-                        } else if (data.type === 'START_GAME') {
-                            startGameSession();
-                        } else if (data.type === 'STATE') {
-                            data.fightersState.forEach((fs, i) => {
-                                fighters[i].x = fs.x; fighters[i].y = fs.y;
-                                fighters[i].health = fs.health; fighters[i].energy = fs.energy;
-                                fighters[i].actionState = fs.actionState; fighters[i].facing = fs.facing;
-                            });
-                            projectiles = data.projectiles.map(p => {
-                                let proj = new Projectile(p.x, p.y, 1, p.color, p.isUlt, p.ownerIndex);
-                                proj.vx = p.vx; proj.width = p.width; proj.height = p.height; proj.active = p.active;
-                                return proj;
-                            });
-                        }
-                    });
-                });
-            }
-        });
-
-        peer.on('connection', conn => {
-            connections.push(conn);
-            conn.on('open', () => {
-                conn.send({ type: 'LOBBY_STATE', slots: slotOccupants });
-            });
-            conn.on('data', data => {
-                if (data.type === 'SELECT_SLOT') {
-                    if (slotOccupants[data.slot] === null) {
-                        slotOccupants[data.slot] = data.peerId;
-                        broadcastLobbyState();
-                    }
-                } else if (data.type === 'INPUT') {
-                    const f = fighters[data.index];
-                    if (f && f.health > 0) {
-                        f.vx = 0;
-                        if (data.left) { if (data.dash) f.dash(-1); else { f.vx = -f.speed; f.facing = -1; f.actionState = 'walk'; } }
-                        if (data.right) { if (data.dash) f.dash(1); else { f.vx = f.speed; f.facing = 1; f.actionState = 'walk'; } }
-                        if (data.jump && f.isGrounded) { f.vy = f.jumpPower; f.isGrounded = false; }
-                        if (data.attack) f.attack(fighters);
-                        if (data.skill) f.skill(projectiles);
-                        if (data.ultimate) f.ultimate(projectiles);
+                if (moveX !== 0 || moveZ !== 0) {
+                    me.facingAngle = Math.atan2(moveX, moveZ);
+                    if (currentInputs.dash) me.dash(moveX, moveZ);
+                    else {
+                        me.vx = moveX * me.speed;
+                        me.vz = moveZ * me.speed;
                     }
                 }
-            });
-        });
-    });
+                if (currentInputs.jump && me.isGrounded) { me.vy = me.jumpPower; me.isGrounded = false; }
+                if (currentInputs.shield) me.activateShield();
+                if (currentInputs.attack) me.attackTarget(fighters);
+                if (currentInputs.skill) me.fireSkill(projectiles);
+                if (currentInputs.ultimate) me.fireUltimate(projectiles);
 
-    function selectSlot(slotIdx) {
-        if (!peer) return alert('Connect to a room first!');
-        if (slotOccupants[slotIdx] !== null) return alert('Slot is already occupied!');
+                fighters.forEach(f => f.update());
+                projectiles.forEach(p => p.update(fighters));
+                projectiles = projectiles.filter(p => p.active);
 
-        const myId = peer.id;
-        for (let i = 0; i < 4; i++) {
-            if (slotOccupants[i] === myId) slotOccupants[i] = null;
-        }
+                checkWinCondition();
 
-        slotOccupants[slotIdx] = myId;
-        myPlayerIndex = slotIdx;
-
-        if (isHost) {
-            broadcastLobbyState();
-        } else {
-            connections[0].send({ type: 'SELECT_SLOT', slot: slotIdx, peerId: myId });
-        }
-        updateLobbyUI();
-    }
-
-    function broadcastLobbyState() {
-        updateLobbyUI();
-        connections.forEach(c => {
-            if (c.open) c.send({ type: 'LOBBY_STATE', slots: slotOccupants });
-        });
-    }
-
-    function updateLobbyUI() {
-        const myId = peer ? peer.id : '';
-        for (let i = 0; i < 4; i++) {
-            const card = document.querySelector(`.slot-card[data-slot="${i}"]`);
-            const status = document.getElementById(`slot-status-${i}`);
-            card.classList.remove('occupied', 'selected');
-
-            if (slotOccupants[i] === null) {
-                status.innerText = 'Available';
-            } else if (slotOccupants[i] === myId) {
-                status.innerText = 'You (Ready)';
-                card.classList.add('selected');
+                if (isHost && connections.length > 0) {
+                    const gameState = {
+                        type: 'STATE',
+                        fightersState: fighters.map(f => ({ x: f.x, y: f.y, z: f.z, health: f.health, energy: f.energy, shield: f.shieldActive }))
+                    };
+                    connections.forEach(c => { if (c.open) c.send(gameState); });
+                }
             } else {
-                status.innerText = 'Occupied';
-                card.classList.add('occupied');
+                const me = fighters[myPlayerIndex];
+                let moveX = 0, moveZ = 0;
+                if (currentInputs.up) moveZ += 1;
+                if (currentInputs.down) moveZ -= 1;
+                if (currentInputs.left) moveX -= 1;
+                if (currentInputs.right) moveX += 1;
+
+                if (moveX !== 0 || moveZ !== 0) {
+                    me.facingAngle = Math.atan2(moveX, moveZ);
+                    me.vx = moveX * me.speed;
+                    me.vz = moveZ * me.speed;
+                }
+                if (currentInputs.jump && me.isGrounded) { me.vy = me.jumpPower; me.isGrounded = false; }
+
+                me.update();
+                checkWinCondition();
+
+                if (connections[0] && connections[0].open) {
+                    connections[0].send({
+                        type: 'INPUT', index: myPlayerIndex,
+                        up: currentInputs.up, down: currentInputs.down, left: currentInputs.left, right: currentInputs.right,
+                        jump: currentInputs.jump, dash: currentInputs.dash, shield: currentInputs.shield,
+                        attack: currentInputs.attack, skill: currentInputs.skill, ultimate: currentInputs.ultimate
+                    });
+                }
             }
-        }
 
-        if (isHost && slotOccupants.some(s => s !== null)) {
-            document.getElementById('startBtn').classList.remove('hidden');
-        } else {
-            document.getElementById('startBtn').classList.add('hidden');
-        }
-    }
-
-    function startGame() {
-        if (!isHost) return;
-        startGameSession();
-        connections.forEach(c => {
-            if (c.open) c.send({ type: 'START_GAME' });
-        });
-    }
-
-    function startGameSession() {
-        if (myPlayerIndex === null) {
-            for(let i=0; i<4; i++) {
-                if(slotOccupants[i] === null) { myPlayerIndex = i; break; }
+            // Smoothly update the camera position to follow the local player
+            if (myPlayerIndex !== null && fighters[myPlayerIndex]) {
+                const targetFighter = fighters[myPlayerIndex];
+                const targetPos = new BABYLON.Vector3(targetFighter.x, targetFighter.y + 4, targetFighter.z);
+                
+                // Lerp camera smoothly behind and above the player
+                const desiredCamPos = new BABYLON.Vector3(targetFighter.x, targetFighter.y + 32, targetFighter.z - 38);
+                followCamera.position = BABYLON.Vector3.Lerp(followCamera.position, desiredCamPos, 0.1);
+                followCamera.setTarget(BABYLON.Vector3.Lerp(followCamera.getTarget(), targetPos, 0.15));
             }
-            if(myPlayerIndex === null) myPlayerIndex = 0;
-        }
-        document.getElementById('lobbyScreen').classList.add('hidden');
-        gameStarted = true;
-        requestAnimationFrame(gameLoop);
-    }
 
-    function checkWinCondition() {
-        if (matchEnded) return;
-        const me = fighters[myPlayerIndex];
+            fighters.forEach((f, i) => {
+                const bar = document.getElementById(`p${i+1}-health`);
+                if (bar) bar.style.width = `${Math.max(0, (f.health / f.maxHealth) * 100)}%`;
+            });
 
-        if (me.health <= 0) {
-            matchEnded = true;
-            document.getElementById('victoryText').innerText = 'DEFEATED';
-            document.getElementById('victoryText').style.color = '#ff2a6d';
-            document.getElementById('victoryOverlay').classList.remove('hidden');
-            return;
-        }
-
-        const opponents = fighters.filter((f, i) => i !== myPlayerIndex);
-        const allOpponentsDead = opponents.every(f => f.health <= 0);
-
-        if (allOpponentsDead) {
-            matchEnded = true;
-            document.getElementById('victoryText').innerText = 'VICTORY!';
-            document.getElementById('victoryText').style.color = '#00ff66';
-            document.getElementById('victoryOverlay').classList.remove('hidden');
-        }
-    }
-
-    function gameLoop() {
-        if (!gameStarted) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.save();
-        camera.update();
-        camera.apply();
-
-        ctx.fillStyle = '#03050d'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#050918'; ctx.fillRect(0, canvas.height - 90, canvas.width, 90);
-        ctx.fillStyle = '#05d9e8'; ctx.shadowColor = '#05d9e8'; ctx.shadowBlur = 10;
-        ctx.fillRect(0, canvas.height - 95, canvas.width, 4); ctx.shadowBlur = 0;
-
-        // Gather current user inputs safely
-        const currentInputs = {
-            left: !!keys['a'],
-            right: !!keys['d'],
-            jump: !!keys['w'],
-            dash: !!keys['s'],
-            attack: !!keys['j'],
-            skill: !!keys['k'],
-            ultimate: !!keys['l']
-        };
-
-        if (isHost || connections.length === 0) {
-            // Host processes local player inputs
-            const me = fighters[myPlayerIndex];
-            me.vx = 0;
-            if (currentInputs.left) { if (currentInputs.dash) me.dash(-1); else { me.vx = -me.speed; me.facing = -1; me.actionState = 'walk'; } }
-            if (currentInputs.right) { if (currentInputs.dash) me.dash(1); else { me.vx = me.speed; me.facing = 1; me.actionState = 'walk'; } }
-            if (currentInputs.jump && me.isGrounded) { me.vy = me.jumpPower; me.isGrounded = false; }
-            if (currentInputs.attack) me.attack(fighters);
-            if (currentInputs.skill) me.skill(projectiles);
-            if (currentInputs.ultimate) me.ultimate(projectiles);
-
-            fighters.forEach(f => f.update());
-            projectiles.forEach(p => p.update(fighters));
-            projectiles = projectiles.filter(p => p.active);
-            fx.update();
-
-            checkWinCondition();
-
-            if (isHost && connections.length > 0) {
-                const gameState = {
-                    type: 'STATE',
-                    fightersState: fighters.map(f => ({ x: f.x, y: f.y, health: f.health, energy: f.energy, actionState: f.actionState, facing: f.facing })),
-                    projectiles: projectiles.map(p => ({ x: p.x, y: p.y, vx: p.vx, width: p.width, height: p.height, color: p.color, isUlt: p.isUlt, ownerIndex: p.ownerIndex, active: p.active }))
-                };
-                connections.forEach(c => { if (c.open) c.send(gameState); });
-            }
-        } else {
-            // Client sends lightweight boolean inputs to Host
-            const me = fighters[myPlayerIndex];
-            me.vx = 0;
-            if (currentInputs.left) { me.vx = -me.speed; me.facing = -1; me.actionState = 'walk'; }
-            if (currentInputs.right) { me.vx = me.speed; me.facing = 1; me.actionState = 'walk'; }
-            if (currentInputs.jump && me.isGrounded) { me.vy = me.jumpPower; me.isGrounded = false; }
-
-            me.update();
-            checkWinCondition();
-
-            if (connections[0] && connections[0].open) {
-                connections[0].send({
-                    type: 'INPUT', index: myPlayerIndex,
-                    left: currentInputs.left, right: currentInputs.right, jump: currentInputs.jump,
-                    dash: currentInputs.dash, attack: currentInputs.attack, skill: currentInputs.skill, ultimate: currentInputs.ultimate
-                });
-            }
-        }
-
-        fx.update();
-        fx.draw();
-        fighters.forEach(f => f.draw());
-        projectiles.forEach(p => p.draw());
-        ctx.restore();
-
-        fighters.forEach((f, i) => {
-            const bar = document.getElementById(`p${i+1}-health`);
-            if (bar) bar.style.width = `${Math.max(0, (f.health / f.maxHealth) * 100)}%`;
+            scene.render();
         });
 
-        if (!matchEnded) {
-            requestAnimationFrame(gameLoop);
-        }
-    }
-</script>
-
+        window.addEventListener('resize', () => engine.resize());
+    </script>
 </body>
 </html>
