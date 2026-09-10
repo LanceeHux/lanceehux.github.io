@@ -772,29 +772,26 @@
                             slotOccupants[data.slot] = data.peerId;
                             broadcastLobbyState();
                         }
-                    } else if (data.type === 'INPUT') {
-                        const f = fighters[data.index];
-                        if (f && f.health > 0) {
-                            let moveX = 0, moveZ = 0;
-                            if (data.up) moveZ += 1;
-                            if (data.down) moveZ -= 1;
-                            if (data.left) moveX -= 1;
-                            if (data.right) moveX += 1;
-
-                            if (moveX !== 0 || moveZ !== 0) {
-                                f.facingAngle = Math.atan2(moveX, moveZ);
-                                if (data.dash) f.dash(moveX, moveZ);
-                                else {
-                                    f.vx = moveX * f.speed;
-                                    f.vz = moveZ * f.speed;
-                                }
-                            }
-                            if (data.jump && f.isGrounded) { f.vy = f.jumpPower; f.isGrounded = false; }
-                            if (data.shield) f.activateShield();
-                            if (data.attack) f.attackTarget(fighters);
-                            if (data.skill) f.fireSkill(projectiles);
-                            if (data.ultimate) f.fireUltimate(projectiles);
+                    } else if (data.type === 'SYNC_STATE') {
+                        // Apply the state locally on the host
+                        const remoteF = fighters[data.index];
+                        if (remoteF) {
+                            remoteF.x = data.state.x;
+                            remoteF.y = data.state.y;
+                            remoteF.z = data.state.z;
+                            remoteF.facingAngle = data.state.ang;
+                            remoteF.health = data.state.health;
+                            remoteF.energy = data.state.energy;
+                            remoteF.shieldActive = data.state.shield;
+                            if (data.state.shield) remoteF.shieldMesh.setEnabled(true);
+                            else remoteF.shieldMesh.setEnabled(false);
                         }
+                        // RELAY the sync packet to all other connected clients
+                        connections.forEach(c => {
+                            if (c !== conn && c.open) {
+                                c.send(data);
+                            }
+                        });
                     }
                 });
             });
