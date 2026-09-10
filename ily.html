@@ -582,9 +582,26 @@
                         const dist = Math.hypot(this.x - target.x, this.z - target.z);
                         if (dist < 12) {
                             const dmg = target.shieldActive ? 3 : 12;
-                            target.health -= dmg;
+                            
+                            // If we hit a remote player, send a network damage event
+                            if (target.index !== myPlayerIndex) {
+                                const damagePayload = {
+                                    type: 'DEAL_DAMAGE',
+                                    targetIndex: target.index,
+                                    damage: dmg
+                                };
+                                if (isHost) {
+                                    connections.forEach(c => { if (c.open) c.send(damagePayload); });
+                                } else if (connections[0] && connections[0].open) {
+                                    connections[0].send(damagePayload);
+                                }
+                            } else {
+                                // Local damage
+                                target.health -= dmg;
+                                if (target.health < 0) target.health = 0;
+                            }
+
                             target.vy = 0.6;
-                            if (target.health < 0) target.health = 0;
                             target.spawnSparks(6);
                         }
                     }
@@ -725,72 +742,41 @@
             }
         };
 
-        document.getElementById('connectRoomBtn').addEventListener('click', () => {
-            roomName = document.getElementById('roomNameInput').value.trim().toLowerCase();
-            if (!roomName) return alert('Please enter a room name');
+document.getElementById('connectRoomBtn').addEventListener('click', () => {
+    roomName = document.getElementById('roomNameInput').value.trim().toLowerCase();
+    if (!roomName) return alert('Please enter a room name');
 
-            const peerId = 'aether-nexus-3d-' + roomName;
-            peer = new Peer(peerId, peerOptions);
+    const peerId = 'aether-nexus-3d-' + roomName;
+    peer = new Peer(peerId, peerOptions);
 
-            peer.on('open', id => {
-                isHost = true;
-                document.getElementById('lobbyNotice').innerText = `Room created! Choose your slot.`;
-                updateLobbyUI();
-            });
+    peer.on('open', id => {
+        isHost = true;
+        document.getElementById('lobbyNotice').innerText = `Room created! Choose your slot.`;
+        updateLobbyUI();
+    });
 
-            peer.on('error', err => {
-                if (err.type === 'unavailable-id') {
-                    peer.destroy();
-                    peer = new Peer(peerOptions);
-                    peer.on('open', () => {
-                        const conn = peer.connect(peerId, { reliable: true });
-                        connections = [conn];
-                        isHost = false;
+    peer.on('error', err => {
+        if (err.type === 'unavailable-id') {
+            peer.destroy();
+            peer = new Peer(peerOptions);
+            peer.on('open', () => {
+                const conn = peer.connect(peerId, { reliable: true });
+                connections = [conn];
+                isHost = false;
 
-                        conn.on('open', () => {
-                            document.getElementById('lobbyNotice').innerText = `Connected! Choose an open slot.`;
-                        });
-
-                        conn.on('data', data => {
-                            if (data.type === 'LOBBY_STATE') {
-                                slotOccupants = data.slots;
-                                updateLobbyUI();
-                            } else if (data.type === 'START_GAME') {
-                                startGameSession();
-                            } else if (data.type === 'SYNC_STATE') {
-                                const remoteF = fighters[data.index];
-                                if (remoteF && data.index !== myPlayerIndex) {
-                                    remoteF.x = data.state.x;
-                                    remoteF.y = data.state.y;
-                                    remoteF.z = data.state.z;
-                                    remoteF.facingAngle = data.state.ang;
-                                    remoteF.health = data.state.health;
-                                    remoteF.energy = data.state.energy;
-                                    remoteF.shieldActive = data.state.shield;
-                                    if (data.state.shield) remoteF.shieldMesh.setEnabled(true);
-                                    else remoteF.shieldMesh.setEnabled(false);
-                                }
-                            }
-                        });
-                    });
-                }
-            });
-
-            peer.on('connection', conn => {
-                connections.push(conn);
                 conn.on('open', () => {
-                    conn.send({ type: 'LOBBY_STATE', slots: slotOccupants });
+                    document.getElementById('lobbyNotice').innerText = `Connected! Choose an open slot.`;
                 });
+
                 conn.on('data', data => {
-                    if (data.type === 'SELECT_SLOT') {
-                        if (slotOccupants[data.slot] === null) {
-                            slotOccupants[data.slot] = data.peerId;
-                            broadcastLobbyState();
-                        }
+                    if (data.type === 'LOBBY_STATE') {
+                        slotOccupants = data.slots;
+                        updateLobbyUI();
+                    } else if (data.type === 'START_GAME') {
+                        startGameSession();
                     } else if (data.type === 'SYNC_STATE') {
-                        // Apply the state locally on the host
                         const remoteF = fighters[data.index];
-                        if (remoteF) {
+                        if (remoteF && data.index !== myPlayerIndex) {
                             remoteF.x = data.state.x;
                             remoteF.y = data.state.y;
                             remoteF.z = data.state.z;
@@ -801,15 +787,63 @@
                             if (data.state.shield) remoteF.shieldMesh.setEnabled(true);
                             else remoteF.shieldMesh.setEnabled(false);
                         }
-                        // RELAY the sync packet to all other connected clients
-                        connections.forEach(c => {
-                            if (c !== conn && c.open) {
-                                c.send(data);
-                            }
-                        });
+                    } else if (data.type === 'DEAL_DAMAGE') {
+                        const victim = fighters[data.targetIndex];
+                        if (victim) {
+                            victim.health -= data.damage;
+                            if (victim.health < 0) victim.health = 0;
+                            victim.spawnSparks(8);
+                        }
+                        if (isHost) {
+                            connections.forEach(c => { if (c.open) c.send(data); });
+                        }
                     }
                 });
             });
+        }
+    });
+
+    peer.on('connection', conn => {
+        connections.push(conn);
+        conn.on('open', () => {
+            conn.send({ type: 'LOBBY_STATE', slots: slotOccupants });
+        });
+        conn.on('data', data => {
+            if (data.type === 'SELECT_SLOT') {
+                if (slotOccupants[data.slot] === null) {
+                    slotOccupants[data.slot] = data.peerId;
+                    broadcastLobbyState();
+                }
+            } else if (data.type === 'SYNC_STATE') {
+                const remoteF = fighters[data.index];
+                if (remoteF) {
+                    remoteF.x = data.state.x;
+                    remoteF.y = data.state.y;
+                    remoteF.z = data.state.z;
+                    remoteF.facingAngle = data.state.ang;
+                    remoteF.health = data.state.health;
+                    remoteF.energy = data.state.energy;
+                    remoteF.shieldActive = data.state.shield;
+                    if (data.state.shield) remoteF.shieldMesh.setEnabled(true);
+                    else remoteF.shieldMesh.setEnabled(false);
+                }
+                connections.forEach(c => {
+                    if (c !== conn && c.open) c.send(data);
+                });
+            } else if (data.type === 'DEAL_DAMAGE') {
+                const victim = fighters[data.targetIndex];
+                if (victim) {
+                    victim.health -= data.damage;
+                    if (victim.health < 0) victim.health = 0;
+                    victim.spawnSparks(8);
+                }
+                connections.forEach(c => {
+                    if (c !== conn && c.open) c.send(data);
+                });
+            }
+        });
+    });
+});
         });
 
         function selectSlot(slotIdx) {
