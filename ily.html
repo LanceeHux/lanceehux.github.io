@@ -176,7 +176,6 @@
         #p3-health { background: #00ff66; }
         #p4-health { background: #ffcc00; }
 
-        /* Comfort Mobile Touch Controls */
         .touch-controls {
             display: flex;
             position: absolute;
@@ -246,7 +245,6 @@
         #touch-ult { width: 120px; height: 42px; font-size: 11px; border-radius: 14px; margin-top: 4px; }
         #touch-shield { width: 58px; height: 58px; font-size: 12px; border-radius: 16px; color: #05d9e8; }
 
-        /* Victory Overlay Banner */
         .victory-screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -278,7 +276,6 @@
             box-shadow: 0 0 15px rgba(0,255,102,0.4);
         }
     </style>
-    <!-- Include PeerJS & Babylon.js 3D Engine ecosystem -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babylonjs/6.30.0/babylon.js"></script>
 </head>
@@ -374,6 +371,7 @@
         let slotOccupants = [null, null, null, null];
         let gameStarted = false;
         let matchEnded = false;
+        let networkTickTimer = 0;
 
         const keys = {};
         window.addEventListener('keydown', e => {
@@ -407,7 +405,6 @@
         bindTouchButton('touch-shield', 'i');
         bindTouchButton('touch-ult', 'l');
 
-        // Babylon.js 3D Engine Setup
         const canvas = document.getElementById('renderCanvas');
         const engine = new BABYLON.Engine(canvas, true);
         let scene = null;
@@ -418,11 +415,9 @@
             scene.clearColor = new BABYLON.Color3(0.01, 0.02, 0.04);
             scene.gravity = new BABYLON.Vector3(0, -0.6, 0);
 
-            // Setup a dynamic following camera (FreeCamera or FollowCamera) positioned behind/above the user's fighter
             followCamera = new BABYLON.UniversalCamera("followCam", new BABYLON.Vector3(0, 30, -45), scene);
             followCamera.setTarget(BABYLON.Vector3.Zero());
 
-            // Lights & Neon Ambiance
             const ambientLight = new BABYLON.HemisphericLight("ambientLight", new BABYLON.Vector3(0, 1, 0), scene);
             ambientLight.intensity = 0.4;
             ambientLight.groundColor = new BABYLON.Color3(0.05, 0.08, 0.15);
@@ -431,14 +426,12 @@
             pointLight.intensity = 1.2;
             pointLight.diffuse = new BABYLON.Color3(0, 0.95, 1);
 
-            // Big Map Arena Floor
             const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 140, height: 140}, scene);
             const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
             groundMat.diffuseColor = new BABYLON.Color3(0.02, 0.04, 0.09);
             groundMat.specularColor = new BABYLON.Color3(0.2, 0.4, 0.8);
             ground.material = groundMat;
 
-            // Grid border lines for sci-fi arena aesthetic
             const arenaBorder = BABYLON.MeshBuilder.CreateBox("border", {width: 140, height: 12, depth: 140}, scene);
             arenaBorder.position.y = 6;
             const borderMat = new BABYLON.StandardMaterial("borderMat", scene);
@@ -446,7 +439,6 @@
             borderMat.diffuseColor = new BABYLON.Color3(0, 0.6, 1);
             arenaBorder.material = borderMat;
 
-            // Obstacles Setup
             const obstacleMat = new BABYLON.StandardMaterial("obsMat", scene);
             obstacleMat.diffuseColor = new BABYLON.Color3(0.08, 0.12, 0.25);
             obstacleMat.specularColor = new BABYLON.Color3(0.5, 0.8, 1);
@@ -706,9 +698,15 @@
         ];
         let projectiles = [];
 
+        // Upgraded robust STUN server mapping for cross-network connectivity
         const peerOptions = {
             config: {
-                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }]
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' },
+                    { urls: 'stun:stun2.l.google.com:19302' },
+                    { urls: 'stun:stun.stunprotocol.org:3478' }
+                ]
             }
         };
 
@@ -730,7 +728,7 @@
                     peer.destroy();
                     peer = new Peer(peerOptions);
                     peer.on('open', () => {
-                        const conn = peer.connect(peerId);
+                        const conn = peer.connect(peerId, { reliable: true });
                         connections = [conn];
                         isHost = false;
 
@@ -745,9 +743,16 @@
                             } else if (data.type === 'START_GAME') {
                                 startGameSession();
                             } else if (data.type === 'STATE') {
+                                // Interpolate data smoothly to eliminate jitter/bugginess
                                 data.fightersState.forEach((fs, i) => {
-                                    fighters[i].x = fs.x; fighters[i].y = fs.y; fighters[i].z = fs.z;
-                                    fighters[i].health = fs.health; fighters[i].energy = fs.energy;
+                                    if (i !== myPlayerIndex) {
+                                        fighters[i].x += (fs.x - fighters[i].x) * 0.4;
+                                        fighters[i].y += (fs.y - fighters[i].y) * 0.4;
+                                        fighters[i].z += (fs.z - fighters[i].z) * 0.4;
+                                        fighters[i].facingAngle = fs.ang;
+                                    }
+                                    fighters[i].health = fs.health;
+                                    fighters[i].energy = fs.energy;
                                     fighters[i].shieldActive = fs.shield;
                                     if (fs.shield) fighters[i].shieldMesh.setEnabled(true);
                                     else fighters[i].shieldMesh.setEnabled(false);
@@ -936,12 +941,17 @@
 
                 checkWinCondition();
 
+                // Throttled Network Sync (Sends data every 2 frames to clear out network bandwidth bottlenecks)
                 if (isHost && connections.length > 0) {
-                    const gameState = {
-                        type: 'STATE',
-                        fightersState: fighters.map(f => ({ x: f.x, y: f.y, z: f.z, health: f.health, energy: f.energy, shield: f.shieldActive }))
-                    };
-                    connections.forEach(c => { if (c.open) c.send(gameState); });
+                    networkTickTimer++;
+                    if (networkTickTimer >= 2) {
+                        networkTickTimer = 0;
+                        const gameState = {
+                            type: 'STATE',
+                            fightersState: fighters.map(f => ({ x: f.x, y: f.y, z: f.z, ang: f.facingAngle, health: f.health, energy: f.energy, shield: f.shieldActive }))
+                        };
+                        connections.forEach(c => { if (c.open) c.send(gameState); });
+                    }
                 }
             } else {
                 const me = fighters[myPlayerIndex];
@@ -971,12 +981,9 @@
                 }
             }
 
-            // Smoothly update the camera position to follow the local player
             if (myPlayerIndex !== null && fighters[myPlayerIndex]) {
                 const targetFighter = fighters[myPlayerIndex];
                 const targetPos = new BABYLON.Vector3(targetFighter.x, targetFighter.y + 4, targetFighter.z);
-                
-                // Lerp camera smoothly behind and above the player
                 const desiredCamPos = new BABYLON.Vector3(targetFighter.x, targetFighter.y + 32, targetFighter.z - 38);
                 followCamera.position = BABYLON.Vector3.Lerp(followCamera.position, desiredCamPos, 0.1);
                 followCamera.setTarget(BABYLON.Vector3.Lerp(followCamera.getTarget(), targetPos, 0.15));
