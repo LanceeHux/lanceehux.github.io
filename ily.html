@@ -578,9 +578,9 @@
                 this.energy = Math.min(100, this.energy + 12);
 
                 fightersArr.forEach(target => {
-                    if (target !== this && target.health > 0) {
+                    if (target && target !== this && target.health > 0) {
                         const dist = Math.hypot(this.x - target.x, this.z - target.z);
-                        if (dist < 10) {
+                        if (dist < 12) {
                             const dmg = target.shieldActive ? 3 : 12;
                             target.health -= dmg;
                             target.vy = 0.6;
@@ -670,9 +670,9 @@
                 }
 
                 fightersArr.forEach(target => {
-                    if (target.index !== this.ownerIndex && target.health > 0) {
+                    if (target && target.index !== this.ownerIndex && target.health > 0) {
                         const dist = Math.hypot(this.x - target.x, this.z - target.z);
-                        if (dist < (this.isUlt ? 6 : 3.5)) {
+                        if (dist < (this.isUlt ? 8 : 4.5)) {
                             const dmg = this.isUlt ? 35 : 14;
                             const finalDmg = target.shieldActive ? Math.floor(dmg * 0.25) : dmg;
                             target.health -= finalDmg;
