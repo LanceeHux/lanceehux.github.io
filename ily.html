@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Aether Nexus: Tactical Operations - Advanced Core</title>
+    <title>Aether Nexus: Tactical Operations - Main Portal</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap');
 
@@ -24,6 +24,108 @@
             justify-content: center;
         }
 
+        /* FULL PAGE LANDING / PORTAL */
+        #pagePortal {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle at center, #09132d 0%, #03050d 100%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 30px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        .portal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .portal-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px;
+            font-weight: 900;
+            color: #00f2fe;
+            text-shadow: 0 0 15px rgba(0,242,254,0.6);
+            letter-spacing: 3px;
+        }
+
+        .portal-body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            max-width: 700px;
+            margin: auto;
+            gap: 20px;
+        }
+
+        .portal-body h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 38px;
+            margin: 0;
+            color: #fff;
+            text-shadow: 0 0 25px rgba(0,242,254,0.4);
+            letter-spacing: 4px;
+        }
+
+        .portal-body p {
+            font-size: 15px;
+            color: #8b9bb4;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .portal-features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .feature-box {
+            background: rgba(8, 12, 24, 0.8);
+            border: 1px solid #203158;
+            border-radius: 10px;
+            padding: 14px;
+            text-align: left;
+        }
+
+        .feature-box h4 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            color: #00f2fe;
+            margin: 0 0 6px 0;
+        }
+
+        .feature-box span {
+            font-size: 11px;
+            color: #8b9bb4;
+        }
+
+        .portal-cta {
+            margin-top: 15px;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .portal-footer {
+            text-align: center;
+            font-size: 11px;
+            color: #435b8a;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        /* IN-GAME HUB & SCREENS */
         .screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -203,7 +305,6 @@
         #p3-health { background: #00ff66; }
         #p4-health { background: #ffcc00; }
 
-        /* ADVANCED METRICS BAR */
         .metrics-hud {
             position: absolute; top: 48px; left: 12px;
             display: flex; gap: 12px; z-index: 15; pointer-events: none;
@@ -211,7 +312,6 @@
             background: rgba(3, 5, 13, 0.85); padding: 6px 10px; border: 1px solid #203158; border-radius: 6px;
         }
 
-        /* MINIMAP */
         .minimap-container {
             position: absolute; top: 48px; right: 12px; width: 130px; height: 130px;
             background: rgba(3, 5, 13, 0.85); border: 2px solid #00f2fe; border-radius: 8px; z-index: 15; overflow: hidden; pointer-events: none;
@@ -266,28 +366,61 @@
 </head>
 <body>
 
-    <!-- SCREEN 1: LANDING & SYSTEM HUB -->
-    <div id="landingScreen" class="screen">
+    <!-- STAGE 1: SEMI-ACTUAL FULL LANDING PAGE -->
+    <div id="pagePortal">
+        <div class="portal-header">
+            <div class="portal-logo">AETHER NEXUS</div>
+            <div style="font-family:'Orbitron'; font-size:11px; color:#05d9e8;">VER 2.5 // HUMANOID RIGS ACTIVE</div>
+        </div>
+
+        <div class="portal-body">
+            <h1>TACTICAL OPERATIONS</h1>
+            <p>Enter the complex grid matrix. Command specialized humanoid cyber-operatives with articulated limbs, navigate multi-room combat chambers, and execute advanced operational combat commands.</p>
+            
+            <div class="portal-features">
+                <div class="feature-box">
+                    <h4>HUMANOID MODELS</h4>
+                    <span>Detailed articulated cyber-units with dynamic limb animation.</span>
+                </div>
+                <div class="feature-box">
+                    <h4>ARMORY UPGRADES</h4>
+                    <span>Enhance hull armor, output damage, and energy regeneration.</span>
+                </div>
+                <div class="feature-box">
+                    <h4>ACHIEVEMENTS</h4>
+                    <span>Unlock operational badges and accumulate system credits.</span>
+                </div>
+            </div>
+
+            <div class="portal-cta">
+                <button class="primary-btn" onclick="enterSystemHub()">INITIALIZE LAUNCH PORTAL</button>
+            </div>
+        </div>
+
+        <div class="portal-footer">
+            SECURE AETHER PROTOCOL ACTIVE © 2026
+        </div>
+    </div>
+
+    <!-- STAGE 2: SCREEN 1 - HUB & SYSTEM UPGRADES -->
+    <div id="landingScreen" class="screen hidden">
         <div class="screen-container">
             <h1>AETHER NEXUS HUB</h1>
             <div style="font-size: 11px; color: #8b9bb4; text-align: center;">Advanced Tactical Combat Architecture & Meta Progression</div>
             
             <input type="text" id="usernameInput" value="OPERATIVE_ALPHA" placeholder="Enter Callsign">
 
-            <!-- STATS COUNTER BAR -->
             <div style="display: flex; justify-content: space-between; width: 100%; background: #080c18; padding: 8px 12px; border-radius: 8px; border: 1px solid #223461; font-family: 'Orbitron', sans-serif; font-size: 10px; color: #05d9e8;">
                 <span id="playerCredits">CREDITS: 500 CR</span>
                 <span id="playerLevel">RANK: 1 [NOVICE]</span>
             </div>
 
-            <!-- TABS NAVIGATION -->
             <div class="tabs-row">
                 <button class="tab-btn active" onclick="switchTab('profileTab', this)">PROFILE</button>
                 <button class="tab-btn" onclick="switchTab('upgradesTab', this)">ARMORY UPGRADES</button>
                 <button class="tab-btn" onclick="switchTab('achievementsTab', this)">ACHIEVEMENTS</button>
             </div>
 
-            <!-- TAB 1: PROFILE / OVERVIEW -->
             <div id="profileTab" class="tab-content active">
                 <div style="font-size: 11px; color: #8b9bb4; text-align: center; padding: 10px 0;">
                     Prepare your equipment, review tactical upgrades, and proceed into the multi-room complex.
@@ -295,28 +428,21 @@
                 <button class="primary-btn" onclick="goToLobby()">PROCEED TO CHARACTER SELECT</button>
             </div>
 
-            <!-- TAB 2: UPGRADES & SKILL TREE -->
             <div id="upgradesTab" class="tab-content">
-                <div class="upgrades-grid" id="upgradesGrid">
-                    <!-- Populated via script -->
-                </div>
+                <div class="upgrades-grid" id="upgradesGrid"></div>
             </div>
 
-            <!-- TAB 3: ACHIEVEMENTS -->
             <div id="achievementsTab" class="tab-content">
                 <div style="display: flex; justify-content: space-between; font-family: 'Orbitron', sans-serif; font-size: 11px; color: #00f2fe;">
                     <span>UNLOCKED REWARDS</span>
                     <span id="achProgress">0 / 8</span>
                 </div>
-                <div class="achievements-grid" id="achievementsGrid">
-                    <!-- Populated via script -->
-                </div>
+                <div class="achievements-grid" id="achievementsGrid"></div>
             </div>
-
         </div>
     </div>
 
-    <!-- SCREEN 2: CHARACTER / FIGHTER SELECTION -->
+    <!-- STAGE 3: SCREEN 2 - CHARACTER / FIGHTER SELECTION -->
     <div id="lobbyScreen" class="screen hidden">
         <div class="screen-container">
             <h1>SELECT COMBATANT</h1>
@@ -346,7 +472,7 @@
         </div>
     </div>
 
-    <!-- SCREEN 3: GAMEPLAY ARENA -->
+    <!-- STAGE 4: SCREEN 3 - GAMEPLAY ARENA -->
     <div class="game-wrapper">
         <div id="victoryOverlay" class="victory-screen hidden">
             <h2 id="victoryText">VICTORY!</h2>
@@ -377,14 +503,12 @@
             </div>
         </div>
         
-        <!-- Advanced Real-time Metrics HUD -->
         <div class="metrics-hud">
             <span id="hudWave">WAVE: 1</span>
             <span id="hudCredits">CR: 500</span>
             <span id="hudMultiplier">XP MULT: 1.2x</span>
         </div>
 
-        <!-- Minimap HUD -->
         <div class="minimap-container">
             <canvas id="minimapCanvas" width="130" height="130"></canvas>
         </div>
@@ -410,7 +534,6 @@
     </div>
 
     <script>
-        // META-PROGRESSION, CREDITS, & UPGRADES STATE
         let playerCredits = parseInt(localStorage.getItem('aether_credits')) || 500;
         let playerRank = parseInt(localStorage.getItem('aether_rank')) || 1;
         let upgradesData = [
@@ -420,7 +543,6 @@
             { id: 'energy_regen', title: 'Aether Core Condenser', desc: '+20% Ultimate energy recharge speed.', cost: 450, level: 0, max: 3 }
         ];
 
-        // 8 EXPANDED ACHIEVEMENTS SYSTEM
         const achievementsData = [
             { id: 'first_blood', title: 'First Deployment', desc: 'Enter the Aether Nexus hub.', unlocked: true },
             { id: 'veteran_warrior', title: 'Tactical Operator', desc: 'Win 3 tactical engagements.', unlocked: false },
@@ -461,10 +583,8 @@
             document.getElementById('playerCredits').innerText = `CREDITS: ${playerCredits} CR`;
             document.getElementById('playerLevel').innerText = `RANK: ${playerRank} [OPERATIVE]`;
             
-            // Check High Roller achievement
             if (playerCredits >= 2000) unlockAchievement('high_roller');
 
-            // Render Upgrades
             const upGrid = document.getElementById('upgradesGrid');
             upGrid.innerHTML = '';
             upgradesData.forEach((up, idx) => {
@@ -483,7 +603,6 @@
                 `;
             });
 
-            // Render Achievements
             const achGrid = document.getElementById('achievementsGrid');
             achGrid.innerHTML = '';
             let unlockedCount = 0;
@@ -534,6 +653,12 @@
 
         loadMetaData();
 
+        function enterSystemHub() {
+            document.getElementById('pagePortal').classList.add('hidden');
+            document.getElementById('landingScreen').classList.remove('hidden');
+            unlockAchievement('first_blood');
+        }
+
         let userName = "OPERATIVE_ALPHA";
         function goToLobby() {
             const inputVal = document.getElementById('usernameInput').value.trim();
@@ -541,7 +666,6 @@
             document.getElementById('welcomePlayerBanner').innerText = `OPERATOR: ${userName.toUpperCase()}`;
             document.getElementById('landingScreen').classList.add('hidden');
             document.getElementById('lobbyScreen').classList.remove('hidden');
-            unlockAchievement('first_blood');
         }
 
         function backToLanding() {
@@ -614,7 +738,6 @@
             pointLight.intensity = 1.4;
             pointLight.diffuse = new BABYLON.Color3(0, 0.95, 1);
 
-            // MASSIVE 380x380 COMPLEX MAP
             const mapSize = 380;
             const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: mapSize, height: mapSize}, scene);
             const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
@@ -629,7 +752,6 @@
             borderMat.diffuseColor = new BABYLON.Color3(0, 0.6, 1);
             arenaBorder.material = borderMat;
 
-            // HEALING PAD SANCTUARY AT (-130, -130)
             healingPadMesh = BABYLON.MeshBuilder.CreateCylinder("healingPad", {diameter: 36, height: 0.4}, scene);
             healingPadMesh.position = new BABYLON.Vector3(-130, 0.2, -130);
             const healMat = new BABYLON.StandardMaterial("healMat", scene);
@@ -642,24 +764,19 @@
             obstacleMat.diffuseColor = new BABYLON.Color3(0.08, 0.12, 0.25);
             obstacleMat.specularColor = new BABYLON.Color3(0.5, 0.8, 1);
 
-            // COMPLEX MULTI-ROOM MAZE STRUCTURES ACROSS 380x380
             const obstaclePositions = [
-                // Outer massive chambers
                 {x: -130, z: 0, w: 22, h: 20, d: 110},
                 {x: 130, z: 0, w: 22, h: 20, d: 110},
                 {x: 0, z: -130, w: 110, h: 20, d: 22},
                 {x: 0, z: 130, w: 110, h: 20, d: 22},
-                // Inner tactical rooms & mazes
                 {x: -75, z: -75, w: 40, h: 16, d: 40},
                 {x: 75, z: 75, w: 40, h: 16, d: 40},
                 {x: -75, z: 75, w: 40, h: 16, d: 40},
                 {x: 75, z: -75, w: 40, h: 16, d: 40},
-                // Central Nexus fortress
                 {x: -30, z: 0, w: 14, h: 24, d: 50},
                 {x: 30, z: 0, w: 14, h: 24, d: 50},
                 {x: 0, z: -30, w: 50, h: 24, d: 14},
                 {x: 0, z: 30, w: 50, h: 24, d: 14},
-                // Scatter flanking corridors
                 {x: -140, z: 80, w: 24, h: 15, d: 24},
                 {x: 140, z: -80, w: 24, h: 15, d: 24},
                 {x: -80, z: 140, w: 24, h: 15, d: 24},
@@ -687,7 +804,6 @@
                 this.x = x; this.y = 0; this.z = z;
                 this.vx = 0; this.vz = 0; this.vy = 0;
                 
-                // Stat calculations with armory upgrade modifiers for player
                 const hpBonus = (!isAI) ? (upgradesData[0].level * 25) : 0;
                 this.maxHealth = 100 + hpBonus;
                 this.health = this.maxHealth;
@@ -703,27 +819,91 @@
                 this.attackCooldown = 0;
                 this.dashCooldown = 0;
                 this.facingAngle = 0;
+                this.walkCycle = 0;
 
-                this.mesh = BABYLON.MeshBuilder.CreateBox(`fighter_${index}`, {width: 4, height: 7, depth: 3}, scene);
-                this.mesh.position = new BABYLON.Vector3(this.x, 3.5, this.z);
+                // Create articulated humanoid rig root container
+                this.rootMesh = new BABYLON.TransformNode(`fighter_root_${index}`, scene);
+                this.rootMesh.position = new BABYLON.Vector3(this.x, 0, this.z);
 
-                const mat = new BABYLON.StandardMaterial(`fMat_${index}`, scene);
-                mat.diffuseColor = BABYLON.Color3.FromHexString(colorHex);
-                mat.emissiveColor = BABYLON.Color3.FromHexString(colorHex).scale(0.3);
-                this.mesh.material = mat;
+                const baseMat = new BABYLON.StandardMaterial(`fMat_${index}`, scene);
+                baseMat.diffuseColor = BABYLON.Color3.FromHexString(colorHex);
+                baseMat.emissiveColor = BABYLON.Color3.FromHexString(colorHex).scale(0.35);
 
+                const limbMat = new BABYLON.StandardMaterial(`lMat_${index}`, scene);
+                limbMat.diffuseColor = new BABYLON.Color3(0.15, 0.18, 0.25);
+                limbMat.specularColor = new BABYLON.Color3(0.5, 0.8, 1);
+
+                // Torso / Chest
+                this.torso = BABYLON.MeshBuilder.CreateBox(`torso_${index}`, {width: 2.2, height: 3.2, depth: 1.2}, scene);
+                this.torso.position.y = 3.6;
+                this.torso.material = baseMat;
+                this.torso.parent = this.rootMesh;
+
+                // Head with Visor
+                this.head = BABYLON.MeshBuilder.CreateBox(`head_${index}`, {width: 1.2, height: 1.2, depth: 1.2}, scene);
+                this.head.position.y = 5.6;
+                this.head.material = limbMat;
+                this.head.parent = this.rootMesh;
+
+                const visor = BABYLON.MeshBuilder.CreateBox(`visor_${index}`, {width: 1.0, height: 0.4, depth: 0.4}, scene);
+                visor.position = new BABYLON.Vector3(0, 5.6, 0.5);
+                const visorMat = new BABYLON.StandardMaterial(`vMat_${index}`, scene);
+                visorMat.emissiveColor = BABYLON.Color3.FromHexString(colorHex);
+                visor.material = visorMat;
+                visor.parent = this.rootMesh;
+
+                // Arms (Shoulders pivot)
+                this.leftArmPivot = new BABYLON.TransformNode(`lArmP_${index}`, scene);
+                this.leftArmPivot.position = new BABYLON.Vector3(-1.5, 4.8, 0);
+                this.leftArmPivot.parent = this.rootMesh;
+
+                this.leftArm = BABYLON.MeshBuilder.CreateBox(`lArm_${index}`, {width: 0.7, height: 2.4, depth: 0.7}, scene);
+                this.leftArm.position.y = -1.2;
+                this.leftArm.material = limbMat;
+                this.leftArm.parent = this.leftArmPivot;
+
+                this.rightArmPivot = new BABYLON.TransformNode(`rArmP_${index}`, scene);
+                this.rightArmPivot.position = new BABYLON.Vector3(1.5, 4.8, 0);
+                this.rightArmPivot.parent = this.rootMesh;
+
+                this.rightArm = BABYLON.MeshBuilder.CreateBox(`rArm_${index}`, {width: 0.7, height: 2.4, depth: 0.7}, scene);
+                this.rightArm.position.y = -1.2;
+                this.rightArm.material = limbMat;
+                this.rightArm.parent = this.rightArmPivot;
+
+                // Legs (Hip pivot)
+                this.leftLegPivot = new BABYLON.TransformNode(`lLegP_${index}`, scene);
+                this.leftLegPivot.position = new BABYLON.Vector3(-0.7, 2.0, 0);
+                this.leftLegPivot.parent = this.rootMesh;
+
+                this.leftLeg = BABYLON.MeshBuilder.CreateBox(`lLeg_${index}`, {width: 0.8, height: 2.4, depth: 0.8}, scene);
+                this.leftLeg.position.y = -1.2;
+                this.leftLeg.material = limbMat;
+                this.leftLeg.parent = this.leftLegPivot;
+
+                this.rightLegPivot = new BABYLON.TransformNode(`rLegP_${index}`, scene);
+                this.rightLegPivot.position = new BABYLON.Vector3(0.7, 2.0, 0);
+                this.rightLegPivot.parent = this.rootMesh;
+
+                this.rightLeg = BABYLON.MeshBuilder.CreateBox(`rLeg_${index}`, {width: 0.8, height: 2.4, depth: 0.8}, scene);
+                this.rightLeg.position.y = -1.2;
+                this.rightLeg.material = limbMat;
+                this.rightLeg.parent = this.rightLegPivot;
+
+                // Shield
                 this.shieldMesh = BABYLON.MeshBuilder.CreateSphere(`shield_${index}`, {diameter: 9.5}, scene);
                 const shieldMat = new BABYLON.StandardMaterial(`sMat_${index}`, scene);
                 shieldMat.diffuseColor = new BABYLON.Color3(0, 0.9, 1);
                 shieldMat.alpha = 0.25;
                 this.shieldMesh.material = shieldMat;
-                this.shieldMesh.parent = this.mesh;
+                this.shieldMesh.position.y = 3.6;
+                this.shieldMesh.parent = this.rootMesh;
                 this.shieldMesh.setEnabled(false);
             }
 
             update(fightersArr, projectilesArr) {
                 if (this.health <= 0) {
-                    this.mesh.setEnabled(false);
+                    this.rootMesh.setEnabled(false);
                     return;
                 }
 
@@ -731,7 +911,6 @@
                     this.runAI(fightersArr, projectilesArr);
                 }
 
-                // SANCTUARY REGEN CHECK (-130, -130)
                 if (!this.isAI && this.index === myPlayerIndex) {
                     const distToPad = Math.hypot(this.x - (-130), this.z - (-130));
                     if (distToPad < 18 && this.health < this.maxHealth) {
@@ -749,7 +928,6 @@
                     this.isGrounded = true;
                 }
 
-                // MAP BOUNDARIES FOR 380x380 (-180 to 180)
                 if (this.x < -180) this.x = -180;
                 if (this.x > 180) this.x = 180;
                 if (this.z < -180) this.z = -180;
@@ -774,6 +952,22 @@
 
                 this.x += this.vx;
                 this.z += this.vz;
+
+                // Animate Walk / Run motion limbs if moving
+                const isMoving = Math.abs(this.vx) > 0.05 || Math.abs(this.vz) > 0.05;
+                if (isMoving) {
+                    this.walkCycle += 0.2;
+                    this.leftLegPivot.rotation.x = Math.sin(this.walkCycle) * 0.6;
+                    this.rightLegPivot.rotation.x = -Math.sin(this.walkCycle) * 0.6;
+                    this.leftArmPivot.rotation.x = -Math.sin(this.walkCycle) * 0.5;
+                    this.rightArmPivot.rotation.x = Math.sin(this.walkCycle) * 0.5;
+                } else {
+                    this.leftLegPivot.rotation.x = BABYLON.Scalar.Lerp(this.leftLegPivot.rotation.x, 0, 0.1);
+                    this.rightLegPivot.rotation.x = BABYLON.Scalar.Lerp(this.rightLegPivot.rotation.x, 0, 0.1);
+                    this.leftArmPivot.rotation.x = BABYLON.Scalar.Lerp(this.leftArmPivot.rotation.x, 0, 0.1);
+                    this.rightArmPivot.rotation.x = BABYLON.Scalar.Lerp(this.rightArmPivot.rotation.x, 0, 0.1);
+                }
+
                 this.vx *= 0.85;
                 this.vz *= 0.85;
 
@@ -787,10 +981,10 @@
                     }
                 }
 
-                this.mesh.position.x = this.x;
-                this.mesh.position.y = this.y + 3.5;
-                this.mesh.position.z = this.z;
-                this.mesh.rotation.y = this.facingAngle;
+                this.rootMesh.position.x = this.x;
+                this.rootMesh.position.y = this.y;
+                this.rootMesh.position.z = this.z;
+                this.rootMesh.rotation.y = this.facingAngle;
             }
 
             runAI(fightersArr, projectilesArr) {
@@ -878,7 +1072,7 @@
 
                 const pDirX = Math.sin(this.facingAngle);
                 const pDirZ = Math.cos(this.facingAngle);
-                projectilesArr.push(new Projectile3D(this.x + pDirX * 4, this.y + 3.5, this.z + pDirZ * 4, pDirX, pDirZ, this.colorHex, false, this.index));
+                projectilesArr.push(new Projectile3D(this.x + pDirX * 4, this.y + 4.0, this.z + pDirZ * 4, pDirX, pDirZ, this.colorHex, false, this.index));
             }
 
             fireUltimate(projectilesArr) {
@@ -888,7 +1082,7 @@
 
                 const pDirX = Math.sin(this.facingAngle);
                 const pDirZ = Math.cos(this.facingAngle);
-                projectilesArr.push(new Projectile3D(this.x + pDirX * 5, this.y + 3.5, this.z + pDirZ * 5, pDirX, pDirZ, this.colorHex, true, this.index));
+                projectilesArr.push(new Projectile3D(this.x + pDirX * 5, this.y + 4.0, this.z + pDirZ * 5, pDirX, pDirZ, this.colorHex, true, this.index));
                 if (this.index === myPlayerIndex) unlockAchievement('ultimate_power');
             }
 
@@ -989,17 +1183,15 @@
                 { name: 'PHANTOM', color: '#ffcc00' }
             ];
 
-            // Player sanctuary spawn at bottom-left corner (-130, -130)
             const positions = [];
             positions[playerChoice] = { x: -130, z: -130 };
 
-            // Randomized enemy spawning pools across expansive quadrants
             const enemySpawnPools = [
-                {x: 130, z: 130},   // Top-Right Corner
-                {x: -130, z: 130},  // Top-Left Corner
-                {x: 130, z: -130},  // Bottom-Right Corner
-                {x: 0, z: 100},     // Upper Center Room
-                {x: 100, z: 0}      // Right Center Room
+                {x: 130, z: 130},
+                {x: -130, z: 130},
+                {x: 130, z: -130},
+                {x: 0, z: 100},
+                {x: 100, z: 0}
             ];
 
             for (let i = enemySpawnPools.length - 1; i > 0; i--) {
@@ -1080,7 +1272,6 @@
             }
         }
 
-        // MINIMAP RENDERING
         function drawMinimap() {
             minimapCtx.clearRect(0, 0, 130, 130);
             
@@ -1097,7 +1288,6 @@
                 minimapCtx.fillRect(mx - mw/2, mz - md/2, mw, md);
             });
 
-            // Healing pad sanctuary (-130, -130)
             minimapCtx.fillStyle = 'rgba(0, 255, 100, 0.4)';
             minimapCtx.beginPath();
             const hx = (-130 * scale) + offsetX;
