@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Aether Nexus: Advanced 3D Arena</title>
+    <title>Aether Nexus: Tactical Operations - Advanced Core</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap');
 
@@ -24,12 +24,9 @@
             justify-content: center;
         }
 
-        .lobby-screen {
+        .screen {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             z-index: 100;
             background: rgba(3, 5, 13, 0.98);
             display: flex;
@@ -41,24 +38,23 @@
             overflow-y: auto;
         }
 
-        .lobby-container {
+        .screen-container {
             background: rgba(8, 12, 24, 0.95);
             border: 2px solid #203158;
             border-radius: 16px;
-            padding: 20px;
+            padding: 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 12px;
-            box-shadow: 0 0 40px rgba(0,242,254,0.25);
+            gap: 16px;
+            box-shadow: 0 0 45px rgba(0,242,254,0.3);
             width: 100%;
-            max-width: 400px;
+            max-width: 520px;
             box-sizing: border-box;
         }
 
-        .lobby-screen h1 {
+        h1, h2 {
             font-family: 'Orbitron', sans-serif;
-            font-size: 16px;
             color: #00f2fe;
             margin: 0;
             text-shadow: 0 0 10px rgba(0,242,254,0.7);
@@ -66,99 +62,130 @@
             text-align: center;
         }
 
-        .lobby-screen input, .lobby-screen button {
+        h1 { font-size: 20px; }
+        h2 { font-size: 15px; }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            background: #03050d;
+            border: 1px solid #384c85;
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            text-align: center;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus {
+            border-color: #00f2fe;
+            box-shadow: 0 0 12px rgba(0,242,254,0.5);
+        }
+
+        .primary-btn {
             font-family: 'Orbitron', sans-serif;
             font-size: 13px;
             padding: 12px 16px;
-            background: #0d1326;
-            color: #fff;
-            border: 1px solid #384c85;
+            background: #00ff66;
+            color: #03050d;
+            font-weight: 900;
+            border: none;
             border-radius: 8px;
-            outline: none;
-            width: 100%;
-            text-align: center;
-            box-sizing: border-box;
-        }
-
-        .lobby-screen input { text-align: left; }
-        .lobby-screen button { cursor: pointer; transition: 0.2s; }
-        .lobby-screen button:active { background: #182347; box-shadow: 0 0 12px rgba(0,242,254,0.5); }
-
-        .slots-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            width: 100%;
-            margin-top: 2px;
-        }
-
-        .slot-card {
-            background: #080c18;
-            border: 2px solid #223461;
-            border-radius: 10px;
-            padding: 12px 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
             cursor: pointer;
-            min-height: 52px;
-            justify-content: center;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+            transition: 0.2s;
+            box-shadow: 0 0 15px rgba(0,255,102,0.4);
         }
 
-        .slot-card.occupied {
-            border-color: #ff2a6d;
-            background: rgba(255, 42, 109, 0.05);
-        }
+        .primary-btn:active { transform: scale(0.96); }
 
-        .slot-card.selected {
-            border-color: #00ff66;
-            box-shadow: 0 0 12px rgba(0,255,102,0.4);
-            background: rgba(0, 255, 102, 0.05);
-        }
-
-        .slot-title {
+        .secondary-btn {
             font-family: 'Orbitron', sans-serif;
             font-size: 11px;
-            font-weight: 900;
-            letter-spacing: 0.5px;
+            padding: 10px;
+            background: #0d1326;
+            color: #05d9e8;
+            border: 1px solid #05d9e8;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
         }
 
-        .slot-status {
-            font-size: 11px;
-            color: #8b9bb4;
+        .tabs-row {
+            display: flex; gap: 8px; width: 100%;
         }
 
+        .tab-btn {
+            flex: 1; padding: 8px; font-family: 'Orbitron', sans-serif; font-size: 10px;
+            background: #080c18; border: 1px solid #223461; color: #8b9bb4; border-radius: 6px; cursor: pointer;
+        }
+        .tab-btn.active { background: rgba(0,242,254,0.15); border-color: #00f2fe; color: #00f2fe; font-weight: 900; }
+
+        .tab-content { display: none; width: 100%; flex-direction: column; gap: 10px; }
+        .tab-content.active { display: flex; }
+
+        .upgrades-grid, .achievements-grid {
+            display: grid; grid-template-columns: 1fr; gap: 8px; width: 100%; max-height: 220px; overflow-y: auto; padding-right: 4px;
+        }
+
+        .upgrade-card, .achievement-item {
+            background: rgba(13, 19, 38, 0.7);
+            border: 1px solid #223461;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .upgrade-card.available:hover { border-color: #00f2fe; }
+        .achievement-item.unlocked { border-color: #00ff66; background: rgba(0, 255, 102, 0.05); }
+
+        .card-info { display: flex; flex-direction: column; gap: 2px; }
+        .card-title { font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 900; color: #fff; }
+        .card-desc { font-size: 10px; color: #8b9bb4; }
+        .card-action { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+        
+        .action-btn-sm {
+            font-family: 'Orbitron', sans-serif; font-size: 9px; padding: 6px 10px;
+            background: #00f2fe; color: #03050d; font-weight: 900; border: none; border-radius: 4px; cursor: pointer;
+        }
+        .action-btn-sm:disabled { background: #223461; color: #8b9bb4; cursor: not-allowed; }
+
+        .slots-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+
+        .slot-card {
+            background: #080c18; border: 2px solid #223461; border-radius: 10px;
+            padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; min-height: 52px; justify-content: center;
+        }
+        .slot-card.selected { border-color: #00ff66; box-shadow: 0 0 12px rgba(0,255,102,0.4); background: rgba(0, 255, 102, 0.05); }
+
+        .slot-title { font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 900; }
+        .slot-status { font-size: 11px; color: #8b9bb4; }
         .hidden { display: none !important; }
 
         .game-wrapper {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            background: #03050d;
-            box-sizing: border-box;
-            overflow: hidden;
+            position: relative; width: 100vw; height: 100vh; background: #03050d; box-sizing: border-box; overflow: hidden;
         }
 
-        #renderCanvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
+        #renderCanvas { display: block; width: 100%; height: 100%; }
 
         .mugen-hud {
-            position: absolute;
-            top: 6px; left: 8px; right: 8px;
-            display: flex; justify-content: space-between; align-items: center;
-            pointer-events: none; z-index: 10;
+            position: absolute; top: 6px; left: 8px; right: 8px;
+            display: flex; justify-content: space-between; align-items: center; pointer-events: none; z-index: 10;
         }
 
         .hud-group { display: flex; gap: 6px; width: 48%; justify-content: space-between; }
         .fighter-hud { width: 47%; display: flex; flex-direction: column; }
         .name-tag {
-            font-family: 'Orbitron', sans-serif; font-size: 8px; font-weight: 900;
-            margin-bottom: 2px;
-            display: flex; justify-content: space-between;
+            font-family: 'Orbitron', sans-serif; font-size: 8px; font-weight: 900; margin-bottom: 2px; display: flex; justify-content: space-between;
         }
 
         .p1-col { color: #ff2a6d; }
@@ -176,62 +203,40 @@
         #p3-health { background: #00ff66; }
         #p4-health { background: #ffcc00; }
 
+        /* ADVANCED METRICS BAR */
+        .metrics-hud {
+            position: absolute; top: 48px; left: 12px;
+            display: flex; gap: 12px; z-index: 15; pointer-events: none;
+            font-family: 'Orbitron', sans-serif; font-size: 10px; color: #00f2fe;
+            background: rgba(3, 5, 13, 0.85); padding: 6px 10px; border: 1px solid #203158; border-radius: 6px;
+        }
+
+        /* MINIMAP */
+        .minimap-container {
+            position: absolute; top: 48px; right: 12px; width: 130px; height: 130px;
+            background: rgba(3, 5, 13, 0.85); border: 2px solid #00f2fe; border-radius: 8px; z-index: 15; overflow: hidden; pointer-events: none;
+            box-shadow: 0 0 15px rgba(0,242,254,0.3);
+        }
+        #minimapCanvas { width: 100%; height: 100%; display: block; }
+
         .touch-controls {
-            display: flex;
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
-            height: 160px;
-            pointer-events: none;
-            z-index: 50;
-            padding: 8px 14px;
-            justify-content: space-between;
-            align-items: flex-end;
-            box-sizing: border-box;
+            display: flex; position: absolute; bottom: 0; left: 0; right: 0; height: 160px;
+            pointer-events: none; z-index: 50; padding: 8px 14px; justify-content: space-between; align-items: flex-end; box-sizing: border-box;
         }
 
-        .touch-group-left, .touch-group-right {
-            display: flex;
-            gap: 10px;
-            pointer-events: auto;
-        }
-
-        .touch-group-left {
-            align-items: flex-end;
-            position: relative;
-            width: 190px;
-            height: 130px;
-        }
-
-        .touch-group-right {
-            align-items: flex-end;
-            flex-wrap: wrap;
-            width: 250px;
-            justify-content: flex-end;
-            padding-bottom: 4px;
-        }
+        .touch-group-left, .touch-group-right { display: flex; gap: 10px; pointer-events: auto; }
+        .touch-group-left { align-items: flex-end; position: relative; width: 190px; height: 130px; }
+        .touch-group-right { align-items: flex-end; flex-wrap: wrap; width: 250px; justify-content: flex-end; padding-bottom: 4px; }
 
         .t-btn {
-            background: rgba(13, 19, 38, 0.82);
-            border: 2px solid rgba(56, 76, 133, 0.9);
-            color: #fff;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 900;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(6px);
-            user-select: none;
-            -webkit-user-select: none;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.6);
-            touch-action: manipulation;
+            background: rgba(13, 19, 38, 0.82); border: 2px solid rgba(56, 76, 133, 0.9); color: #fff;
+            font-family: 'Orbitron', sans-serif; font-weight: 900; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center; backdrop-filter: blur(6px);
+            user-select: none; -webkit-user-select: none; box-shadow: 0 6px 16px rgba(0,0,0,0.6); touch-action: manipulation;
         }
 
         .t-btn:active, .t-btn.pressed {
-            background: rgba(0, 242, 254, 0.35);
-            border-color: #00f2fe;
-            box-shadow: 0 0 18px rgba(0,242,254,0.7);
-            transform: scale(0.93);
+            background: rgba(0, 242, 254, 0.35); border-color: #00f2fe; box-shadow: 0 0 18px rgba(0,242,254,0.7); transform: scale(0.93);
         }
 
         #touch-up { position: absolute; left: 37px; top: 0; width: 54px; height: 54px; font-size: 16px; border-radius: 16px; }
@@ -246,102 +251,144 @@
         #touch-shield { width: 58px; height: 58px; font-size: 12px; border-radius: 16px; color: #05d9e8; }
 
         .victory-screen {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(3, 5, 13, 0.85);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 200;
-            backdrop-filter: blur(4px);
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 5, 13, 0.92); display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 200; backdrop-filter: blur(6px); gap: 15px;
         }
-        .victory-screen h2 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 28px;
-            color: #00ff66;
-            text-shadow: 0 0 20px rgba(0,255,102,0.8);
-            margin: 0 0 10px 0;
-            letter-spacing: 3px;
-        }
-        .victory-screen button {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 13px;
-            padding: 10px 20px;
-            background: #0d1326;
-            color: #fff;
-            border: 2px solid #00ff66;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 0 15px rgba(0,255,102,0.4);
+        .victory-screen h2 { font-size: 28px; color: #00ff66; text-shadow: 0 0 20px rgba(0,255,102,0.8); margin: 0; letter-spacing: 3px; }
+        .reward-card {
+            background: rgba(0, 242, 254, 0.1); border: 1px solid #00f2fe; padding: 12px 24px;
+            border-radius: 10px; text-align: center; font-family: 'Orbitron', sans-serif; font-size: 13px; color: #00f2fe;
+            box-shadow: 0 0 15px rgba(0,242,254,0.3);
         }
     </style>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babylonjs/6.30.0/babylon.js"></script>
 </head>
 <body>
 
-    <div id="lobbyScreen" class="lobby-screen">
-        <div class="lobby-container">
-            <h1>AETHER NEXUS 3D ARENA</h1>
-            <input type="text" id="roomNameInput" placeholder="Enter Room Name">
-            <button id="connectRoomBtn">CONNECT TO ROOM</button>
+    <!-- SCREEN 1: LANDING & SYSTEM HUB -->
+    <div id="landingScreen" class="screen">
+        <div class="screen-container">
+            <h1>AETHER NEXUS HUB</h1>
+            <div style="font-size: 11px; color: #8b9bb4; text-align: center;">Advanced Tactical Combat Architecture & Meta Progression</div>
             
-            <div style="font-size: 11px; color: #00f2fe; margin-top: 2px;">Select Your Color Fighter:</div>
+            <input type="text" id="usernameInput" value="OPERATIVE_ALPHA" placeholder="Enter Callsign">
+
+            <!-- STATS COUNTER BAR -->
+            <div style="display: flex; justify-content: space-between; width: 100%; background: #080c18; padding: 8px 12px; border-radius: 8px; border: 1px solid #223461; font-family: 'Orbitron', sans-serif; font-size: 10px; color: #05d9e8;">
+                <span id="playerCredits">CREDITS: 500 CR</span>
+                <span id="playerLevel">RANK: 1 [NOVICE]</span>
+            </div>
+
+            <!-- TABS NAVIGATION -->
+            <div class="tabs-row">
+                <button class="tab-btn active" onclick="switchTab('profileTab', this)">PROFILE</button>
+                <button class="tab-btn" onclick="switchTab('upgradesTab', this)">ARMORY UPGRADES</button>
+                <button class="tab-btn" onclick="switchTab('achievementsTab', this)">ACHIEVEMENTS</button>
+            </div>
+
+            <!-- TAB 1: PROFILE / OVERVIEW -->
+            <div id="profileTab" class="tab-content active">
+                <div style="font-size: 11px; color: #8b9bb4; text-align: center; padding: 10px 0;">
+                    Prepare your equipment, review tactical upgrades, and proceed into the multi-room complex.
+                </div>
+                <button class="primary-btn" onclick="goToLobby()">PROCEED TO CHARACTER SELECT</button>
+            </div>
+
+            <!-- TAB 2: UPGRADES & SKILL TREE -->
+            <div id="upgradesTab" class="tab-content">
+                <div class="upgrades-grid" id="upgradesGrid">
+                    <!-- Populated via script -->
+                </div>
+            </div>
+
+            <!-- TAB 3: ACHIEVEMENTS -->
+            <div id="achievementsTab" class="tab-content">
+                <div style="display: flex; justify-content: space-between; font-family: 'Orbitron', sans-serif; font-size: 11px; color: #00f2fe;">
+                    <span>UNLOCKED REWARDS</span>
+                    <span id="achProgress">0 / 8</span>
+                </div>
+                <div class="achievements-grid" id="achievementsGrid">
+                    <!-- Populated via script -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SCREEN 2: CHARACTER / FIGHTER SELECTION -->
+    <div id="lobbyScreen" class="screen hidden">
+        <div class="screen-container">
+            <h1>SELECT COMBATANT</h1>
+            <div style="font-size: 11px; color: #00f2fe; text-align: center;" id="welcomePlayerBanner">OPERATOR READY</div>
             
             <div class="slots-grid">
-                <div class="slot-card" data-slot="0" onclick="selectSlot(0)">
+                <div class="slot-card selected" data-slot="0" onclick="selectSlot(0)">
                     <div class="slot-title p1-col">P1: VALKYRIE</div>
-                    <div class="slot-status" id="slot-status-0">Available</div>
+                    <div class="slot-status" id="slot-status-0">Selected</div>
                 </div>
                 <div class="slot-card" data-slot="1" onclick="selectSlot(1)">
                     <div class="slot-title p2-col">P2: BLADE</div>
                     <div class="slot-status" id="slot-status-1">Available</div>
                 </div>
                 <div class="slot-card" data-slot="2" onclick="selectSlot(2)">
-                    <div class="slot-title p3-col">P3: NOVA</div>
+                    <div class="slot-title p3-col">NOVA</div>
                     <div class="slot-status" id="slot-status-2">Available</div>
                 </div>
                 <div class="slot-card" data-slot="3" onclick="selectSlot(3)">
-                    <div class="slot-title p4-col">P4: PHANTOM</div>
+                    <div class="slot-title p4-col">PHANTOM</div>
                     <div class="slot-status" id="slot-status-3">Available</div>
                 </div>
             </div>
 
-            <button id="startBtn" class="hidden" style="background: #00ff66; color: #03050d; font-weight: 900; margin-top: 4px;" onclick="startGame()">START 3D BATTLE</button>
-            <div id="lobbyNotice" style="font-size: 10px; color: #8b9bb4; min-height: 14px; text-align: center;"></div>
+            <button class="primary-btn" onclick="startGame()">DEPLOY TO NEXUS</button>
+            <button class="secondary-btn" onclick="backToLanding()">RETURN TO HUB</button>
         </div>
     </div>
 
+    <!-- SCREEN 3: GAMEPLAY ARENA -->
     <div class="game-wrapper">
         <div id="victoryOverlay" class="victory-screen hidden">
             <h2 id="victoryText">VICTORY!</h2>
-            <button onclick="location.reload()">PLAY AGAIN</button>
+            <div id="rewardBox" class="reward-card">Reward Unlocked</div>
+            <button class="primary-btn" style="max-width: 220px;" onclick="returnToHub()">RETURN TO HUB</button>
         </div>
 
         <div class="mugen-hud">
             <div class="hud-group">
                 <div class="fighter-hud">
-                    <div class="name-tag p1-col"><span>P1: VALKYRIE</span></div>
+                    <div class="name-tag p1-col"><span id="p1-name-tag">P1: VALKYRIE</span></div>
                     <div class="health-bar-frame"><div id="p1-health" class="health-bar-fill"></div></div>
                 </div>
                 <div class="fighter-hud">
-                    <div class="name-tag p2-col"><span>P2: BLADE</span></div>
+                    <div class="name-tag p2-col"><span id="p2-name-tag">P2: BLADE</span></div>
                     <div class="health-bar-frame"><div id="p2-health" class="health-bar-fill"></div></div>
                 </div>
             </div>
             <div class="hud-group">
                 <div class="fighter-hud">
-                    <div class="name-tag p3-col"><span>P3: NOVA</span></div>
+                    <div class="name-tag p3-col"><span id="p3-name-tag">P3: NOVA</span></div>
                     <div class="health-bar-frame"><div id="p3-health" class="health-bar-fill"></div></div>
                 </div>
                 <div class="fighter-hud">
-                    <div class="name-tag p4-col"><span>P4: PHANTOM</span></div>
+                    <div class="name-tag p4-col"><span id="p4-name-tag">P4: PHANTOM</span></div>
                     <div class="health-bar-frame"><div id="p4-health" class="health-bar-fill"></div></div>
                 </div>
             </div>
         </div>
         
+        <!-- Advanced Real-time Metrics HUD -->
+        <div class="metrics-hud">
+            <span id="hudWave">WAVE: 1</span>
+            <span id="hudCredits">CR: 500</span>
+            <span id="hudMultiplier">XP MULT: 1.2x</span>
+        </div>
+
+        <!-- Minimap HUD -->
+        <div class="minimap-container">
+            <canvas id="minimapCanvas" width="130" height="130"></canvas>
+        </div>
+
         <canvas id="renderCanvas"></canvas>
 
         <div class="touch-controls">
@@ -363,15 +410,153 @@
     </div>
 
     <script>
-        let peer = null;
-        let connections = [];
-        let myPlayerIndex = null;
-        let isHost = false;
-        let roomName = '';
-        let slotOccupants = [null, null, null, null];
+        // META-PROGRESSION, CREDITS, & UPGRADES STATE
+        let playerCredits = parseInt(localStorage.getItem('aether_credits')) || 500;
+        let playerRank = parseInt(localStorage.getItem('aether_rank')) || 1;
+        let upgradesData = [
+            { id: 'hp_boost', title: 'Nanotech Hull Armor', desc: '+25 Max Health points per level.', cost: 300, level: 0, max: 5 },
+            { id: 'dmg_boost', title: 'Plasma Amplifier', desc: '+15% Attack and Skill damage output.', cost: 400, level: 0, max: 5 },
+            { id: 'speed_boost', title: 'Overdrive Thrusters', desc: '+10% Movement and Dash velocity.', cost: 350, level: 0, max: 3 },
+            { id: 'energy_regen', title: 'Aether Core Condenser', desc: '+20% Ultimate energy recharge speed.', cost: 450, level: 0, max: 3 }
+        ];
+
+        // 8 EXPANDED ACHIEVEMENTS SYSTEM
+        const achievementsData = [
+            { id: 'first_blood', title: 'First Deployment', desc: 'Enter the Aether Nexus hub.', unlocked: true },
+            { id: 'veteran_warrior', title: 'Tactical Operator', desc: 'Win 3 tactical engagements.', unlocked: false },
+            { id: 'sanctuary_master', title: 'Sanctuary Regenerator', desc: 'Heal your chassis on the home base healing pad.', unlocked: false },
+            { id: 'ultimate_power', title: 'Overdrive Unleashed', desc: 'Deploy an Ultimate energy projectile strike.', unlocked: false },
+            { id: 'shield_guardian', title: 'Defensive Matrix', desc: 'Activate operational shield barriers.', unlocked: false },
+            { id: 'high_roller', title: 'Tycoon', desc: 'Accumulate over 2,000 Credits.', unlocked: false },
+            { id: 'armory_master', title: 'Arms Dealer', desc: 'Purchase at least 2 armory upgrades.', unlocked: false },
+            { id: 'nexus_champion', title: 'Nexus Supreme', desc: 'Eliminate all opposing entities in combat.', unlocked: false }
+        ];
+
+        function loadMetaData() {
+            const savedUps = localStorage.getItem('aether_upgrades');
+            if (savedUps) {
+                try {
+                    const parsed = JSON.parse(savedUps);
+                    upgradesData.forEach((u, i) => { if(parsed[i]) u.level = parsed[i].level; });
+                } catch(e) {}
+            }
+            const savedAch = localStorage.getItem('aether_achievements');
+            if (savedAch) {
+                try {
+                    const parsed = JSON.parse(savedAch);
+                    achievementsData.forEach((a, i) => { if(parsed[i]) a.unlocked = parsed[i].unlocked; });
+                } catch(e) {}
+            }
+            updateHubUI();
+        }
+
+        function saveMetaData() {
+            localStorage.setItem('aether_credits', playerCredits);
+            localStorage.setItem('aether_rank', playerRank);
+            localStorage.setItem('aether_upgrades', JSON.stringify(upgradesData));
+            localStorage.setItem('aether_achievements', JSON.stringify(achievementsData));
+        }
+
+        function updateHubUI() {
+            document.getElementById('playerCredits').innerText = `CREDITS: ${playerCredits} CR`;
+            document.getElementById('playerLevel').innerText = `RANK: ${playerRank} [OPERATIVE]`;
+            
+            // Check High Roller achievement
+            if (playerCredits >= 2000) unlockAchievement('high_roller');
+
+            // Render Upgrades
+            const upGrid = document.getElementById('upgradesGrid');
+            upGrid.innerHTML = '';
+            upgradesData.forEach((up, idx) => {
+                const canBuy = playerCredits >= up.cost && up.level < up.max;
+                upGrid.innerHTML += `
+                    <div class="upgrade-card ${canBuy ? 'available' : ''}">
+                        <div class="card-info">
+                            <span class="card-title">${up.title} [Lv. ${up.level}/${up.max}]</span>
+                            <span class="card-desc">${up.desc}</span>
+                        </div>
+                        <div class="card-action">
+                            <span style="font-family:'Orbitron'; font-size:9px; color:#00f2fe;">${up.level >= up.max ? 'MAX' : up.cost + ' CR'}</span>
+                            <button class="action-btn-sm" ${!canBuy || up.level >= up.max ? 'disabled' : ''} onclick="buyUpgrade(${idx})">UPGRADE</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Render Achievements
+            const achGrid = document.getElementById('achievementsGrid');
+            achGrid.innerHTML = '';
+            let unlockedCount = 0;
+            achievementsData.forEach(ach => {
+                if (ach.unlocked) unlockedCount++;
+                achGrid.innerHTML += `
+                    <div class="achievement-item ${ach.unlocked ? 'unlocked' : ''}">
+                        <div class="card-info">
+                            <span class="card-title">${ach.title}</span>
+                            <span class="card-desc">${ach.desc}</span>
+                        </div>
+                        <div style="font-family:'Orbitron'; font-size:9px; padding:3px 6px; border-radius:4px; background:${ach.unlocked ? '#00ff66; color:#03050d; font-weight:900;' : '#223461; color:#8b9bb4;'}">${ach.unlocked ? 'UNLOCKED' : 'LOCKED'}</div>
+                    </div>
+                `;
+            });
+            document.getElementById('achProgress').innerText = `${unlockedCount} / ${achievementsData.length}`;
+            saveMetaData();
+        }
+
+        function unlockAchievement(id) {
+            const ach = achievementsData.find(a => a.id === id);
+            if (ach && !ach.unlocked) {
+                ach.unlocked = true;
+                saveMetaData();
+            }
+        }
+
+        function buyUpgrade(idx) {
+            const up = upgradesData[idx];
+            if (playerCredits >= up.cost && up.level < up.max) {
+                playerCredits -= up.cost;
+                up.level++;
+                up.cost = Math.floor(up.cost * 1.5);
+                
+                let totalUpgrades = upgradesData.reduce((acc, curr) => acc + curr.level, 0);
+                if (totalUpgrades >= 2) unlockAchievement('armory_master');
+                
+                updateHubUI();
+            }
+        }
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        loadMetaData();
+
+        let userName = "OPERATIVE_ALPHA";
+        function goToLobby() {
+            const inputVal = document.getElementById('usernameInput').value.trim();
+            if (inputVal) userName = inputVal;
+            document.getElementById('welcomePlayerBanner').innerText = `OPERATOR: ${userName.toUpperCase()}`;
+            document.getElementById('landingScreen').classList.add('hidden');
+            document.getElementById('lobbyScreen').classList.remove('hidden');
+            unlockAchievement('first_blood');
+        }
+
+        function backToLanding() {
+            document.getElementById('lobbyScreen').classList.add('hidden');
+            document.getElementById('landingScreen').classList.remove('hidden');
+            updateHubUI();
+        }
+
+        function returnToHub() {
+            location.reload();
+        }
+
+        let myPlayerIndex = 0;
         let gameStarted = false;
         let matchEnded = false;
-        let networkTickTimer = 0;
 
         const keys = {};
         window.addEventListener('keydown', e => {
@@ -409,46 +594,76 @@
         const engine = new BABYLON.Engine(canvas, true);
         let scene = null;
         let followCamera = null;
+        let healingPadMesh = null;
+        const minimapCanvas = document.getElementById('minimapCanvas');
+        const minimapCtx = minimapCanvas.getContext('2d');
 
         function createScene() {
             scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color3(0.01, 0.02, 0.04);
             scene.gravity = new BABYLON.Vector3(0, -0.6, 0);
 
-            followCamera = new BABYLON.UniversalCamera("followCam", new BABYLON.Vector3(0, 30, -45), scene);
+            followCamera = new BABYLON.UniversalCamera("followCam", new BABYLON.Vector3(0, 50, -70), scene);
             followCamera.setTarget(BABYLON.Vector3.Zero());
 
             const ambientLight = new BABYLON.HemisphericLight("ambientLight", new BABYLON.Vector3(0, 1, 0), scene);
-            ambientLight.intensity = 0.4;
+            ambientLight.intensity = 0.45;
             ambientLight.groundColor = new BABYLON.Color3(0.05, 0.08, 0.15);
 
-            const pointLight = new BABYLON.PointLight("neonGlow", new BABYLON.Vector3(0, 30, 0), scene);
-            pointLight.intensity = 1.2;
+            const pointLight = new BABYLON.PointLight("neonGlow", new BABYLON.Vector3(0, 50, 0), scene);
+            pointLight.intensity = 1.4;
             pointLight.diffuse = new BABYLON.Color3(0, 0.95, 1);
 
-            const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 140, height: 140}, scene);
+            // MASSIVE 380x380 COMPLEX MAP
+            const mapSize = 380;
+            const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: mapSize, height: mapSize}, scene);
             const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
             groundMat.diffuseColor = new BABYLON.Color3(0.02, 0.04, 0.09);
             groundMat.specularColor = new BABYLON.Color3(0.2, 0.4, 0.8);
             ground.material = groundMat;
 
-            const arenaBorder = BABYLON.MeshBuilder.CreateBox("border", {width: 140, height: 12, depth: 140}, scene);
-            arenaBorder.position.y = 6;
+            const arenaBorder = BABYLON.MeshBuilder.CreateBox("border", {width: mapSize, height: 24, depth: mapSize}, scene);
+            arenaBorder.position.y = 12;
             const borderMat = new BABYLON.StandardMaterial("borderMat", scene);
             borderMat.wireframe = true;
             borderMat.diffuseColor = new BABYLON.Color3(0, 0.6, 1);
             arenaBorder.material = borderMat;
 
+            // HEALING PAD SANCTUARY AT (-130, -130)
+            healingPadMesh = BABYLON.MeshBuilder.CreateCylinder("healingPad", {diameter: 36, height: 0.4}, scene);
+            healingPadMesh.position = new BABYLON.Vector3(-130, 0.2, -130);
+            const healMat = new BABYLON.StandardMaterial("healMat", scene);
+            healMat.diffuseColor = new BABYLON.Color3(0, 1, 0.4);
+            healMat.emissiveColor = new BABYLON.Color3(0, 0.8, 0.3);
+            healMat.alpha = 0.5;
+            healingPadMesh.material = healMat;
+
             const obstacleMat = new BABYLON.StandardMaterial("obsMat", scene);
             obstacleMat.diffuseColor = new BABYLON.Color3(0.08, 0.12, 0.25);
             obstacleMat.specularColor = new BABYLON.Color3(0.5, 0.8, 1);
 
+            // COMPLEX MULTI-ROOM MAZE STRUCTURES ACROSS 380x380
             const obstaclePositions = [
-                {x: -30, z: -30, w: 12, h: 16, d: 12},
-                {x: 30, z: 30, w: 12, h: 16, d: 12},
-                {x: -30, z: 30, w: 16, h: 10, d: 8},
-                {x: 30, z: -30, w: 8, h: 10, d: 16},
-                {x: 0, z: 0, w: 10, h: 22, d: 10}
+                // Outer massive chambers
+                {x: -130, z: 0, w: 22, h: 20, d: 110},
+                {x: 130, z: 0, w: 22, h: 20, d: 110},
+                {x: 0, z: -130, w: 110, h: 20, d: 22},
+                {x: 0, z: 130, w: 110, h: 20, d: 22},
+                // Inner tactical rooms & mazes
+                {x: -75, z: -75, w: 40, h: 16, d: 40},
+                {x: 75, z: 75, w: 40, h: 16, d: 40},
+                {x: -75, z: 75, w: 40, h: 16, d: 40},
+                {x: 75, z: -75, w: 40, h: 16, d: 40},
+                // Central Nexus fortress
+                {x: -30, z: 0, w: 14, h: 24, d: 50},
+                {x: 30, z: 0, w: 14, h: 24, d: 50},
+                {x: 0, z: -30, w: 50, h: 24, d: 14},
+                {x: 0, z: 30, w: 50, h: 24, d: 14},
+                // Scatter flanking corridors
+                {x: -140, z: 80, w: 24, h: 15, d: 24},
+                {x: 140, z: -80, w: 24, h: 15, d: 24},
+                {x: -80, z: 140, w: 24, h: 15, d: 24},
+                {x: 80, z: -140, w: 24, h: 15, d: 24}
             ];
 
             window.obstacles = obstaclePositions.map((pos, idx) => {
@@ -464,15 +679,24 @@
         scene = createScene();
 
         class Fighter3D {
-            constructor(x, z, name, colorHex, index) {
+            constructor(x, z, name, colorHex, index, isAI = false) {
                 this.index = index;
                 this.name = name;
                 this.colorHex = colorHex;
+                this.isAI = isAI;
                 this.x = x; this.y = 0; this.z = z;
                 this.vx = 0; this.vz = 0; this.vy = 0;
-                this.speed = 0.55; this.jumpPower = 1.2; this.gravity = 0.05;
+                
+                // Stat calculations with armory upgrade modifiers for player
+                const hpBonus = (!isAI) ? (upgradesData[0].level * 25) : 0;
+                this.maxHealth = 100 + hpBonus;
+                this.health = this.maxHealth;
+
+                const spdBonus = (!isAI) ? (upgradesData[2].level * 0.05) : 0;
+                this.speed = (isAI ? 0.48 : 0.62) + spdBonus;
+
+                this.jumpPower = 1.25; this.gravity = 0.05;
                 this.isGrounded = true;
-                this.maxHealth = 100; this.health = 100;
                 this.energy = 0;
                 this.shieldActive = false;
                 this.shieldTimer = 0;
@@ -488,7 +712,7 @@
                 mat.emissiveColor = BABYLON.Color3.FromHexString(colorHex).scale(0.3);
                 this.mesh.material = mat;
 
-                this.shieldMesh = BABYLON.MeshBuilder.CreateSphere(`shield_${index}`, {diameter: 9}, scene);
+                this.shieldMesh = BABYLON.MeshBuilder.CreateSphere(`shield_${index}`, {diameter: 9.5}, scene);
                 const shieldMat = new BABYLON.StandardMaterial(`sMat_${index}`, scene);
                 shieldMat.diffuseColor = new BABYLON.Color3(0, 0.9, 1);
                 shieldMat.alpha = 0.25;
@@ -497,10 +721,23 @@
                 this.shieldMesh.setEnabled(false);
             }
 
-            update() {
+            update(fightersArr, projectilesArr) {
                 if (this.health <= 0) {
                     this.mesh.setEnabled(false);
                     return;
+                }
+
+                if (this.isAI && gameStarted && !matchEnded) {
+                    this.runAI(fightersArr, projectilesArr);
+                }
+
+                // SANCTUARY REGEN CHECK (-130, -130)
+                if (!this.isAI && this.index === myPlayerIndex) {
+                    const distToPad = Math.hypot(this.x - (-130), this.z - (-130));
+                    if (distToPad < 18 && this.health < this.maxHealth) {
+                        this.health = Math.min(this.maxHealth, this.health + 0.35);
+                        unlockAchievement('sanctuary_master');
+                    }
                 }
 
                 this.vy -= this.gravity;
@@ -512,10 +749,11 @@
                     this.isGrounded = true;
                 }
 
-                if (this.x < -65) this.x = -65;
-                if (this.x > 65) this.x = 65;
-                if (this.z < -65) this.z = -65;
-                if (this.z > 65) this.z = 65;
+                // MAP BOUNDARIES FOR 380x380 (-180 to 180)
+                if (this.x < -180) this.x = -180;
+                if (this.x > 180) this.x = 180;
+                if (this.z < -180) this.z = -180;
+                if (this.z > 180) this.z = 180;
 
                 window.obstacles.forEach(obs => {
                     const minX = obs.x - obs.w / 2 - 2.5;
@@ -555,12 +793,46 @@
                 this.mesh.rotation.y = this.facingAngle;
             }
 
+            runAI(fightersArr, projectilesArr) {
+                const target = fightersArr[myPlayerIndex];
+                if (!target || target.health <= 0) return;
+
+                const dx = target.x - this.x;
+                const dz = target.z - this.z;
+                const dist = Math.hypot(dx, dz);
+
+                this.facingAngle = Math.atan2(dx, dz);
+
+                if (dist > 14) {
+                    this.vx = Math.sin(this.facingAngle) * this.speed;
+                    this.vz = Math.cos(this.facingAngle) * this.speed;
+                } else {
+                    if (this.attackCooldown === 0) {
+                        if (Math.random() < 0.45) {
+                            this.attackTarget(fightersArr);
+                        } else {
+                            this.fireSkill(projectilesArr);
+                        }
+                    }
+                }
+
+                this.energy = Math.min(100, this.energy + 0.35);
+                if (this.energy >= 100 && Math.random() < 0.05) {
+                    this.fireUltimate(projectilesArr);
+                }
+
+                if (this.isGrounded && Math.random() < 0.01) {
+                    this.vy = this.jumpPower;
+                    this.isGrounded = false;
+                }
+            }
+
             dash(dirX, dirZ) {
                 if (this.dashCooldown > 0 || this.health <= 0) return;
                 const len = Math.hypot(dirX, dirZ) || 1;
-                this.vx = (dirX / len) * 3.5;
-                this.vz = (dirZ / len) * 3.5;
-                this.dashCooldown = 45;
+                this.vx = (dirX / len) * 4.2;
+                this.vz = (dirZ / len) * 4.2;
+                this.dashCooldown = 40;
                 this.spawnSparks(8);
             }
 
@@ -570,37 +842,28 @@
                 this.shieldActive = true;
                 this.shieldTimer = 90;
                 this.shieldMesh.setEnabled(true);
+                unlockAchievement('shield_guardian');
             }
 
             attackTarget(fightersArr) {
                 if (this.attackCooldown > 0 || this.health <= 0) return;
-                this.attackCooldown = 25;
-                this.energy = Math.min(100, this.energy + 12);
+                this.attackCooldown = 28; 
+                const energyMult = 15 + (this.index === myPlayerIndex ? (upgradesData[3].level * 5) : 0);
+                this.energy = Math.min(100, this.energy + energyMult);
 
                 fightersArr.forEach(target => {
                     if (target && target !== this && target.health > 0) {
                         const dist = Math.hypot(this.x - target.x, this.z - target.z);
-                        if (dist < 12) {
-                            const dmg = target.shieldActive ? 3 : 12;
-                            
-                            // If we hit a remote player, send a network damage event
-                            if (target.index !== myPlayerIndex) {
-                                const damagePayload = {
-                                    type: 'DEAL_DAMAGE',
-                                    targetIndex: target.index,
-                                    damage: dmg
-                                };
-                                if (isHost) {
-                                    connections.forEach(c => { if (c.open) c.send(damagePayload); });
-                                } else if (connections[0] && connections[0].open) {
-                                    connections[0].send(damagePayload);
-                                }
-                            } else {
-                                // Local damage
-                                target.health -= dmg;
-                                if (target.health < 0) target.health = 0;
+                        if (dist < 15) {
+                            let baseDmg = 6;
+                            if (this.index === myPlayerIndex) {
+                                const dmgMult = 1.0 + (upgradesData[1].level * 0.15);
+                                baseDmg = Math.floor(45 * dmgMult);
                             }
-
+                            const dmg = target.shieldActive ? Math.floor(baseDmg * 0.25) : baseDmg;
+                            
+                            target.health -= dmg;
+                            if (target.health < 0) target.health = 0;
                             target.vy = 0.6;
                             target.spawnSparks(6);
                         }
@@ -610,7 +873,7 @@
 
             fireSkill(projectilesArr) {
                 if (this.attackCooldown > 0 || this.health <= 0) return;
-                this.attackCooldown = 35;
+                this.attackCooldown = 32;
                 this.energy = Math.min(100, this.energy + 20);
 
                 const pDirX = Math.sin(this.facingAngle);
@@ -620,12 +883,13 @@
 
             fireUltimate(projectilesArr) {
                 if (this.energy < 100 || this.attackCooldown > 0 || this.health <= 0) return;
-                this.attackCooldown = 60;
+                this.attackCooldown = 55;
                 this.energy = 0;
 
                 const pDirX = Math.sin(this.facingAngle);
                 const pDirZ = Math.cos(this.facingAngle);
                 projectilesArr.push(new Projectile3D(this.x + pDirX * 5, this.y + 3.5, this.z + pDirZ * 5, pDirX, pDirZ, this.colorHex, true, this.index));
+                if (this.index === myPlayerIndex) unlockAchievement('ultimate_power');
             }
 
             spawnSparks(count) {
@@ -658,14 +922,14 @@
             constructor(x, y, z, dirX, dirZ, colorHex, isUlt, ownerIndex) {
                 this.x = x; this.y = y; this.z = z;
                 this.dirX = dirX; this.dirZ = dirZ;
-                this.speed = isUlt ? 1.4 : 1.0;
+                this.speed = isUlt ? 1.6 : 1.2;
                 this.colorHex = colorHex;
                 this.isUlt = isUlt;
                 this.ownerIndex = ownerIndex;
                 this.active = true;
-                this.life = 120;
+                this.life = 150;
 
-                const size = isUlt ? 5 : 2;
+                const size = isUlt ? 6.5 : 2.4;
                 this.mesh = BABYLON.MeshBuilder.CreateSphere("proj", {diameter: size}, scene);
                 this.mesh.position = new BABYLON.Vector3(x, y, z);
                 const mat = new BABYLON.StandardMaterial("pMat", scene);
@@ -675,13 +939,13 @@
 
             update(fightersArr) {
                 if (!this.active) return;
-                this.x += this.dirX * this.speed * 2;
-                this.z += this.dirZ * this.speed * 2;
+                this.x += this.dirX * this.speed * 2.4;
+                this.z += this.dirZ * this.speed * 2.4;
                 this.mesh.position.x = this.x;
                 this.mesh.position.z = this.z;
 
                 this.life--;
-                if (this.life <= 0 || Math.abs(this.x) > 75 || Math.abs(this.z) > 75) {
+                if (this.life <= 0 || Math.abs(this.x) > 190 || Math.abs(this.z) > 190) {
                     this.destroy();
                     return;
                 }
@@ -689,9 +953,16 @@
                 fightersArr.forEach(target => {
                     if (target && target.index !== this.ownerIndex && target.health > 0) {
                         const dist = Math.hypot(this.x - target.x, this.z - target.z);
-                        if (dist < (this.isUlt ? 8 : 4.5)) {
-                            const dmg = this.isUlt ? 35 : 14;
-                            const finalDmg = target.shieldActive ? Math.floor(dmg * 0.25) : dmg;
+                        if (dist < (this.isUlt ? 10 : 5.5)) {
+                            let baseDmg = 6;
+                            if (this.ownerIndex === myPlayerIndex) {
+                                const dmgMult = 1.0 + (upgradesData[1].level * 0.15);
+                                baseDmg = Math.floor((this.isUlt ? 100 : 40) * dmgMult);
+                            } else {
+                                baseDmg = this.isUlt ? 15 : 6;
+                            }
+
+                            const finalDmg = target.shieldActive ? Math.floor(baseDmg * 0.25) : baseDmg;
                             target.health -= finalDmg;
                             if (target.health < 0) target.health = 0;
                             target.spawnSparks(8);
@@ -707,214 +978,76 @@
             }
         }
 
-        const fighters = [
-            new Fighter3D(-35, -35, 'VALKYRIE', '#ff2a6d', 0),
-            new Fighter3D(35, -35, 'BLADE', '#05d9e8', 1),
-            new Fighter3D(-35, 35, 'NOVA', '#00ff66', 2),
-            new Fighter3D(35, 35, 'PHANTOM', '#ffcc00', 3)
-        ];
+        let fighters = [];
         let projectiles = [];
 
-        // Upgraded robust STUN server mapping for cross-network connectivity
-        // Upgraded robust STUN & TURN server mapping for strict cross-network connectivity
-        const peerOptions = {
-            config: {
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' },
-                    // Free Public TURN Relay for strict firewalls and cellular networks
-                    { 
-                        urls: 'turn:openrelay.metered.ca:80',
-                        username: 'openrelayproject',
-                        credential: 'openrelayproject'
-                    },
-                    { 
-                        urls: 'turn:openrelay.metered.ca:443',
-                        username: 'openrelayproject',
-                        credential: 'openrelayproject'
-                    },
-                    { 
-                        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-                        username: 'openrelayproject',
-                        credential: 'openrelayproject'
-                    }
-                ]
+        function initFighters(playerChoice) {
+            const roster = [
+                { name: 'VALKYRIE', color: '#ff2a6d' },
+                { name: 'BLADE', color: '#05d9e8' },
+                { name: 'NOVA', color: '#00ff66' },
+                { name: 'PHANTOM', color: '#ffcc00' }
+            ];
+
+            // Player sanctuary spawn at bottom-left corner (-130, -130)
+            const positions = [];
+            positions[playerChoice] = { x: -130, z: -130 };
+
+            // Randomized enemy spawning pools across expansive quadrants
+            const enemySpawnPools = [
+                {x: 130, z: 130},   // Top-Right Corner
+                {x: -130, z: 130},  // Top-Left Corner
+                {x: 130, z: -130},  // Bottom-Right Corner
+                {x: 0, z: 100},     // Upper Center Room
+                {x: 100, z: 0}      // Right Center Room
+            ];
+
+            for (let i = enemySpawnPools.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [enemySpawnPools[i], enemySpawnPools[j]] = [enemySpawnPools[j], enemySpawnPools[i]];
             }
-        };
 
-document.getElementById('connectRoomBtn').addEventListener('click', () => {
-    roomName = document.getElementById('roomNameInput').value.trim().toLowerCase();
-    if (!roomName) return alert('Please enter a room name');
+            let poolIdx = 0;
+            for(let i=0; i<4; i++) {
+                if (i === playerChoice) continue;
+                positions[i] = enemySpawnPools[poolIdx++];
+            }
 
-    const peerId = 'aether-nexus-3d-' + roomName;
-    peer = new Peer(peerId, peerOptions);
-
-    peer.on('open', id => {
-        isHost = true;
-        document.getElementById('lobbyNotice').innerText = `Room created! Choose your slot.`;
-        updateLobbyUI();
-    });
-
-    peer.on('error', err => {
-        if (err.type === 'unavailable-id') {
-            peer.destroy();
-            peer = new Peer(peerOptions);
-            peer.on('open', () => {
-                const conn = peer.connect(peerId, { reliable: true });
-                connections = [conn];
-                isHost = false;
-
-                conn.on('open', () => {
-                    document.getElementById('lobbyNotice').innerText = `Connected! Choose an open slot.`;
-                });
-
-                conn.on('data', data => {
-                    if (data.type === 'LOBBY_STATE') {
-                        slotOccupants = data.slots;
-                        updateLobbyUI();
-                    } else if (data.type === 'START_GAME') {
-                        startGameSession();
-                    } else if (data.type === 'SYNC_STATE') {
-                        const remoteF = fighters[data.index];
-                        if (remoteF && data.index !== myPlayerIndex) {
-                            remoteF.x = data.state.x;
-                            remoteF.y = data.state.y;
-                            remoteF.z = data.state.z;
-                            remoteF.facingAngle = data.state.ang;
-                            remoteF.health = data.state.health;
-                            remoteF.energy = data.state.energy;
-                            remoteF.shieldActive = data.state.shield;
-                            if (data.state.shield) remoteF.shieldMesh.setEnabled(true);
-                            else remoteF.shieldMesh.setEnabled(false);
-                        }
-                    } else if (data.type === 'DEAL_DAMAGE') {
-                        const victim = fighters[data.targetIndex];
-                        if (victim) {
-                            victim.health -= data.damage;
-                            if (victim.health < 0) victim.health = 0;
-                            victim.spawnSparks(8);
-                        }
-                        if (isHost) {
-                            connections.forEach(c => { if (c.open) c.send(data); });
-                        }
-                    }
-                });
-            });
+            fighters = [];
+            for(let i=0; i<4; i++) {
+                const isAI = (i !== playerChoice);
+                fighters.push(new Fighter3D(
+                    positions[i].x, 
+                    positions[i].z, 
+                    roster[i].name, 
+                    roster[i].color, 
+                    i, 
+                    isAI
+                ));
+                document.getElementById(`p${i+1}-name-tag`).innerText = `${roster[i].name} ${isAI ? '[AI]' : '[YOU]'}`;
+            }
         }
-    });
 
-    peer.on('connection', conn => {
-        connections.push(conn);
-        conn.on('open', () => {
-            conn.send({ type: 'LOBBY_STATE', slots: slotOccupants });
-        });
-        conn.on('data', data => {
-            if (data.type === 'SELECT_SLOT') {
-                if (slotOccupants[data.slot] === null) {
-                    slotOccupants[data.slot] = data.peerId;
-                    broadcastLobbyState();
-                }
-            } else if (data.type === 'SYNC_STATE') {
-                const remoteF = fighters[data.index];
-                if (remoteF) {
-                    remoteF.x = data.state.x;
-                    remoteF.y = data.state.y;
-                    remoteF.z = data.state.z;
-                    remoteF.facingAngle = data.state.ang;
-                    remoteF.health = data.state.health;
-                    remoteF.energy = data.state.energy;
-                    remoteF.shieldActive = data.state.shield;
-                    if (data.state.shield) remoteF.shieldMesh.setEnabled(true);
-                    else remoteF.shieldMesh.setEnabled(false);
-                }
-                connections.forEach(c => {
-                    if (c !== conn && c.open) c.send(data);
-                });
-            } else if (data.type === 'DEAL_DAMAGE') {
-                const victim = fighters[data.targetIndex];
-                if (victim) {
-                    victim.health -= data.damage;
-                    if (victim.health < 0) victim.health = 0;
-                    victim.spawnSparks(8);
-                }
-                connections.forEach(c => {
-                    if (c !== conn && c.open) c.send(data);
-                });
-            }
-        });
-    });
-});
-
+        initFighters(0);
 
         function selectSlot(slotIdx) {
-            if (!peer) return alert('Connect to a room first!');
-            if (slotOccupants[slotIdx] !== null) return alert('Slot is already occupied!');
-
-            const myId = peer.id;
-            for (let i = 0; i < 4; i++) {
-                if (slotOccupants[i] === myId) slotOccupants[i] = null;
-            }
-
-            slotOccupants[slotIdx] = myId;
             myPlayerIndex = slotIdx;
-
-            if (isHost) {
-                broadcastLobbyState();
-            } else {
-                connections[0].send({ type: 'SELECT_SLOT', slot: slotIdx, peerId: myId });
-            }
-            updateLobbyUI();
-        }
-
-        function broadcastLobbyState() {
-            updateLobbyUI();
-            connections.forEach(c => {
-                if (c.open) c.send({ type: 'LOBBY_STATE', slots: slotOccupants });
-            });
-        }
-
-        function updateLobbyUI() {
-            const myId = peer ? peer.id : '';
-            for (let i = 0; i < 4; i++) {
+            for(let i=0; i<4; i++) {
                 const card = document.querySelector(`.slot-card[data-slot="${i}"]`);
                 const status = document.getElementById(`slot-status-${i}`);
-                card.classList.remove('occupied', 'selected');
-
-                if (slotOccupants[i] === null) {
-                    status.innerText = 'Available';
-                } else if (slotOccupants[i] === myId) {
-                    status.innerText = 'You (Ready)';
-                    card.classList.add('selected');
-                } else {
-                    status.innerText = 'Occupied';
-                    card.classList.add('occupied');
-                }
+                card.classList.remove('selected');
+                status.innerText = 'Available';
             }
-
-            if (isHost && slotOccupants.some(s => s !== null)) {
-                document.getElementById('startBtn').classList.remove('hidden');
-            } else {
-                document.getElementById('startBtn').classList.add('hidden');
-            }
+            const selectedCard = document.querySelector(`.slot-card[data-slot="${slotIdx}"]`);
+            selectedCard.classList.add('selected');
+            document.getElementById(`slot-status-${slotIdx}`).innerText = 'Selected';
+            initFighters(slotIdx);
         }
 
         function startGame() {
-            if (!isHost) return;
-            startGameSession();
-            connections.forEach(c => {
-                if (c.open) c.send({ type: 'START_GAME' });
-            });
-        }
-
-        function startGameSession() {
-            if (myPlayerIndex === null) {
-                for(let i=0; i<4; i++) {
-                    if(slotOccupants[i] === null) { myPlayerIndex = i; break; }
-                }
-                if(myPlayerIndex === null) myPlayerIndex = 0;
-            }
             document.getElementById('lobbyScreen').classList.add('hidden');
             gameStarted = true;
+            matchEnded = false;
         }
 
         function checkWinCondition() {
@@ -925,6 +1058,7 @@ document.getElementById('connectRoomBtn').addEventListener('click', () => {
                 matchEnded = true;
                 document.getElementById('victoryText').innerText = 'DEFEATED';
                 document.getElementById('victoryText').style.color = '#ff2a6d';
+                document.getElementById('rewardBox').innerText = 'Mission Failed. Upgrade armory and retry!';
                 document.getElementById('victoryOverlay').classList.remove('hidden');
                 return;
             }
@@ -934,8 +1068,53 @@ document.getElementById('connectRoomBtn').addEventListener('click', () => {
                 matchEnded = true;
                 document.getElementById('victoryText').innerText = 'VICTORY!';
                 document.getElementById('victoryText').style.color = '#00ff66';
+                
+                const earnedCredits = 400;
+                playerCredits += earnedCredits;
+                document.getElementById('rewardBox').innerHTML = `Mission Successful!<br>🏆 <strong>+${earnedCredits} Credits</strong> | 💎 <strong>Nexus Medal</strong>`;
                 document.getElementById('victoryOverlay').classList.remove('hidden');
+                
+                unlockAchievement('veteran_warrior');
+                unlockAchievement('nexus_champion');
+                saveMetaData();
             }
+        }
+
+        // MINIMAP RENDERING
+        function drawMinimap() {
+            minimapCtx.clearRect(0, 0, 130, 130);
+            
+            const scale = 130 / 380;
+            const offsetX = 65;
+            const offsetZ = 65;
+
+            minimapCtx.fillStyle = '#182444';
+            window.obstacles.forEach(obs => {
+                const mx = (obs.x * scale) + offsetX;
+                const mz = (obs.z * scale) + offsetZ;
+                const mw = obs.w * scale;
+                const md = obs.d * scale;
+                minimapCtx.fillRect(mx - mw/2, mz - md/2, mw, md);
+            });
+
+            // Healing pad sanctuary (-130, -130)
+            minimapCtx.fillStyle = 'rgba(0, 255, 100, 0.4)';
+            minimapCtx.beginPath();
+            const hx = (-130 * scale) + offsetX;
+            const hz = (-130 * scale) + offsetZ;
+            minimapCtx.arc(hx, hz, 18 * scale, 0, Math.PI * 2);
+            minimapCtx.fill();
+
+            fighters.forEach((f, i) => {
+                if (f.health <= 0) return;
+                const fx = (f.x * scale) + offsetX;
+                const fz = (f.z * scale) + offsetZ;
+                
+                minimapCtx.fillStyle = (i === myPlayerIndex) ? '#00ff66' : '#ff2a6d';
+                minimapCtx.beginPath();
+                minimapCtx.arc(fx, fz, (i === myPlayerIndex) ? 4 : 3, 0, Math.PI * 2);
+                minimapCtx.fill();
+            });
         }
 
         engine.runRenderLoop(() => {
@@ -949,7 +1128,7 @@ document.getElementById('connectRoomBtn').addEventListener('click', () => {
                 down: !!keys['s'],
                 left: !!keys['a'],
                 right: !!keys['d'],
-                jump: !!keys[' '] ,
+                jump: !!keys[' '],
                 dash: !!keys['shift'],
                 shield: !!keys['i'],
                 attack: !!keys['j'],
@@ -980,49 +1159,32 @@ document.getElementById('connectRoomBtn').addEventListener('click', () => {
                 if (currentInputs.ultimate) me.fireUltimate(projectiles);
             }
 
-            fighters.forEach(f => f.update());
+            fighters.forEach(f => f.update(fighters, projectiles));
             projectiles.forEach(p => p.update(fighters));
             projectiles = projectiles.filter(p => p.active);
 
             checkWinCondition();
 
-            // Broadcast your live position and actions to other peers instantly
-            networkTickTimer++;
-            if (networkTickTimer >= 2) {
-                networkTickTimer = 0;
-                const myStatePayload = {
-                    type: 'SYNC_STATE',
-                    index: myPlayerIndex,
-                    state: {
-                        x: me.x, y: me.y, z: me.z,
-                        ang: me.facingAngle,
-                        health: me.health,
-                        energy: me.energy,
-                        shield: me.shieldActive
-                    }
-                };
-
-                if (isHost) {
-                    connections.forEach(c => { if (c.open) c.send(myStatePayload); });
-                } else if (connections[0] && connections[0].open) {
-                    connections[0].send(myStatePayload);
-                }
-            }
-
             if (myPlayerIndex !== null && fighters[myPlayerIndex]) {
                 const targetFighter = fighters[myPlayerIndex];
                 const targetPos = new BABYLON.Vector3(targetFighter.x, targetFighter.y + 4, targetFighter.z);
-                const desiredCamPos = new BABYLON.Vector3(targetFighter.x, targetFighter.y + 32, targetFighter.z - 38);
+                const desiredCamPos = new BABYLON.Vector3(targetFighter.x, targetFighter.y + 55, targetFighter.z - 65);
                 followCamera.position = BABYLON.Vector3.Lerp(followCamera.position, desiredCamPos, 0.1);
                 followCamera.setTarget(BABYLON.Vector3.Lerp(followCamera.getTarget(), targetPos, 0.15));
             }
 
+            fighters.progressHUD = true;
             fighters.forEach((f, i) => {
                 const bar = document.getElementById(`p${i+1}-health`);
                 if (bar) bar.style.width = `${Math.max(0, (f.health / f.maxHealth) * 100)}%`;
             });
 
+            document.getElementById('hudWave').innerText = `WAVE: 1`;
+            document.getElementById('hudCredits').innerText = `CR: ${playerCredits}`;
+            document.getElementById('hudMultiplier').innerText = `XP MULT: ${ (1.0 + (upgradesData[1].level * 0.15)).toFixed(2) }x`;
+
             scene.render();
+            drawMinimap();
         });
 
         window.addEventListener('resize', () => engine.resize());
