@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hand Gesture Recognition Arena</title>
+    <title>Optimized Hand Gesture Recognition</title>
     <!-- Load MediaPipe Hands and Camera Utils via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
@@ -39,14 +39,14 @@
         }
 
         video {
-            display: none; /* Processed via hidden video element */
+            display: none;
         }
 
         canvas {
             display: block;
             width: 100%;
             height: 100%;
-            transform: scaleX(-1); /* Mirror camera feed */
+            transform: scaleX(-1);
         }
 
         .hud-overlay {
@@ -94,7 +94,6 @@
             font-family: 'Orbitron', sans-serif;
         }
 
-        /* Permission Modal */
         #permissionScreen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -145,10 +144,9 @@
 <body>
 
     <div class="game-wrapper">
-        <!-- Permission & Start Screen -->
         <div id="permissionScreen">
             <h2>CAMERA ACCESS REQUIRED</h2>
-            <p>This application uses computer vision to detect your hand gestures in real-time. Please grant camera permissions to begin.</p>
+            <p>Please grant camera permissions to initialize the gesture recognition system.</p>
             <button class="btn" onclick="requestCameraAccess()">INITIALIZE CAMERA</button>
         </div>
 
@@ -162,7 +160,7 @@
     </div>
 
     <div class="instructions">
-        Show a <span>Peace Sign (✌️)</span> for Function A &nbsp;|&nbsp; Show a <span>High Five / Open Palm (🖐️)</span> for Function B
+        Show a <span>Peace Sign (✌️)</span> for Function A &nbsp;|&nbsp; Show a <span>High Five (🖐️)</span> for Function B
     </div>
 
     <script>
@@ -175,61 +173,76 @@
 
         let score = 0;
         let lastTriggerTime = 0;
+        let latestResults = null;
+        let lastProcessTime = 0;
+        const processInterval = 65; // Throttle AI processing to every ~65ms (~15 FPS) to keep video silky smooth
 
         async function requestCameraAccess() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 720, height: 480 } });
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 640, height: 480, frameRate: { ideal: 30 } } 
+                });
                 videoElement.srcObject = stream;
                 permissionScreen.style.display = 'none';
                 
-                // Initialize MediaPipe Hands after permission granted
                 const hands = new Hands({
                     locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
                 });
 
                 hands.setOptions({
                     maxNumHands: 1,
-                    modelComplexity: 1,
-                    minDetectionConfidence: 0.7,
-                    minTrackingConfidence: 0.7
+                    modelComplexity: 0, // Lower complexity to optimize performance and prevent freezing
+                    minDetectionConfidence: 0.6,
+                    minTrackingConfidence: 0.6
                 });
 
-                hands.onResults(onHandResults);
+                hands.onResults((results) => {
+                    latestResults = results;
+                });
 
                 const camera = new Camera(videoElement, {
                     onFrame: async () => {
-                        await hands.send({ image: videoElement });
+                        const now = Date.now();
+                        // Only send frame to MediaPipe if interval has passed
+                        if (now - lastProcessTime > processInterval) {
+                            lastProcessTime = now;
+                            await hands.send({ image: videoElement });
+                        }
                     },
-                    width: 720,
+                    width: 640,
                     height: 480
                 });
                 camera.start();
 
+                // Run main render loop completely independent of AI processing rate
+                requestAnimationFrame(renderLoop);
+
             } catch (err) {
-                alert('Camera permission denied or unavailable. Please check your browser settings.');
+                alert('Camera permission denied or unavailable.');
                 console.error(err);
             }
         }
 
-        // --- GESTURE RECOGNITION LOGIC ---
-        function onHandResults(results) {
+        function renderLoop() {
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+            
+            // Always draw live video feed instantly without blocking
+            if (videoElement.readyState >= 2) {
+                canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+            }
 
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                const landmarks = results.multiHandLandmarks[0];
+            // Draw hand landmarks and process gestures if results are available
+            if (latestResults && latestResults.multiHandLandmarks && latestResults.multiHandLandmarks.length > 0) {
+                const landmarks = latestResults.multiHandLandmarks[0];
 
-                // Draw skeleton landmarks on canvas for aesthetic cyberpunk interface
-                drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: '#05d9e8', lineWidth: 3 });
-                drawLandmarks(canvasCtx, landmarks, { color: '#ff2a6d', lineWidth: 1, radius: 4 });
+                drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: '#05d9e8', lineWidth: 2 });
+                drawLandmarks(canvasCtx, landmarks, { color: '#ff2a6d', lineWidth: 1, radius: 3 });
 
-                // Analyze gesture state
                 const gesture = classifyGesture(landmarks);
                 statusSpan.innerText = gesture.name;
 
                 const now = Date.now();
-                // Cooldown to avoid rapid spamming (1.5 seconds)
                 if (now - lastTriggerTime > 1500) {
                     if (gesture.type === 'PIECE') {
                         triggerFunctionA();
@@ -240,41 +253,33 @@
                     }
                 }
             } else {
-                statusSpan.innerText = 'NO HAND DETECTED';
+                statusSpan.innerText = 'SEARCHING...';
             }
+
             canvasCtx.restore();
+            requestAnimationFrame(renderLoop);
         }
 
         function classifyGesture(lm) {
-            // Finger tip indices: Index=8, Middle=12, Ring=16, Pinky=20
-            // Finger mcp/pip joint checks for curl state (y-axis coordinate comparison)
             const isIndexUp = lm[8].y < lm[6].y;
             const isMiddleUp = lm[12].y < lm[10].y;
             const isRingUp = lm[16].y < lm[14].y;
             const isPinkyUp = lm[20].y < lm[18].y;
 
-            // 1. Piece Sign: Index & Middle up, Ring & Pinky curled down
             if (isIndexUp && isMiddleUp && !isRingUp && !isPinkyUp) {
-                return { name: 'PEECE SIGN (✌️)', type: 'PIECE' };
+                return { name: 'PEACE SIGN (✌️)', type: 'PIECE' };
             }
-
-            // 2. High Five / Open Palm: All 4 main fingers extended up
             if (isIndexUp && isMiddleUp && isRingUp && isPinkyUp) {
                 return { name: 'HIGH FIVE (🖐️)', type: 'HIGH_FIVE' };
             }
-
-            return { name: 'UNKNOWN GESTURE', type: 'NONE' };
+            return { name: 'UNKNOWN', type: 'NONE' };
         }
 
-        // --- TWO DIFFERENT FUNCTIONS ---
         function triggerFunctionA() {
             score += 10;
             counterSpan.innerText = `SCORE: ${score}`;
             statusSpan.style.color = '#00c6ff';
-            console.log("Function A Triggered: Peace Sign executed!");
-            
-            // Visual feedback flash on canvas
-            canvasCtx.fillStyle = 'rgba(0, 198, 255, 0.3)';
+            canvasCtx.fillStyle = 'rgba(0, 198, 255, 0.25)';
             canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
         }
 
@@ -282,10 +287,7 @@
             score += 25;
             counterSpan.innerText = `SCORE: ${score}`;
             statusSpan.style.color = '#ff2a6d';
-            console.log("Function B Triggered: High Five executed!");
-
-            // Visual feedback flash on canvas
-            canvasCtx.fillStyle = 'rgba(255, 42, 109, 0.3)';
+            canvasCtx.fillStyle = 'rgba(255, 42, 109, 0.25)';
             canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
         }
     </script>
