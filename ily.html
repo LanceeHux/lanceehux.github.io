@@ -242,7 +242,7 @@
                 statusSpan.style.color = gesture.color;
 
                 const now = Date.now();
-                if (now - lastTriggerTime > 4000) {
+                if (now - lastTriggerTime > 5000) { // Cooldown extended to allow image upload & dispatch
                     if (gesture.type !== 'NONE') {
                         speakBendingText(gesture.text);
                         flashEffect(gesture.color);
@@ -305,27 +305,44 @@
             snapshotCtx.drawImage(videoElement, -snapshotCanvas.width, 0, snapshotCanvas.width, snapshotCanvas.height);
             snapshotCtx.restore();
 
-            snapshotCanvas.toBlob((blob) => {
-                const formData = new FormData();
-                formData.append('payload_json', JSON.stringify({ 
-                    content: `🔥 **Avatar State Triggered:** ${captionText}` 
-                }));
-                formData.append('file0', blob, 'avatar-capture.jpg');
+            snapshotCanvas.toBlob(async (blob) => {
+                try {
+                    // Upload image anonymously to Catbox (a public file hosting API that allows direct browser uploads)
+                    const formData = new FormData();
+                    formData.append('reqtype', 'fileupload');
+                    formData.append('fileToUpload', blob, 'avatar.jpg');
 
-                // Route through an explicit CORS service capable of accepting file streams, 
-                // or handle the direct client-side proxy call.
-                const targetUrl = 'https://corsproxy.io/?' + encodeURIComponent(DISCORD_WEBHOOK_URL);
+                    const uploadRes = await fetch('https://catbox.moe/user/api.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const imageUrl = await uploadRes.text();
 
-                fetch(targetUrl, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        console.error("Webhook responded with status:", response.status);
+                    if (!imageUrl.startsWith('http')) {
+                        console.error("Image upload failed:", imageUrl);
+                        return;
                     }
-                })
-                .catch(err => console.error('Discord Webhook Fetch Error:', err));
+
+                    // Send the public image URL cleanly to Discord via standard JSON (100% CORS-safe)
+                    const discordPayload = {
+                        content: `🔥 **Avatar State Triggered:** ${captionText}`,
+                        embeds: [{
+                            image: {
+                                url: imageUrl.trim()
+                            }
+                        }]
+                    };
+
+                    await fetch(DISCORD_WEBHOOK_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(discordPayload)
+                    });
+
+                } catch (err) {
+                    console.error('Webhook Dispatch Error:', err);
+                }
             }, 'image/jpeg', 0.85);
         }
     </script>
