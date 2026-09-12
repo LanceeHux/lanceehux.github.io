@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Optimized Hand Gesture Recognition</title>
+    <title>High-Performance Hand Gesture Recognition</title>
     <!-- Load MediaPipe Hands and Camera Utils via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
@@ -175,7 +175,7 @@
         let lastTriggerTime = 0;
         let latestResults = null;
         let lastProcessTime = 0;
-        const processInterval = 65; // Throttle AI processing to every ~65ms (~15 FPS) to keep video silky smooth
+        const processInterval = 80; // Limit AI model checks to ~12.5 FPS for maximum frame stability
 
         async function requestCameraAccess() {
             try {
@@ -191,9 +191,9 @@
 
                 hands.setOptions({
                     maxNumHands: 1,
-                    modelComplexity: 0, // Lower complexity to optimize performance and prevent freezing
-                    minDetectionConfidence: 0.6,
-                    minTrackingConfidence: 0.6
+                    modelComplexity: 0, // Minimal complexity to prevent any threading lag
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
                 });
 
                 hands.onResults((results) => {
@@ -203,7 +203,6 @@
                 const camera = new Camera(videoElement, {
                     onFrame: async () => {
                         const now = Date.now();
-                        // Only send frame to MediaPipe if interval has passed
                         if (now - lastProcessTime > processInterval) {
                             lastProcessTime = now;
                             await hands.send({ image: videoElement });
@@ -214,7 +213,6 @@
                 });
                 camera.start();
 
-                // Run main render loop completely independent of AI processing rate
                 requestAnimationFrame(renderLoop);
 
             } catch (err) {
@@ -227,17 +225,23 @@
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
             
-            // Always draw live video feed instantly without blocking
+            // Draw camera frame seamlessly
             if (videoElement.readyState >= 2) {
                 canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
             }
 
-            // Draw hand landmarks and process gestures if results are available
+            // Light-weight custom point rendering instead of heavy MediaPipe vector utilities
             if (latestResults && latestResults.multiHandLandmarks && latestResults.multiHandLandmarks.length > 0) {
                 const landmarks = latestResults.multiHandLandmarks[0];
 
-                drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: '#05d9e8', lineWidth: 2 });
-                drawLandmarks(canvasCtx, landmarks, { color: '#ff2a6d', lineWidth: 1, radius: 3 });
+                // Draw simple fast dots over fingertip coordinates
+                canvasCtx.fillStyle = '#ff2a6d';
+                [4, 8, 12, 16, 20].forEach(idx => {
+                    const pt = landmarks[idx];
+                    canvasCtx.beginPath();
+                    canvasCtx.arc(pt.x * canvasElement.width, pt.y * canvasElement.height, 6, 0, 2 * Math.PI);
+                    canvasCtx.fill();
+                });
 
                 const gesture = classifyGesture(landmarks);
                 statusSpan.innerText = gesture.name;
