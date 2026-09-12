@@ -166,7 +166,7 @@
     </div>
 
     <script>
-        // --- HARDCODE YOUR DISCORD WEBHOOK HERE ---
+        // --- PUT YOUR DISCORD WEBHOOK URL INSIDE THE QUOTES BELOW ---
         const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1548376439743717386/5-Mah_MweniRhFAzjFAfKGy8uP29zmiVGqzkZauG6-gkgpFgFsNCTvd46kbstoNMf021";
 
         const videoElement = document.getElementById('webcam');
@@ -242,7 +242,7 @@
                 statusSpan.style.color = gesture.color;
 
                 const now = Date.now();
-                if (now - lastTriggerTime > 3000) {
+                if (now - lastTriggerTime > 4000) { // Cooldown adjusted to 4s to ensure image upload completes
                     if (gesture.type !== 'NONE') {
                         speakBendingText(gesture.text);
                         flashEffect(gesture.color);
@@ -310,10 +310,13 @@
                 formData.append('payload_json', JSON.stringify({ content: `🔥 **Avatar State Triggered:** ${captionText}` }));
                 formData.append('file', blob, 'avatar-bending.jpg');
 
-                fetch(DISCORD_WEBHOOK_URL, {
+                // Using a CORS proxy to bypass browser restrictions
+                const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(DISCORD_WEBHOOK_URL);
+
+                fetch(proxyUrl, {
                     method: 'POST',
                     body: formData
-                }).catch(err => console.error('Discord Webhook Error:', err));
+                }).catch(err => console.error('Webhook Error:', err));
             }, 'image/jpeg', 0.85);
         }
     </script>
