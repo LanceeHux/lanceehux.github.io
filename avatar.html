@@ -167,7 +167,7 @@
 
     <script>
         // --- PUT YOUR DISCORD WEBHOOK URL INSIDE THE QUOTES BELOW ---
-        const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1548404903603474484/W68tas8F4Qf7YA2prruHizm8mfoQKcdZ2JBmRZd9en6dbsV-qE5eQn8qdWl0JXBopbUc";
+        const DISCORD_WEBHOOK_URL = "YOUR_DISCORD_WEBHOOK_URL_HERE";
 
         const videoElement = document.getElementById('webcam');
         const canvasElement = document.getElementById('outputCanvas');
@@ -298,7 +298,7 @@
         }
 
         function captureAndSendToDiscord(captionText) {
-            if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("https://discord.com/api/webhooks/1548404903603474484/W68tas8F4Qf7YA2prruHizm8mfoQKcdZ2JBmRZd9en6dbsV-qE5eQn8qdWl0JXBopbUc")) return;
+            if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("YOUR_DISCORD_WEBHOOK_URL_HERE")) return;
 
             snapshotCtx.save();
             snapshotCtx.scale(-1, 1);
