@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>High-Performance Hand Gesture Recognition</title>
+    <title>Avatar Bending Arena</title>
     <!-- Load MediaPipe Hands and Camera Utils via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
@@ -26,8 +26,8 @@
 
         .game-wrapper {
             position: relative;
-            box-shadow: 0 0 50px rgba(0, 242, 254, 0.2);
-            border: 3px solid #1a233a;
+            box-shadow: 0 0 50px rgba(255, 69, 0, 0.2);
+            border: 3px solid #2a1a1a;
             border-radius: 14px;
             overflow: hidden;
             background: #080c18;
@@ -63,7 +63,7 @@
 
         .badge {
             background: rgba(10, 14, 26, 0.85);
-            border: 2px solid #28355c;
+            border: 2px solid #3a2828;
             padding: 10px 20px;
             border-radius: 8px;
             font-family: 'Orbitron', sans-serif;
@@ -73,8 +73,8 @@
         }
 
         #detectedGesture {
-            color: #ffcc00;
-            text-shadow: 0 0 10px #ffcc00;
+            color: #ff4500;
+            text-shadow: 0 0 10px #ff4500;
         }
 
         .instructions {
@@ -90,7 +90,7 @@
         }
 
         .instructions span {
-            color: #05d9e8;
+            color: #ff4500;
             font-family: 'Orbitron', sans-serif;
         }
 
@@ -110,9 +110,9 @@
         #permissionScreen h2 {
             font-family: 'Orbitron', sans-serif;
             font-size: 24px;
-            color: #05d9e8;
+            color: #ff4500;
             margin-bottom: 10px;
-            text-shadow: 0 0 15px #05d9e8;
+            text-shadow: 0 0 15px #ff4500;
         }
 
         #permissionScreen p {
@@ -122,7 +122,7 @@
         }
 
         .btn {
-            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            background: linear-gradient(90deg, #ff4500, #ff8c00);
             color: white;
             border: none;
             padding: 12px 30px;
@@ -131,13 +131,13 @@
             font-weight: 700;
             border-radius: 6px;
             cursor: pointer;
-            box-shadow: 0 0 15px rgba(0, 198, 255, 0.5);
+            box-shadow: 0 0 15px rgba(255, 69, 0, 0.5);
             transition: all 0.2s ease;
         }
 
         .btn:hover {
             transform: scale(1.05);
-            box-shadow: 0 0 25px rgba(0, 198, 255, 0.8);
+            box-shadow: 0 0 25px rgba(255, 69, 0, 0.8);
         }
     </style>
 </head>
@@ -145,14 +145,13 @@
 
     <div class="game-wrapper">
         <div id="permissionScreen">
-            <h2>CAMERA ACCESS REQUIRED</h2>
-            <p>Please grant camera permissions to initialize the gesture recognition system.</p>
-            <button class="btn" onclick="requestCameraAccess()">INITIALIZE CAMERA</button>
+            <h2>ELEMENTAL CAMERA ACCESS</h2>
+            <p>Grant camera permissions to enter the Avatar state and unlock your bending abilities.</p>
+            <button class="btn" onclick="requestCameraAccess()">ENTER ELEMENTAL STATE</button>
         </div>
 
         <div class="hud-overlay">
-            <div class="badge">STATUS: <span id="detectedGesture">SEARCHING...</span></div>
-            <div class="badge" id="actionCounter">SCORE: 0</div>
+            <div class="badge">ELEMENT: <span id="detectedGesture">MEDITATING...</span></div>
         </div>
 
         <video id="webcam" autoplay playsinline></video>
@@ -160,7 +159,7 @@
     </div>
 
     <div class="instructions">
-        Show a <span>Peace Sign (✌️)</span> for Function A &nbsp;|&nbsp; Show a <span>High Five (🖐️)</span> for Function B
+        <span>Fist (✊)</span> = Fire &nbsp;|&nbsp; <span>Open Palm (🖐️)</span> = Air &nbsp;|&nbsp; <span>Pancake Hand / Flat & Closed (✋)</span> = Water
     </div>
 
     <script>
@@ -168,14 +167,12 @@
         const canvasElement = document.getElementById('outputCanvas');
         const canvasCtx = canvasElement.getContext('2d');
         const statusSpan = document.getElementById('detectedGesture');
-        const counterSpan = document.getElementById('actionCounter');
         const permissionScreen = document.getElementById('permissionScreen');
 
-        let score = 0;
         let lastTriggerTime = 0;
         let latestResults = null;
         let lastProcessTime = 0;
-        const processInterval = 80; // Limit AI model checks to ~12.5 FPS for maximum frame stability
+        const processInterval = 80;
 
         async function requestCameraAccess() {
             try {
@@ -191,7 +188,7 @@
 
                 hands.setOptions({
                     maxNumHands: 1,
-                    modelComplexity: 0, // Minimal complexity to prevent any threading lag
+                    modelComplexity: 0,
                     minDetectionConfidence: 0.5,
                     minTrackingConfidence: 0.5
                 });
@@ -225,39 +222,28 @@
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
             
-            // Draw camera frame seamlessly
             if (videoElement.readyState >= 2) {
                 canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
             }
 
-            // Light-weight custom point rendering instead of heavy MediaPipe vector utilities
             if (latestResults && latestResults.multiHandLandmarks && latestResults.multiHandLandmarks.length > 0) {
                 const landmarks = latestResults.multiHandLandmarks[0];
 
-                // Draw simple fast dots over fingertip coordinates
-                canvasCtx.fillStyle = '#ff2a6d';
-                [4, 8, 12, 16, 20].forEach(idx => {
-                    const pt = landmarks[idx];
-                    canvasCtx.beginPath();
-                    canvasCtx.arc(pt.x * canvasElement.width, pt.y * canvasElement.height, 6, 0, 2 * Math.PI);
-                    canvasCtx.fill();
-                });
-
                 const gesture = classifyGesture(landmarks);
                 statusSpan.innerText = gesture.name;
+                statusSpan.style.color = gesture.color;
 
                 const now = Date.now();
-                if (now - lastTriggerTime > 1500) {
-                    if (gesture.type === 'PIECE') {
-                        triggerFunctionA();
-                        lastTriggerTime = now;
-                    } else if (gesture.type === 'HIGH_FIVE') {
-                        triggerFunctionB();
+                if (now - lastTriggerTime > 2000) {
+                    if (gesture.type !== 'NONE') {
+                        speakBendingText(gesture.text);
+                        flashEffect(gesture.color);
                         lastTriggerTime = now;
                     }
                 }
             } else {
-                statusSpan.innerText = 'SEARCHING...';
+                statusSpan.innerText = 'MEDITATING...';
+                statusSpan.style.color = '#ffcc00';
             }
 
             canvasCtx.restore();
@@ -265,35 +251,49 @@
         }
 
         function classifyGesture(lm) {
+            // Check finger extensions (tip vs mcp/pip joints)
+            const isThumbUp = Math.abs(lm[4].x - lm[17].x) > 0.08; 
             const isIndexUp = lm[8].y < lm[6].y;
             const isMiddleUp = lm[12].y < lm[10].y;
             const isRingUp = lm[16].y < lm[14].y;
             const isPinkyUp = lm[20].y < lm[18].y;
 
-            if (isIndexUp && isMiddleUp && !isRingUp && !isPinkyUp) {
-                return { name: 'PEACE SIGN (✌️)', type: 'PIECE' };
+            // Calculate average finger spread distance for Pancake Hand check
+            const fingertipsSpread = Math.hypot(lm[8].x - lm[20].x, lm[8].y - lm[20].y);
+
+            // 1. Fire: Closed Fist (all fingers curled down towards palm)
+            if (!isIndexUp && !isMiddleUp && !isRingUp && !isPinkyUp) {
+                return { name: 'FIRE BENDING (✊)', type: 'FIRE', text: 'You bent fire!', color: '#ff4500' };
             }
-            if (isIndexUp && isMiddleUp && isRingUp && isPinkyUp) {
-                return { name: 'HIGH FIVE (🖐️)', type: 'HIGH_FIVE' };
+
+            // 2. Air: High Five Open (all fingers up with natural spacing/spread)
+            if (isIndexUp && isMiddleUp && isRingUp && isPinkyUp && fingertipsSpread > 0.22) {
+                return { name: 'AIR BENDING (🖐️)', type: 'AIR', text: 'You bent air!', color: '#00d2ff' };
             }
-            return { name: 'UNKNOWN', type: 'NONE' };
+
+            // 3. Water: Pancake Hand (all 4 fingers extended up, but tightly pressed together/closed)
+            if (isIndexUp && isMiddleUp && isRingUp && isPinkyUp && fingertipsSpread <= 0.22) {
+                return { name: 'WATER BENDING (✋)', type: 'WATER', text: 'You bent water!', color: '#0055ff' };
+            }
+
+            return { name: 'GATHERING CHI...', type: 'NONE' };
         }
 
-        function triggerFunctionA() {
-            statusSpan.style.color = '#00c6ff';
-            canvasCtx.fillStyle = 'rgba(0, 198, 255, 0.25)';
-            canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
-             let textToSpeak = new SpeechSynthesisUtterance("Hello, this is function A!");
-              window.speechSynthesis.speak(textToSpeak);
-
+        function speakBendingText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Clear queued speech
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
         }
 
-        function triggerFunctionB() {
-            score += 25;
-            counterSpan.innerText = `SCORE: ${score}`;
-            statusSpan.style.color = '#ff2a6d';
-            canvasCtx.fillStyle = 'rgba(255, 42, 109, 0.25)';
+        function flashEffect(hexColor) {
+            canvasCtx.fillStyle = hexColor;
+            canvasCtx.globalAlpha = 0.3;
             canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.globalAlpha = 1.0;
         }
     </script>
 </body>
