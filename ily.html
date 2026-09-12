@@ -280,11 +280,12 @@
         }
 
         function triggerFunctionA() {
-            score += 10;
-            counterSpan.innerText = `SCORE: ${score}`;
             statusSpan.style.color = '#00c6ff';
             canvasCtx.fillStyle = 'rgba(0, 198, 255, 0.25)';
             canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
+             let textToSpeak = new SpeechSynthesisUtterance("Hello, this is function A!");
+              window.speechSynthesis.speak(textToSpeak);
+
         }
 
         function triggerFunctionB() {
