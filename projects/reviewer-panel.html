@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leeyam++ Reviewer Studio - Firebase Edition</title>
+    <style>
+        :root {
+            --bg-deep: #0a0a0a;
+            --surface-color: #141414;
+            --surface-card: #1c1c1c;
+            --surface-glass: rgba(20, 20, 20, 0.85);
+            --border-color: #2a2a2a;
+            --border-glow: rgba(255, 205, 0, 0.25);
+            --text-main: #f3f3f3;
+            --text-muted: #888888;
+            --accent-gold: #ffcd00;
+            --accent-gold-glow: rgba(255, 205, 0, 0.4);
+            --accent-gold-hover: #e6b800;
+            --danger-color: #ff4757;
+            --danger-glow: rgba(255, 71, 87, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(255, 205, 0, 0.04) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(255, 205, 0, 0.03) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        header {
+            background-color: var(--surface-glass);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-brand-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-box {
+            width: 48px;
+            height: 48px;
+            background: #ffcd00;
+            border: 2px solid var(--accent-gold);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px var(--accent-gold-glow);
+            position: relative;
+            overflow: hidden;
+            color: black;
+            font-weight: bold;
+        }
+
+        .logo-svg {
+            width: 26px;
+            height: 26px;
+            fill: var(--accent-gold);
+        }
+
+        .brand-title-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-title {
+            color: var(--accent-gold);
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--accent-gold-glow);
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .nav-cluster {
+            background-color: var(--surface-card);
+            border: 1px solid var(--border-color);
+            padding: 0.35rem;
+            border-radius: 10px;
+            display: flex;
+            gap: 0.35rem;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.6rem 1.25rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-btn.active {
+            background-color: var(--accent-gold);
+            color: var(--bg-deep);
+            box-shadow: 0 0 15px var(--accent-gold-glow);
+        }
+
+        .nav-btn:hover:not(.active) {
+            color: var(--text-main);
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        main {
+            flex: 1;
+            max-width: 1000px;
+            width: 100%;
+            margin: 2.5rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .view {
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Firebase Config Modal Banner */
+        .firebase-config-banner {
+            background-color: var(--surface-card);
+            border: 1px solid var(--accent-gold);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 20px rgba(255, 205, 0, 0.1);
+        }
+
+        .firebase-config-banner h3 {
+            color: var(--accent-gold);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .firebase-config-banner p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Form Master Wrapper */
+        .form-master-wrapper {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .form-master-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+        }
+
+        .form-section-header {
+            padding: 2rem 2.5rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            background-color: rgba(255, 255, 255, 0.01);
+        }
+
+        .form-section-title {
+            color: var(--accent-gold);
+            font-size: 1.4rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .form-section-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+        }
+
+        .form-body-container {
+            padding: 2.5rem;
+        }
+
+        .form-grid-dual {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background-color: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 1rem;
+            transition: all 0.25s ease;
+        }
+
+        input[type="text"]:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 3px var(--accent-gold-glow);
+            background-color: #222;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            line-height: 1.5;
+        }
+
+        .file-upload-cluster {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            padding-top: 1.5rem;
+            border-top: 1px dashed var(--border-color);
+        }
+
+        .custom-file-box {
+            background-color: var(--surface-card);
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 1.25rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .custom-file-box:hover {
+            border-color: var(--accent-gold);
+            background-color: rgba(255, 205, 0, 0.02);
+        }
+
+        .custom-file-box input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-box-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 0.25rem;
+        }
+
+        .file-box-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .subsections-wrapper {
+            background-color: rgba(0,0,0,0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .subsections-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .subsections-heading {
+            color: var(--accent-gold);
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dynamic-card-item {
+            background-color: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .dynamic-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .dynamic-card-index {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent-gold);
+            background: rgba(255, 205, 0, 0.1);
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+
+        .btn-action-ghost {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-action-ghost:hover {
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+            background-color: rgba(255, 205, 0, 0.05);
+        }
+
+        .btn-action-danger {
+            background: transparent;
+            border: 1px solid rgba(255, 71, 87, 0.3);
+            color: var(--danger-color);
+            padding: 0.3rem 0.7rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-action-danger:hover {
+            background-color: var(--danger-color);
+            color: white;
+            border-color: var(--danger-color);
+            box-shadow: 0 0 10px var(--danger-glow);
+        }
+
+        .btn-primary-glow {
+            background-color: var(--accent-gold);
+            color: var(--bg-deep);
+            border: none;
+            padding: 1rem 2rem;
+            font-weight: 800;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1.05rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 20px var(--accent-gold-glow);
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .btn-primary-glow:hover {
+            background-color: var(--accent-gold-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px var(--accent-gold-glow);
+        }
+
+        .btn-primary-glow:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Output Toolbar & Dashboard */
+        .output-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .search-box-wrapper {
+            flex: 1;
+            min-width: 240px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.65rem 1rem 0.65rem 2.4rem;
+            background-color: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 0.9rem;
+        }
+
+        .search-icon-abs {
+            position: absolute;
+            left: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .output-stats {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .output-stats span {
+            color: var(--accent-gold);
+            font-weight: 700;
+        }
+
+        .reviewer-master-card {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reviewer-master-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: var(--accent-gold);
+            box-shadow: 0 0 10px var(--accent-gold);
+        }
+
+        .reviewer-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+        }
+
+        .subject-badge-cluster {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .subject-pill {
+            background-color: rgba(255, 205, 0, 0.1);
+            color: var(--accent-gold);
+            border: 1px solid rgba(255, 205, 0, 0.2);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-block;
+            align-self: flex-start;
+        }
+
+        .topic-main-title {
+            font-size: 1.75rem;
+            color: var(--text-main);
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .topic-overview-box {
+            color: var(--text-muted);
+            line-height: 1.7;
+            font-size: 1.05rem;
+            margin-bottom: 2rem;
+            background: var(--surface-card);
+            padding: 1.25rem 1.5rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .sub-modules-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .sub-module-block {
+            background-color: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .sub-module-block::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 1.5rem;
+            bottom: 1.5rem;
+            width: 2px;
+            background-color: var(--accent-gold);
+        }
+
+        .sub-module-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+            padding-left: 0.75rem;
+        }
+
+        .sub-module-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            padding-left: 0.75rem;
+        }
+
+        .code-example-box {
+            background-color: #0d0d0d;
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--accent-gold);
+            padding: 1rem 1.25rem;
+            border-radius: 0 8px 8px 0;
+            margin-left: 0.75rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.9rem;
+            color: #ffea80;
+            overflow-x: auto;
+        }
+
+        .code-example-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+            font-family: -apple-system, sans-serif;
+            font-weight: 700;
+        }
+
+        .media-asset-grid {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            align-items: center;
+        }
+
+        .image-preview-wrapper {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            background: #000;
+            max-width: 320px;
+        }
+
+        .reviewer-display-image {
+            width: 100%;
+            height: auto;
+            max-height: 220px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .download-file-card {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.85rem;
+            background-color: var(--surface-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.85rem 1.25rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.25s ease;
+        }
+
+        .download-file-card:hover {
+            border-color: var(--accent-gold);
+            background-color: rgba(255, 205, 0, 0.05);
+            color: var(--accent-gold);
+        }
+
+        .file-icon-box {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 205, 0, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-gold);
+            font-size: 1.1rem;
+        }
+
+        .empty-state-container {
+            text-align: center;
+            padding: 5rem 2rem;
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.4;
+        }
+
+        .empty-state-text {
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid-dual, .file-upload-cluster {
+                grid-template-columns: 1fr;
+            }
+            .header-container {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            .form-body-container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-container">
+            <div class="header-brand-wrapper">
+                <div class="logo-box">
+                    L
+                </div>
+                <div class="brand-title-group">
+                    <div class="brand-title">Leeyam++</div>
+                </div>
+            </div>
+            <nav class="nav-cluster">
+                <button id="nav-add" class="nav-btn active" onclick="switchView('add')">
+                    <span>➕</span> Add Reviewer
+                </button>
+                <button id="nav-output" class="nav-btn" onclick="switchView('output')">
+                    <span>📚</span> View Output
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- ADD VIEW -->
+        <section id="view-add" class="view active">
+
+            <div class="form-master-wrapper">
+                <div class="form-section-header">
+                    <div class="form-section-title">
+                        <span>⚡</span> Build Cloud Study Module
+                    </div>
+                    <div class="form-section-desc">Add subjects, sub-modules, examples, images, and downloadable PDFs/DOCX directly to Firebase.</div>
+                </div>
+
+                <div class="form-body-container">
+                    <form id="reviewerForm" onsubmit="saveReviewerToFirebase(event)">
+                        
+                        <div class="form-grid-dual">
+                            <div class="form-group">
+                                <label for="subjectName">Subject Name</label>
+                                <input type="text" id="subjectName" required placeholder="e.g., Cloud Architecture">
+                            </div>
+                            <div class="form-group">
+                                <label for="subjectTopic">Subject Topic</label>
+                                <input type="text" id="subjectTopic" required placeholder="e.g., Firestore Security Rules">
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="topicDesc">Topic Description / Core Overview</label>
+                            <textarea id="topicDesc" required placeholder="Comprehensive summary of the core concept..."></textarea>
+                        </div>
+
+                        <div class="subsections-wrapper">
+                            <div class="subsections-header-row">
+                                <span class="subsections-heading">Sub-modules & Practical Examples</span>
+                                <button type="button" class="btn-action-ghost" onclick="addSubSection()">
+                                    <span>+</span> Add Sub-topic Block
+                                </button>
+                            </div>
+                            <div id="subsectionsContainer">
+                                <!-- Dynamic rows populated via JS -->
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width" style="margin-bottom: 0;">
+                            <label>Attached Multimedia & Documents</label>
+                            <div class="file-upload-cluster">
+                                <div class="custom-file-box">
+                                    <div class="file-box-title">Reference Image</div>
+                                    <div class="file-box-subtitle" id="imgLabelName">PNG, JPG, WEBP</div>
+                                    <input type="file" id="imageUpload" accept="image/*" onchange="updateFileLabel('imageUpload', 'imgLabelName')">
+                                </div>
+                                <div class="custom-file-box">
+                                    <div class="file-box-title">PDF / DOCX Downloadable</div>
+                                    <div class="file-box-subtitle" id="docLabelName">PDF, DOC, DOCX</div>
+                                    <input type="file" id="fileUpload" accept=".pdf,.doc,.docx" onchange="updateFileLabel('fileUpload', 'docLabelName')">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="btn-primary-glow">Publish to Firebase Cloud</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- OUTPUT VIEW -->
+        <section id="view-output" class="view">
+            <div class="output-toolbar">
+                <div class="search-box-wrapper">
+                    <span class="search-icon-abs">🔍</span>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search cloud reviewers..." oninput="renderReviewers()">
+                </div>
+                <div class="output-stats">Cloud Modules: <span id="reviewerCount">0</span></div>
+            </div>
+            <div id="outputContainer">
+                <div class="empty-state-container">
+                    <div class="empty-state-icon">☁️</div>
+                    <div class="empty-state-text">Connecting to Firebase Cloud...</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Firebase SDK v10 (Modular via CDN) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+        // ==========================================
+        // REPLACE WITH YOUR FIREBASE CONFIGURATION
+        // ==========================================
+        const firebaseConfig = {
+          apiKey: "AIzaSyBZ80XZUpQl_JSzwFb9ORcu1yU6BpvmqPs",
+          authDomain: "lanx-reviewer.firebaseapp.com",
+          projectId: "lanx-reviewer",
+          storageBucket: "lanx-reviewer.firebasestorage.app",
+          messagingSenderId: "1081956747291",
+          appId: "1:1081956747291:web:bdd613d2ce9c731add10be"
+        };
+
+        // Initialize Firebase
+        let app, db, storage;
+        let isFirebaseInitialized = false;
+
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            storage = getStorage(app);
+            isFirebaseInitialized = true;
+            console.log("Firebase initialized successfully.");
+        } catch (e) {
+            console.warn("Firebase config placeholders detected. Falling back to LocalStorage demo mode until config is updated.", e);
+        }
+
+        // Global exposure for event handlers
+        window.switchView = function(viewName) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+            if (viewName === 'add') {
+                document.getElementById('view-add').classList.add('active');
+                document.getElementById('nav-add').classList.add('active');
+            } else {
+                document.getElementById('view-output').classList.add('active');
+                document.getElementById('nav-output').classList.add('active');
+                loadReviewersFromCloud();
+            }
+        };
+
+        window.updateFileLabel = function(inputId, labelId) {
+            const input = document.getElementById(inputId);
+            const label = document.getElementById(labelId);
+            if (input.files && input.files[0]) {
+                label.textContent = input.files[0].name;
+                label.style.color = 'var(--accent-gold)';
+            }
+        };
+
+        window.addSubSection = function(subTitleVal = '', subDescVal = '', exampleVal = '') {
+            const container = document.getElementById('subsectionsContainer');
+            const rowId = 'sub_' + Date.now() + Math.random().toString(36).substring(2, 5);
+            
+            const div = document.createElement('div');
+            div.className = 'dynamic-card-item';
+            div.id = rowId;
+            div.innerHTML = `
+                <div class="dynamic-card-top">
+                    <span class="dynamic-card-index">SUB-MODULE</span>
+                    <button type="button" class="btn-action-danger" onclick="document.getElementById('${rowId}').remove()">Remove</button>
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Sub-title</label>
+                    <input type="text" class="sub-title-input" value="${subTitleVal}" placeholder="e.g., Collection Reference Setup">
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Sub-description</label>
+                    <textarea style="min-height: 80px;" class="sub-desc-input" placeholder="Explain the sub-component details...">${subDescVal}</textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Example (Code block, formula, or text format)</label>
+                    <input type="text" class="sub-example-input" value="${exampleVal}" placeholder="e.g., await addDoc(collection(db, 'reviewers'), data);">
+                </div>
+            `;
+            container.appendChild(div);
+        };
+
+        // Initialize default UI state
+        window.addEventListener('DOMContentLoaded', () => {
+            addSubSection();
+            loadReviewersFromCloud();
+        });
+
+        // Save Reviewer to Firebase Firestore & Storage
+        window.saveReviewerToFirebase = async function(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Uploading to Firebase...';
+
+            const subjectName = document.getElementById('subjectName').value;
+            const subjectTopic = document.getElementById('subjectTopic').value;
+            const topicDesc = document.getElementById('topicDesc').value;
+
+            const subsections = [];
+            document.querySelectorAll('.dynamic-card-item').forEach(row => {
+                const subTitle = row.querySelector('.sub-title-input').value;
+                const subDesc = row.querySelector('.sub-desc-input').value;
+                const example = row.querySelector('.sub-example-input').value;
+                if(subTitle || subDesc || example) {
+                    subsections.push({ subTitle, subDesc, example });
+                }
+            });
+
+            const imageInput = document.getElementById('imageUpload');
+            const fileInput = document.getElementById('fileUpload');
+
+            let imageUrl = null;
+            let fileUrl = null;
+            let fileName = null;
+
+            try {
+                if (isFirebaseInitialized) {
+                    // Upload Image to Firebase Storage if selected
+                    if (imageInput.files && imageInput.files[0]) {
+                        const imgFile = imageInput.files[0];
+                        const imgRef = ref(storage, `reviewers/images/${Date.now()}_${imgFile.name}`);
+                        const imgSnap = await uploadBytes(imgRef, imgFile);
+                        imageUrl = await getDownloadURL(imgSnap.ref);
+                    }
+
+                    // Upload Document to Firebase Storage if selected
+                    if (fileInput.files && fileInput.files[0]) {
+                        const docFile = fileInput.files[0];
+                        fileName = docFile.name;
+                        const docRef = ref(storage, `reviewers/documents/${Date.now()}_${fileName}`);
+                        const docSnap = await uploadBytes(docRef, docFile);
+                        fileUrl = await getDownloadURL(docSnap.ref);
+                    }
+
+                    // Save Data Document to Firestore
+                    await addDoc(collection(db, "reviewers"), {
+                        subjectName,
+                        subjectTopic,
+                        topicDesc,
+                        subsections,
+                        imageUrl,
+                        fileUrl,
+                        fileName,
+                        createdAt: serverTimestamp()
+                    });
+                } else {
+                    // Fallback to LocalStorage if Firebase is not yet configured
+                    const localReviewer = {
+                        id: Date.now(),
+                        subjectName,
+                        subjectTopic,
+                        topicDesc,
+                        subsections,
+                        imageUrl: imageInput.files[0] ? URL.createObjectURL(imageInput.files[0]) : null,
+                        fileUrl: fileInput.files[0] ? URL.createObjectURL(fileInput.files[0]) : null,
+                        fileName: fileInput.files[0] ? fileInput.files[0].name : null
+                    };
+                    let existing = JSON.parse(localStorage.getItem('leeyam_firebase_fallback') || '[]');
+                    existing.unshift(localReviewer);
+                    localStorage.setItem('leeyam_firebase_fallback', JSON.stringify(existing));
+                }
+
+                // Reset Form
+                document.getElementById('reviewerForm').reset();
+                document.getElementById('imgLabelName').textContent = 'PNG, JPG, WEBP';
+                document.getElementById('imgLabelName').style.color = 'var(--text-muted)';
+                document.getElementById('docLabelName').textContent = 'PDF, DOC, DOCX';
+                document.getElementById('docLabelName').style.color = 'var(--text-muted)';
+                document.getElementById('subsectionsContainer').innerHTML = '';
+                addSubSection();
+                
+                alert('Reviewer successfully published!');
+                switchView('output');
+
+            } catch (error) {
+                console.error("Error saving reviewer:", error);
+                alert("Failed to save reviewer. Check console for details.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Publish to Firebase Cloud';
+            }
+        };
+
+        // Load Reviewers from Cloud
+        window.loadReviewersFromCloud = async function() {
+            const container = document.getElementById('outputContainer');
+            container.innerHTML = `<div class="empty-state-container"><div class="empty-state-icon">⏳</div><div class="empty-state-text">Fetching cloud modules...</div></div>`;
+
+            let reviewers = [];
+
+            try {
+                if (isFirebaseInitialized) {
+                    const q = query(collection(db, "reviewers"), orderBy("createdAt", "desc"));
+                    const querySnapshot = await getDocs(q);
+                    querySnapshot.forEach((docSnap) => {
+                        reviewers.push({ id: docSnap.id, ...docSnap.data() });
+                    });
+                } else {
+                    reviewers = JSON.parse(localStorage.getItem('leeyam_firebase_fallback') || '[]');
+                }
+            } catch (e) {
+                console.error("Error loading reviewers:", e);
+                reviewers = JSON.parse(localStorage.getItem('leeyam_firebase_fallback') || '[]');
+            }
+
+            window._cachedReviewers = reviewers;
+            renderReviewers();
+        };
+
+        window.renderReviewers = function() {
+            const container = document.getElementById('outputContainer');
+            const searchQuery = (document.getElementById('searchInput')?.value || '').toLowerCase();
+            const reviewers = window._cachedReviewers || [];
+
+            const filtered = reviewers.filter(rev => {
+                const subMatches = rev.subsections && rev.subsections.some(sub => 
+                    sub.subTitle.toLowerCase().includes(searchQuery) || sub.subDesc.toLowerCase().includes(searchQuery)
+                );
+                return rev.subjectName.toLowerCase().includes(searchQuery) || 
+                       rev.subjectTopic.toLowerCase().includes(searchQuery) || 
+                       rev.topicDesc.toLowerCase().includes(searchQuery) ||
+                       subMatches;
+            });
+
+            document.getElementById('reviewerCount').textContent = filtered.length;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state-container">
+                        <div class="empty-state-icon">🗂️</div>
+                        <div class="empty-state-text">No cloud reviewer modules found. Switch to "Add Reviewer" to publish your first cloud entry.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            filtered.forEach(rev => {
+                let subsHtml = '';
+                if (rev.subsections && rev.subsections.length > 0) {
+                    subsHtml = rev.subsections.map(sub => `
+                        <div class="sub-module-block">
+                            ${sub.subTitle ? `<div class="sub-module-title">${escapeHtml(sub.subTitle)}</div>` : ''}
+                            ${sub.subDesc ? `<div class="sub-module-desc">${escapeHtml(sub.subDesc)}</div>` : ''}
+                            ${sub.example ? `
+                                <div style="margin-left: 0.75rem; margin-top: 0.75rem;">
+                                    <div class="code-example-label">Practical Example / Expression</div>
+                                    <div class="code-example-box">${escapeHtml(sub.example)}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('');
+                }
+
+                let mediaHtml = '';
+                if (rev.imageUrl || rev.fileUrl) {
+                    mediaHtml += `<div class="media-asset-grid">`;
+                    if (rev.imageUrl) {
+                        mediaHtml += `
+                            <div class="image-preview-wrapper">
+                                <img src="${rev.imageUrl}" class="reviewer-display-image" alt="Cloud Reference Graphic">
+                            </div>
+                        `;
+                    }
+                    if (rev.fileUrl && rev.fileName) {
+                        mediaHtml += `
+                            <a href="${rev.fileUrl}" target="_blank" download="${rev.fileName}" class="download-file-card">
+                                <div class="file-icon-box">📥</div>
+                                <div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">Cloud Downloadable File</div>
+                                    <div>${escapeHtml(rev.fileName)}</div>
+                                </div>
+                            </a>
+                        `;
+                    }
+                    mediaHtml += `</div>`;
+                }
+
+                const card = document.createElement('div');
+                card.className = 'reviewer-master-card';
+                card.innerHTML = `
+                    <div class="reviewer-card-header">
+                        <div class="subject-badge-cluster">
+                            <span class="subject-pill">${escapeHtml(rev.subjectName)}</span>
+                            <h3 class="topic-main-title">${escapeHtml(rev.subjectTopic)}</h3>
+                        </div>
+                        <button class="btn-action-danger" onclick="deleteCloudReviewer('${rev.id}')">Delete Module</button>
+                    </div>
+                    <div class="topic-overview-box">${escapeHtml(rev.topicDesc)}</div>
+                    <div class="sub-modules-container">${subsHtml}</div>
+                    ${mediaHtml}
+                `;
+                container.appendChild(card);
+            });
+        };
+
+        window.deleteCloudReviewer = async function(id) {
+            if(!confirm('Are you certain you want to delete this cloud module?')) return;
+            try {
+                if (isFirebaseInitialized) {
+                    await deleteDoc(doc(db, "reviewers", id));
+                } else {
+                    let existing = JSON.parse(localStorage.getItem('leeyam_firebase_fallback') || '[]');
+                    existing = existing.filter(r => r.id != id);
+                    localStorage.setItem('leeyam_firebase_fallback', JSON.stringify(existing));
+                }
+                loadReviewersFromCloud();
+            } catch (e) {
+                console.error("Error deleting document:", e);
+                alert("Failed to delete module.");
+            }
+        };
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
