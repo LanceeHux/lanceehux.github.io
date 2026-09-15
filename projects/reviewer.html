@@ -9,7 +9,7 @@
     <meta property="og:description" content="Leeyam++ - Contains all subjects reviewer">
     <meta property="og:image" content="https://lynxlab.vercel.app/images/thumbnail.jpeg">
     <meta property="og:site_name" content="Leeyam++ - Digital Portdolio">
-    <link rel="icon" type="image/png" href="images/L.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://lynxlab.vercel.app/images/L.png" sizes="32x32">
     <title>Leeyam++ - Reviewer</title>
     <style>
         :root {
@@ -1483,7 +1483,6 @@
                             <span class="subject-pill" style="cursor:pointer;" onclick="filterBySubject('${escapeAttr(rev.subjectName)}')">${escapeHtml(rev.subjectName)}</span>
                             <h3 class="topic-main-title">${escapeHtml(rev.subjectTopic)}</h3>
                         </div>
-                        <button class="btn-action-danger" onclick="deleteCloudReviewer('${rev.id}')">Delete Module</button>
                     </div>
                     <div class="topic-overview-box">${escapeHtml(rev.topicDesc)}</div>
                     <div class="sub-modules-container">${subsHtml}</div>
