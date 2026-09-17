@@ -1092,9 +1092,10 @@
                                     <input type="file" id="imageUpload" accept="image/*" onchange="updateFileLabel('imageUpload', 'imgLabelName')">
                                 </div>
                                 <div class="custom-file-box">
-                                    <div class="file-box-title">PDF / DOCX Downloadable</div>
-                                    <div class="file-box-subtitle" id="docLabelName">PDF, DOC, DOCX</div>
-                                    <input type="file" id="fileUpload" accept=".pdf,.doc,.docx" onchange="updateFileLabel('fileUpload', 'docLabelName')">
+                                    <div class="file-box-title">External URL Link</div>
+                                    <div class="file-box-subtitle" id="docLabelName">Paste target website/docs link</div>
+                                    <!-- Changed from type="file" to type="url" -->
+                                    <input type="url" id="fileUpload" placeholder="https://example.com" oninput="updateUrlLabel('fileUpload', 'docLabelName')" style="width: 100%; background: transparent; border: none; color: var(--text-main); outline: none; margin-top: 0.5rem;">
                                 </div>
                             </div>
                         </div>
@@ -1207,50 +1208,51 @@
         });
 
         // Save Reviewer to Firebase
-        window.saveReviewerToFirebase = async function(event) {
-            event.preventDefault();
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Uploading to Firebase...';
-
-            const subjectName = document.getElementById('subjectName').value;
-            const subjectTopic = document.getElementById('subjectTopic').value;
-            const topicDesc = document.getElementById('topicDesc').value;
-
+        window.saveReviewerToFirebase = async function() {
+            const subjectName = document.getElementById('subjectName').value.trim();
+            const subjectTopic = document.getElementById('subjectTopic').value.trim();
+            const topicDesc = document.getElementById('topicDesc').value.trim();
+            
+            // Gather all subsections dynamically
+            const subsectionElements = document.querySelectorAll('.subsection-group');
             const subsections = [];
-            document.querySelectorAll('.dynamic-card-item').forEach(row => {
-                const subTitle = row.querySelector('.sub-title-input').value;
-                const subDesc = row.querySelector('.sub-desc-input').value;
-                const example = row.querySelector('.sub-example-input').value;
-                if(subTitle || subDesc || example) {
-                    subsections.push({ subTitle, subDesc, example });
+            subsectionElements.forEach(el => {
+                const title = el.querySelector('.sub-title-input').value.trim();
+                const content = el.querySelector('.sub-content-input').value.trim();
+                if (title || content) {
+                    subsections.push({ title, content });
                 }
             });
-
+        
+            if (!subjectName || !subjectTopic) {
+                alert('Please fill out the required Subject Name and Topic fields.');
+                return;
+            }
+        
             const imageInput = document.getElementById('imageUpload');
-            const fileInput = document.getElementById('fileUpload');
-
+            const fileInput = document.getElementById('fileUpload'); // URL text input field
+        
             let imageUrl = null;
             let fileUrl = null;
             let fileName = null;
-
+        
             try {
                 if (isFirebaseInitialized) {
+                    // Upload image file if attached
                     if (imageInput.files && imageInput.files[0]) {
                         const imgFile = imageInput.files[0];
                         const imgRef = ref(storage, `reviewers/images/${Date.now()}_${imgFile.name}`);
                         const imgSnap = await uploadBytes(imgRef, imgFile);
                         imageUrl = await getDownloadURL(imgSnap.ref);
                     }
-
-                    if (fileInput.files && fileInput.files[0]) {
-                        const docFile = fileInput.files[0];
-                        fileName = docFile.name;
-                        const docRef = ref(storage, `reviewers/documents/${Date.now()}_${fileName}`);
-                        const docSnap = await uploadBytes(docRef, docFile);
-                        fileUrl = await getDownloadURL(docSnap.ref);
+        
+                    // Capture URL string directly from the text input
+                    if (fileInput.value.trim() !== '') {
+                        fileUrl = fileInput.value.trim();
+                        fileName = "Visit External Link";
                     }
-
+        
+                    // Save document to Firestore
                     await addDoc(collection(db, "reviewers"), {
                         subjectName,
                         subjectTopic,
@@ -1262,6 +1264,7 @@
                         createdAt: serverTimestamp()
                     });
                 } else {
+                    // LocalStorage fallback saving mechanism
                     const localReviewer = {
                         id: Date.now(),
                         subjectName,
@@ -1269,32 +1272,45 @@
                         topicDesc,
                         subsections,
                         imageUrl: imageInput.files[0] ? URL.createObjectURL(imageInput.files[0]) : null,
-                        fileUrl: fileInput.files[0] ? URL.createObjectURL(fileInput.files[0]) : null,
-                        fileName: fileInput.files[0] ? fileInput.files[0].name : null
+                        fileUrl: fileInput.value.trim() !== '' ? fileInput.value.trim() : null,
+                        fileName: fileInput.value.trim() !== '' ? "Visit External Link" : null,
+                        createdAt: new Date().toISOString()
                     };
                     let existing = JSON.parse(localStorage.getItem('leeyam_firebase_fallback') || '[]');
                     existing.unshift(localReviewer);
                     localStorage.setItem('leeyam_firebase_fallback', JSON.stringify(existing));
                 }
-
+        
+                // Reset form inputs and UI text labels safely
                 document.getElementById('reviewerForm').reset();
-                document.getElementById('imgLabelName').textContent = 'PNG, JPG, WEBP';
-                document.getElementById('imgLabelName').style.color = 'var(--text-muted)';
-                document.getElementById('docLabelName').textContent = 'PDF, DOC, DOCX';
-                document.getElementById('docLabelName').style.color = 'var(--text-muted)';
-                document.getElementById('subsectionsContainer').innerHTML = '';
-                addSubSection();
+                
+                const imgLabel = document.getElementById('imgLabelName');
+                if (imgLabel) {
+                    imgLabel.textContent = 'PNG, JPG, WEBP';
+                    imgLabel.style.color = 'var(--text-muted)';
+                }
+        
+                const docLabel = document.getElementById('docLabelName');
+                if (docLabel) {
+                    docLabel.textContent = 'Paste target website/docs link';
+                    docLabel.style.color = 'var(--text-muted)';
+                }
+        
+                const subsectionsContainer = document.getElementById('subsectionsContainer');
+                if (subsectionsContainer && typeof window.addSubSection === 'function') {
+                    subsectionsContainer.innerHTML = '';
+                    window.addSubSection();
+                }
                 
                 alert('Reviewer successfully published!');
                 window._currentSubjectFilter = null;
-                switchView('output');
-
+                if (typeof window.switchView === 'function') {
+                    window.switchView('output');
+                }
+        
             } catch (error) {
-                console.error("Error saving reviewer:", error);
-                alert("Failed to save reviewer. Check console for details.");
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Publish to Firebase Cloud';
+                console.error('Error saving reviewer: ', error);
+                alert('Failed to save reviewer. Check the console for details.');
             }
         };
 
@@ -1377,6 +1393,17 @@
             gridHtml += `</div>`;
 
             container.innerHTML = gridHtml;
+        };
+        window.updateUrlLabel = function(inputId, labelId) {
+            const input = document.getElementById(inputId);
+            const label = document.getElementById(labelId);
+            if (input.value.trim() !== '') {
+                label.textContent = input.value;
+                label.style.color = 'var(--accent-gold)';
+            } else {
+                label.textContent = 'Paste target website/docs link';
+                label.style.color = 'var(--text-muted)';
+            }
         };
 
         window.filterBySubject = function(subjectName) {
