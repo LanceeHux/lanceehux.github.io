@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-darkbg text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>STEM 2 Randomizer - Mobile Respondent Selector</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: '#ffcd00',
+                        'gold-hover': '#e6b800',
+                        'gold-dark': '#b38f00',
+                        darkbg: '#0c0d0e',
+                        darkcard: '#16181b',
+                        darkpanel: '#1f2227',
+                        darkborder: '#2e333d'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #16181b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2e333d;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ffcd00;
+        }
+        .glow-gold {
+            box-shadow: 0 0 25px rgba(255, 205, 0, 0.25);
+        }
+        .text-glow {
+            text-shadow: 0 0 12px rgba(255, 205, 0, 0.4);
+        }
+        /* Mobile tab view toggles */
+        @media (max-width: 767px) {
+            .mobile-tab-content {
+                display: none;
+            }
+            .mobile-tab-content.active-tab {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col overflow-hidden select-none">
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 md:left-auto md:right-5 md:translate-x-0 z-50 transform translate-y-[-180%] transition-transform duration-300 bg-darkcard border border-gold/40 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 w-[90%] max-w-sm">
+        <i id="toast-icon" class="fas fa-info-circle text-gold text-lg"></i>
+        <span id="toast-message" class="text-xs sm:text-sm font-medium">Notification message</span>
+    </div>
+
+    <!-- HEADER / BRANDING BAR -->
+    <header class="h-16 bg-darkcard border-b border-darkborder px-4 sm:px-6 flex items-center justify-between shrink-0 z-20">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-gold text-darkbg flex items-center justify-center font-black text-xl shadow-md shadow-gold/20">
+                L
+            </div>
+            <div>
+                <h1 class="font-black text-base sm:text-lg text-white leading-tight tracking-tight">STEM 2 <span class="text-gold">Randomizer</span></h1>
+                <p class="text-[10px] sm:text-xs text-slate-400 font-semibold" id="header-section-subtitle">Section: STEM 2</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="exportResults()" class="hidden sm:flex bg-darkpanel hover:bg-darkborder text-slate-100 px-3 py-2 rounded-xl text-xs font-bold border border-darkborder transition-all items-center gap-1.5 min-h-[40px]">
+                <i class="fas fa-file-csv text-gold"></i> Export
+            </button>
+            <button onclick="copyChosenNames()" class="hidden sm:flex bg-gold hover:bg-gold-hover text-darkbg px-3 py-2 rounded-xl text-xs font-extrabold shadow-md shadow-gold/20 transition-all items-center gap-1.5 min-h-[40px]">
+                <i class="fas fa-copy"></i> Copy List
+            </button>
+            <button onclick="openHelpModal()" class="w-10 h-10 rounded-xl bg-darkpanel border border-darkborder text-slate-400 hover:text-gold flex items-center justify-center transition-colors min-h-[40px] min-w-[40px]" title="Instructions">
+                <i class="fas fa-question-circle text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN APP CONTENT CONTAINERS -->
+    <div class="flex-1 overflow-hidden flex flex-col md:flex-row relative">
+
+        <!-- SETUP PANEL / TAB 1 -->
+        <section id="tab-setup" class="mobile-tab-content active-tab w-full md:w-80 lg:w-96 bg-darkcard border-r border-darkborder flex-col h-full shrink-0 overflow-y-auto p-4 sm:p-5 space-y-5">
+            <div class="flex items-center justify-between pb-3 border-b border-darkborder">
+                <h3 class="font-bold text-sm uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                    <i class="fas fa-sliders text-gold"></i> Configuration & List
+                </h3>
+                <span id="names-count" class="text-xs bg-gold/10 border border-gold/30 text-gold px-2.5 py-0.5 rounded-full font-bold">0 names</span>
+            </div>
+
+            <!-- Section Input -->
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                    Section Name
+                </label>
+                <input type="text" id="section-name" value="STEM 2" placeholder="e.g., STEM 2, ABM 1" class="w-full min-h-[44px] bg-darkpanel border border-darkborder rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all">
+            </div>
+
+            <!-- Respondent Limit -->
+            <div>
+                <div class="flex justify-between items-center mb-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">
+                        Target Quota Limit
+                    </label>
+                    <span id="limit-display" class="text-xs font-bold text-gold">11 Target</span>
+                </div>
+                <input type="number" id="respondent-limit" value="11" min="1" max="500" class="w-full min-h-[44px] bg-darkpanel border border-darkborder rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all">
+            </div>
+
+            <!-- Master List Textarea -->
+            <div class="flex-1 flex flex-col">
+                <div class="flex justify-between items-center mb-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">
+                        Master List (1 per line)
+                    </label>
+                    <button onclick="copyMasterList()" id="copy-master-btn" class="min-h-[36px] text-xs bg-darkpanel hover:bg-darkborder text-slate-200 hover:text-gold border border-darkborder px-2.5 py-1 rounded-lg font-bold transition-all flex items-center gap-1.5">
+                        <i class="fas fa-copy text-[11px]"></i> <span id="copy-master-btn-text">Copy Names</span>
+                    </button>
+                </div>
+                <textarea id="master-list-input" rows="8" placeholder="Paste names here:&#10;Juan Dela Cruz&#10;Maria Santos&#10;Pedro Penduko" class="w-full bg-darkpanel border border-darkborder rounded-xl p-3 text-sm text-white focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all resize-none font-mono"></textarea>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="space-y-2.5 pt-2">
+                <button onclick="loadMasterList()" class="w-full min-h-[48px] bg-gold hover:bg-gold-hover text-darkbg font-extrabold py-3 px-4 rounded-xl text-sm shadow-lg shadow-gold/20 transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fas fa-arrows-rotate"></i> Load Wheel Pool
+                </button>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <button onclick="loadSampleData()" class="min-h-[44px] bg-darkpanel hover:bg-darkborder text-slate-300 border border-darkborder font-semibold py-2 px-3 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5">
+                        <i class="fas fa-wand-magic-sparkles text-gold"></i> Sample List
+                    </button>
+                    <button onclick="clearAllData()" class="min-h-[44px] bg-darkpanel hover:bg-darkborder text-rose-400 border border-darkborder font-semibold py-2 px-3 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5">
+                        <i class="fas fa-trash-can"></i> Clear All
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- WHEEL PANEL / TAB 2 -->
+        <section id="tab-wheel" class="mobile-tab-content flex-1 bg-darkbg flex-col h-full overflow-y-auto p-4 sm:p-6 items-center justify-between relative">
+            
+            <!-- Selection Progress Bar Widget -->
+            <div class="w-full max-w-md bg-darkcard border border-darkborder rounded-2xl p-3 shadow-xl shrink-0">
+                <div class="flex justify-between items-center text-xs font-bold mb-1.5">
+                    <span class="text-slate-400 uppercase tracking-wider"><i class="fas fa-bullseye text-gold mr-1"></i> Selection Progress</span>
+                    <span id="progress-indicator" class="text-gold font-extrabold">0 / 11 Selected</span>
+                </div>
+                <div class="w-full bg-darkpanel h-2.5 rounded-full overflow-hidden border border-darkborder">
+                    <div id="progress-bar" class="bg-gradient-to-r from-amber-400 to-gold h-full w-0 transition-all duration-300"></div>
+                </div>
+            </div>
+
+            <!-- Dynamic Wheel Canvas Container -->
+            <div class="w-full flex-1 min-h-[280px] max-h-[420px] my-2 flex items-center justify-center relative">
+                <!-- Pointer Arrow -->
+                <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 z-20 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[22px] border-t-gold filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]"></div>
+                
+                <!-- Canvas Element -->
+                <canvas id="wheel-canvas" class="w-full max-w-[340px] sm:max-w-[380px] aspect-square cursor-pointer drop-shadow-2xl" onclick="startSpin()"></canvas>
+                
+                <!-- Center Play Pin -->
+                <div onclick="startSpin()" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-darkcard border-4 border-gold flex items-center justify-center shadow-2xl cursor-pointer active:scale-95 transition-transform z-10">
+                    <i class="fas fa-play text-gold text-base sm:text-lg ml-0.5"></i>
+                </div>
+            </div>
+
+            <!-- Action Controls Row -->
+            <div class="w-full max-w-md grid grid-cols-2 gap-3 shrink-0 pb-16 md:pb-0">
+                <button id="spin-btn" onclick="startSpin()" class="min-h-[50px] bg-gold hover:bg-gold-hover text-darkbg font-black py-3 px-4 rounded-2xl shadow-xl shadow-gold/20 transition-all transform active:scale-95 flex items-center justify-center gap-2 text-xs sm:text-sm uppercase tracking-wider">
+                    <i class="fas fa-dice text-base"></i> Spin Wheel
+                </button>
+                <button id="skip-btn" onclick="instantPick()" class="min-h-[50px] bg-darkcard hover:bg-darkpanel text-gold border border-gold/40 font-black py-3 px-4 rounded-2xl shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 text-xs sm:text-sm uppercase tracking-wider">
+                    <i class="fas fa-bolt"></i> Instant Pick
+                </button>
+            </div>
+        </section>
+
+        <!-- RESULTS PANEL / TAB 3 -->
+        <section id="tab-results" class="mobile-tab-content w-full md:w-80 lg:w-96 bg-darkcard border-l border-darkborder flex-col h-full shrink-0 p-4 sm:p-5 overflow-hidden">
+            <div class="flex items-center justify-between pb-3 border-b border-darkborder shrink-0">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-gold/10 text-gold flex items-center justify-center border border-gold/30">
+                        <i class="fas fa-clipboard-check text-xs"></i>
+                    </div>
+                    <h3 class="font-bold text-sm text-white">Chosen Respondents</h3>
+                </div>
+                <span id="chosen-count-badge" class="text-xs bg-gold/10 text-gold border border-gold/30 px-2.5 py-0.5 rounded-full font-extrabold">0 Selected</span>
+            </div>
+
+            <!-- List Container -->
+            <div id="chosen-list-container" class="flex-1 overflow-y-auto space-y-2 py-3 pr-1">
+                <div class="text-center py-16 text-slate-500">
+                    <i class="fas fa-users-slash text-3xl mb-2 opacity-30 text-slate-400"></i>
+                    <p class="text-xs font-semibold text-slate-400">No respondents chosen yet</p>
+                </div>
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="pt-3 border-t border-darkborder shrink-0 space-y-3 pb-16 md:pb-0">
+                <div class="flex items-center justify-between text-xs text-slate-400">
+                    <span id="remaining-quota">Quota left: 11</span>
+                    <button onclick="undoLastSelection()" class="text-slate-400 hover:text-gold font-medium transition-colors flex items-center gap-1">
+                        <i class="fas fa-rotate-left"></i> Undo Last
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="copyChosenNames()" class="min-h-[44px] bg-gold hover:bg-gold-hover text-darkbg font-extrabold px-3 py-2 rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-1.5">
+                        <i class="fas fa-copy"></i> Copy List
+                    </button>
+                    <button onclick="exportResults()" class="min-h-[44px] bg-darkpanel hover:bg-darkborder text-slate-100 border border-darkborder font-bold px-3 py-2 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5">
+                        <i class="fas fa-file-csv text-gold"></i> Export CSV
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- MOBILE BOTTOM NAVIGATION TABS (< 768px) -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-darkcard/95 backdrop-blur-lg border-t border-darkborder flex items-center justify-around z-40 px-2">
+        <button onclick="switchMobileTab('setup')" id="nav-btn-setup" class="flex-1 flex flex-col items-center justify-center py-1 text-slate-400 font-medium text-[11px] gap-1 active-nav">
+            <i class="fas fa-sliders text-base"></i> Setup
+        </button>
+        <button onclick="switchMobileTab('wheel')" id="nav-btn-wheel" class="flex-1 flex flex-col items-center justify-center py-1 text-gold font-bold text-[11px] gap-1">
+            <div class="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center border border-gold/30">
+                <i class="fas fa-circle-notch text-gold text-sm"></i>
+            </div>
+            Wheel
+        </button>
+        <button onclick="switchMobileTab('results')" id="nav-btn-results" class="flex-1 flex flex-col items-center justify-center py-1 text-slate-400 font-medium text-[11px] gap-1 relative">
+            <i class="fas fa-clipboard-list text-base"></i> Selected
+            <span id="mobile-nav-badge" class="absolute top-1 right-6 bg-gold text-darkbg text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center hidden">0</span>
+        </button>
+    </nav>
+
+    <!-- HELP MODAL -->
+    <div id="help-modal" class="fixed inset-0 z-50 bg-darkbg/90 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-darkcard border border-darkborder rounded-3xl max-w-sm w-full p-6 shadow-2xl relative">
+            <button onclick="closeHelpModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+                <i class="fas fa-times text-base"></i>
+            </button>
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-9 h-9 rounded-xl bg-gold text-darkbg flex items-center justify-center font-bold text-base">
+                    <i class="fas fa-info"></i>
+                </div>
+                <h3 class="font-bold text-base text-white">STEM 2 Randomizer</h3>
+            </div>
+            <div class="space-y-2.5 text-xs text-slate-300 leading-relaxed">
+                <p><strong class="text-gold">1. Setup:</strong> Input section name and quota, then paste student names.</p>
+                <p><strong class="text-gold">2. Load Pool:</strong> Click "Load Wheel Pool" to initialize.</p>
+                <p><strong class="text-gold">3. Spin / Instant:</strong> Use "Spin Wheel" for animation or "Instant Pick" to skip directly to a winner.</p>
+                <p><strong class="text-gold">4. Auto-Remove:</strong> Selected students are auto-removed so no repeat picks occur.</p>
+                <p><strong class="text-gold">5. Export:</strong> Copy results or export directly to CSV.</p>
+            </div>
+            <div class="mt-5 pt-3 border-t border-darkborder flex justify-end">
+                <button onclick="closeHelpModal()" class="bg-gold hover:bg-gold-hover text-darkbg font-bold px-4 py-2 rounded-xl text-xs transition-all">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WINNER MODAL -->
+    <div id="winner-modal" class="fixed inset-0 z-50 bg-darkbg/90 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="bg-darkcard border border-gold/40 rounded-3xl max-w-xs sm:max-w-sm w-full p-6 shadow-2xl text-center relative glow-gold">
+            <div class="w-16 h-16 rounded-2xl bg-gold text-darkbg mx-auto flex items-center justify-center shadow-lg shadow-gold/30 mb-4 animate-bounce">
+                <i class="fas fa-trophy text-2xl"></i>
+            </div>
+            <span class="text-[10px] uppercase tracking-widest bg-gold/10 text-gold border border-gold/30 font-extrabold px-3 py-1 rounded-full">Respondent Picked</span>
+            <h2 id="winner-name-display" class="text-2xl font-black text-white mt-3 mb-1 tracking-tight text-glow">Juan Dela Cruz</h2>
+            <p id="winner-section-display" class="text-xs text-slate-400 mb-5 font-medium">Section: STEM 2</p>
+            <button onclick="closeWinnerModal()" class="w-full bg-gold hover:bg-gold-hover text-darkbg font-extrabold py-3 px-5 rounded-xl shadow-lg transition-all uppercase tracking-wider text-xs min-h-[44px]">
+                Continue Selection
+            </button>
+        </div>
+    </div>
+
+    <!-- LOGIC SCRIPT -->
+    <script>
+        // State
+        let masterList = [];
+        let activePool = [];
+        let chosenRespondents = [];
+        let respondentLimit = 11;
+        let sectionName = "STEM 2";
+        
+        // Canvas & Animation
+        let currentAngle = 0;
+        let isSpinning = false;
+        let spinVelocity = 0;
+        let wheelCanvas, ctx;
+
+        const wheelColors = [
+            '#ffcd00', '#1f2227', '#e6b800', '#2e333d',
+            '#ffd633', '#16181b', '#cca300', '#3a404d'
+        ];
+
+        window.onload = function() {
+            wheelCanvas = document.getElementById('wheel-canvas');
+            ctx = wheelCanvas.getContext('2d');
+            
+            setupCanvasResolution();
+            window.addEventListener('resize', setupCanvasResolution);
+
+            // Listeners
+            document.getElementById('respondent-limit').addEventListener('input', (e) => {
+                respondentLimit = parseInt(e.target.value) || 1;
+                document.getElementById('limit-display').innerText = `${respondentLimit} Target`;
+                updateProgressDisplay();
+            });
+
+            document.getElementById('section-name').addEventListener('input', (e) => {
+                sectionName = e.target.value.trim() || "STEM 2";
+                document.getElementById('header-section-subtitle').innerText = `Section: ${sectionName}`;
+            });
+
+            document.getElementById('master-list-input').addEventListener('input', updateNamesCount);
+
+            // Default setup for mobile tab initialization
+            if (window.innerWidth < 768) {
+                switchMobileTab('wheel');
+            } else {
+                // Ensure desktop shows all panels
+                document.querySelectorAll('.mobile-tab-content').forEach(el => el.style.display = 'flex');
+            }
+
+            loadSampleData();
+        };
+
+        function setupCanvasResolution() {
+            if (!wheelCanvas) return;
+            const rect = wheelCanvas.getBoundingClientRect();
+            const size = Math.min(rect.width || 340, 380);
+            wheelCanvas.width = size * 2; // HiDPI
+            wheelCanvas.height = size * 2;
+            drawWheel();
+        }
+
+        function switchMobileTab(tabName) {
+            if (window.innerWidth >= 768) return;
+
+            document.querySelectorAll('.mobile-tab-content').forEach(tab => {
+                tab.classList.remove('active-tab');
+            });
+
+            const targetTab = document.getElementById(`tab-${tabName}`);
+            if (targetTab) targetTab.classList.add('active-tab');
+
+            // Reset navigation highlights
+            ['setup', 'wheel', 'results'].forEach(t => {
+                const btn = document.getElementById(`nav-btn-${t}`);
+                if (btn) {
+                    if (t === tabName) {
+                        btn.className = "flex-1 flex flex-col items-center justify-center py-1 text-gold font-bold text-[11px] gap-1";
+                    } else {
+                        btn.className = "flex-1 flex flex-col items-center justify-center py-1 text-slate-400 font-medium text-[11px] gap-1";
+                    }
+                }
+            });
+
+            if (tabName === 'wheel') setTimeout(setupCanvasResolution, 50);
+        }
+
+        function updateNamesCount() {
+            const rawText = document.getElementById('master-list-input').value;
+            const names = rawText.split('\n').map(n => n.trim()).filter(n => n.length > 0);
+            document.getElementById('names-count').innerText = `${names.length} names`;
+        }
+
+        function loadSampleData() {
+            const sampleNames = [
+                "Juan Dela Cruz", "Maria Santos", "Pedro Penduko", "Ana Reyes", 
+                "Jose Rizal", "Andres Bonifacio", "Apolinario Mabini", "Gabriela Silang",
+                "Emilio Aguinaldo", "Melchora Aquino", "Antonio Luna", "Gregoria de Jesus",
+                "Marcelo del Pilar", "Juan Luna", "Diego Silang", "Francisco Baltazar",
+                "Graciano Lopez Jaena", "Leona Florentino", "Tandang Sora", "Miguel Malvar",
+                "Simeon Ola", "Trinidad Tecson", "Pio Valenzuela", "Jose Palma", "Rajah Sulayman"
+            ];
+            document.getElementById('master-list-input').value = sampleNames.join('\n');
+            document.getElementById('section-name').value = "STEM 2";
+            document.getElementById('respondent-limit').value = 11;
+            respondentLimit = 11;
+            sectionName = "STEM 2";
+            document.getElementById('limit-display').innerText = `11 Target`;
+            document.getElementById('header-section-subtitle').innerText = `Section: STEM 2`;
+            
+            updateNamesCount();
+            loadMasterList();
+            showToast("Sample list loaded (25 students)", "success");
+        }
+
+        function loadMasterList() {
+            const rawText = document.getElementById('master-list-input').value;
+            masterList = rawText.split('\n').map(n => n.trim()).filter(n => n.length > 0);
+            
+            if (masterList.length === 0) {
+                showToast("Please enter names in the list.", "error");
+                return;
+            }
+
+            activePool = [...masterList];
+            chosenRespondents = [];
+            currentAngle = 0;
+            
+            updateChosenListUI();
+            updateProgressDisplay();
+            drawWheel();
+            showToast(`Loaded ${masterList.length} names onto wheel!`, "success");
+        }
+
+        function drawWheel() {
+            if (!ctx || !wheelCanvas) return;
+            const width = wheelCanvas.width;
+            const height = wheelCanvas.height;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(centerX, centerY) - 16;
+
+            ctx.clearRect(0, 0, width, height);
+
+            if (activePool.length === 0) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                ctx.fillStyle = '#16181b';
+                ctx.fill();
+                ctx.lineWidth = 6;
+                ctx.strokeStyle = '#2e333d';
+                ctx.stroke();
+
+                ctx.fillStyle = '#ffcd00';
+                ctx.font = 'bold 24px Inter';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('Pool Empty / Quota Met', centerX, centerY);
+                return;
+            }
+
+            const sliceAngle = (2 * Math.PI) / activePool.length;
+
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(currentAngle);
+
+            for (let i = 0; i < activePool.length; i++) {
+                const startAngle = i * sliceAngle;
+                const endAngle = (i + 1) * sliceAngle;
+
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, radius, startAngle, endAngle);
+                ctx.closePath();
+
+                const color = wheelColors[i % wheelColors.length];
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#0c0d0e';
+                ctx.stroke();
+
+                ctx.save();
+                ctx.rotate(startAngle + sliceAngle / 2);
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                
+                ctx.fillStyle = (color === '#ffcd00' || color === '#ffd633' || color === '#e6b800') ? '#0c0d0e' : '#ffffff';
+                ctx.font = 'bold 20px Inter';
+                
+                let displayName = activePool[i];
+                if (displayName.length > 15) displayName = displayName.substring(0, 13) + '...';
+                
+                ctx.fillText(displayName, radius - 28, 0);
+                ctx.restore();
+            }
+
+            ctx.restore();
+
+            // Outer Ring
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.lineWidth = 10;
+            ctx.strokeStyle = '#ffcd00';
+            ctx.stroke();
+        }
+
+        function startSpin() {
+            if (isSpinning) return;
+
+            if (activePool.length === 0) {
+                showToast("Active pool is empty!", "error");
+                return;
+            }
+
+            if (chosenRespondents.length >= respondentLimit) {
+                showToast(`Target limit of ${respondentLimit} reached!`, "info");
+                return;
+            }
+
+            isSpinning = true;
+            toggleButtons(true);
+
+            spinVelocity = 0.35 + Math.random() * 0.25;
+            const friction = 0.982;
+
+            function animateSpin() {
+                currentAngle += spinVelocity;
+                spinVelocity *= friction;
+
+                drawWheel();
+
+                if (spinVelocity > 0.002) {
+                    requestAnimationFrame(animateSpin);
+                } else {
+                    isSpinning = false;
+                    toggleButtons(false);
+                    determineWinner();
+                }
+            }
+
+            requestAnimationFrame(animateSpin);
+        }
+
+        function instantPick() {
+            if (isSpinning) return;
+
+            if (activePool.length === 0) {
+                showToast("Active pool is empty!", "error");
+                return;
+            }
+
+            if (chosenRespondents.length >= respondentLimit) {
+                showToast(`Target limit of ${respondentLimit} reached!`, "info");
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * activePool.length);
+            const numSlices = activePool.length;
+            const sliceAngle = (2 * Math.PI) / numSlices;
+            currentAngle = 1.5 * Math.PI - (randomIndex + 0.5) * sliceAngle;
+
+            const winner = activePool[randomIndex];
+            activePool.splice(randomIndex, 1);
+            
+            chosenRespondents.push({
+                name: winner,
+                section: sectionName,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+
+            updateChosenListUI();
+            updateProgressDisplay();
+            drawWheel();
+
+            triggerConfetti();
+            showWinnerModal(winner);
+        }
+
+        function determineWinner() {
+            const numSlices = activePool.length;
+            const sliceAngle = (2 * Math.PI) / numSlices;
+
+            let normalizedAngle = currentAngle % (2 * Math.PI);
+            if (normalizedAngle < 0) normalizedAngle += 2 * Math.PI;
+
+            const pointerAngle = (1.5 * Math.PI - normalizedAngle + 2 * Math.PI) % (2 * Math.PI);
+            const winningIndex = Math.floor(pointerAngle / sliceAngle) % numSlices;
+
+            const winner = activePool[winningIndex];
+            activePool.splice(winningIndex, 1);
+            
+            chosenRespondents.push({
+                name: winner,
+                section: sectionName,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+
+            updateChosenListUI();
+            updateProgressDisplay();
+            drawWheel();
+
+            triggerConfetti();
+            showWinnerModal(winner);
+        }
+
+        function toggleButtons(disabled) {
+            const spinBtn = document.getElementById('spin-btn');
+            const skipBtn = document.getElementById('skip-btn');
+            spinBtn.disabled = disabled;
+            skipBtn.disabled = disabled;
+            spinBtn.style.opacity = disabled ? "0.5" : "1";
+            skipBtn.style.opacity = disabled ? "0.5" : "1";
+        }
+
+        function updateProgressDisplay() {
+            const count = chosenRespondents.length;
+            const percentage = Math.min(100, Math.round((count / respondentLimit) * 100));
+            
+            document.getElementById('progress-indicator').innerText = `${count} / ${respondentLimit} Selected (${percentage}%)`;
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+            document.getElementById('chosen-count-badge').innerText = `${count} Selected`;
+            document.getElementById('remaining-quota').innerText = `Quota left: ${Math.max(0, respondentLimit - count)}`;
+            
+            // Update Mobile badge
+            const mobileBadge = document.getElementById('mobile-nav-badge');
+            if (count > 0) {
+                mobileBadge.innerText = count;
+                mobileBadge.classList.remove('hidden');
+            } else {
+                mobileBadge.classList.add('hidden');
+            }
+        }
+
+        function updateChosenListUI() {
+            const container = document.getElementById('chosen-list-container');
+            if (chosenRespondents.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 text-slate-500">
+                        <i class="fas fa-users-slash text-3xl mb-2 opacity-30 text-slate-400"></i>
+                        <p class="text-xs font-semibold text-slate-400">No respondents chosen yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            chosenRespondents.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-darkpanel border border-darkborder rounded-xl p-2.5 flex items-center justify-between shadow-sm";
+                card.innerHTML = `
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-6 h-6 rounded-lg bg-gold/20 text-gold font-black text-[11px] flex items-center justify-center border border-gold/30 shrink-0">
+                            ${index + 1}
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xs text-white">${item.name}</h4>
+                            <p class="text-[10px] text-slate-400">${item.section} • ${item.timestamp}</p>
+                        </div>
+                    </div>
+                    <button onclick="removeChosenRespondent(${index})" class="text-slate-500 hover:text-rose-400 p-1.5 transition-colors" title="Remove">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function undoLastSelection() {
+            if (chosenRespondents.length === 0) return;
+            removeChosenRespondent(chosenRespondents.length - 1);
+        }
+
+        function removeChosenRespondent(index) {
+            const removed = chosenRespondents.splice(index, 1)[0];
+            if (removed) {
+                activePool.push(removed.name);
+                updateChosenListUI();
+                updateProgressDisplay();
+                drawWheel();
+                showToast(`Returned ${removed.name} to wheel`, "info");
+            }
+        }
+
+        function clearAllData() {
+            document.getElementById('master-list-input').value = '';
+            masterList = [];
+            activePool = [];
+            chosenRespondents = [];
+            updateNamesCount();
+            updateChosenListUI();
+            updateProgressDisplay();
+            drawWheel();
+            showToast("All data cleared.", "info");
+        }
+
+        function showWinnerModal(name) {
+            document.getElementById('winner-name-display').innerText = name;
+            document.getElementById('winner-section-display').innerText = `Section: ${sectionName} • Sample #${chosenRespondents.length} of ${respondentLimit}`;
+            document.getElementById('winner-modal').classList.remove('hidden');
+            document.getElementById('winner-modal').classList.add('flex');
+        }
+
+        function closeWinnerModal() {
+            document.getElementById('winner-modal').classList.remove('flex');
+            document.getElementById('winner-modal').classList.add('hidden');
+        }
+
+        function openHelpModal() {
+            document.getElementById('help-modal').classList.remove('hidden');
+            document.getElementById('help-modal').classList.add('flex');
+        }
+
+        function closeHelpModal() {
+            document.getElementById('help-modal').classList.remove('flex');
+            document.getElementById('help-modal').classList.add('hidden');
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+
+            msgEl.innerText = message;
+            if (type === 'success') {
+                iconEl.className = "fas fa-check-circle text-emerald-400 text-base";
+            } else if (type === 'error') {
+                iconEl.className = "fas fa-exclamation-circle text-rose-400 text-base";
+            } else {
+                iconEl.className = "fas fa-info-circle text-gold text-base";
+            }
+
+            toast.classList.remove('translate-y-[-180%]');
+            toast.classList.add('translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0');
+                toast.classList.add('translate-y-[-180%]');
+            }, 2500);
+        }
+
+        function triggerConfetti() {
+            confetti({
+                particleCount: 70,
+                spread: 50,
+                colors: ['#ffcd00', '#ffffff', '#e6b800'],
+                origin: { y: 0.6 }
+            });
+        }
+
+        function copyMasterList() {
+            const rawText = document.getElementById('master-list-input').value;
+            if (!rawText.trim()) {
+                showToast("Master list is empty!", "error");
+                return;
+            }
+
+            const textarea = document.createElement('textarea');
+            textarea.value = rawText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            const btnText = document.getElementById('copy-master-btn-text');
+            btnText.innerText = "Copied!";
+            setTimeout(() => { btnText.innerText = "Copy Names"; }, 1800);
+
+            showToast("Copied master list to clipboard!", "success");
+        }
+
+        function copyChosenNames() {
+            if (chosenRespondents.length === 0) {
+                showToast("No chosen respondents to copy.", "error");
+                return;
+            }
+
+            let textToCopy = `STEM 2 Randomizer - Selected Respondents\nSection: ${sectionName}\nTotal: ${chosenRespondents.length} / ${respondentLimit}\n\n`;
+            chosenRespondents.forEach((item, idx) => {
+                textToCopy += `${idx + 1}. ${item.name}\n`;
+            });
+
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            showToast("Copied chosen respondents list!", "success");
+        }
+
+        function exportResults() {
+            if (chosenRespondents.length === 0) {
+                showToast("No respondents to export.", "error");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,No,Respondent Name,Section,Timestamp\n";
+            chosenRespondents.forEach((item, idx) => {
+                csvContent += `${idx + 1},"${item.name}","${item.section}","${item.timestamp}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `STEM2_Respondents_${sectionName.replace(/\s+/g, '_')}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast("Exported CSV file!", "success");
+        }
+    </script>
+</body>
+</html>
