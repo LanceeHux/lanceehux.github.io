@@ -1,818 +1,1859 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-darkbg text-slate-100">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://lynxlab.vercel.app/">
-    <meta property="og:title" content="Leeyam+ - SPIN THE WHEELS (skip animation) | Digital Portfolio">
-    <meta property="og:description" content="Leeyam+ - pwede skip animations para mas mabilis pagpili ng respondents">
-    <meta property="og:image" content="https://lynxlab.vercel.app/images/wheels.jpeg">
-    <meta property="og:site_name" content="Leeyam+ - SPIN THE WHEELS (skip animation) | Digital Portfolio">
-    <title>STEM 2 Randomizer - Mobile Respondent Selector</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        gold: '#ffcd00',
-                        'gold-hover': '#e6b800',
-                        'gold-dark': '#b38f00',
-                        darkbg: '#0c0d0e',
-                        darkcard: '#16181b',
-                        darkpanel: '#1f2227',
-                        darkborder: '#2e333d'
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- Google Fonts Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Canvas Confetti -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Section Picker - Spin the Wheel</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
+        /* ==========================================================================
+           1. CORE STYLES & VARIABLES
+           ========================================================================== */
+        :root {
+            --bg-dark: #0b0f19;
+            --bg-card: #182232;
+            --bg-card-hover: #233147;
+            --accent-primary: #ffcd00;
+            --accent-glow: #ffe066;
+            --accent-hover: #e6b800;
+            --accent-quick: #ec4899;
+            --accent-danger: #ef4444;
+            --accent-success: #10b981;
+            --text-main: #f8fafc;
+            --text-dark: #0f172a;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 205, 0, 0.25);
+            --border-subtle: rgba(255, 255, 255, 0.1);
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-glow: 0 0 30px rgba(255, 205, 0, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
-        ::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 20px 15px;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(255, 205, 0, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(236, 72, 153, 0.1) 0%, transparent 45%);
         }
-        ::-webkit-scrollbar-track {
-            background: #16181b;
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #2e333d;
-            border-radius: 4px;
+
+        header h1 {
+            font-size: 2.3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 30%, #ffcd00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+            margin-bottom: 6px;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #ffcd00;
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
         }
-        .glow-gold {
-            box-shadow: 0 0 25px rgba(255, 205, 0, 0.25);
+
+        /* ==========================================================================
+           2. MAIN LAYOUT & NAV BAR
+           ========================================================================== */
+        .app-container {
+            width: 100%;
+            max-width: 1150px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
         }
-        .text-glow {
-            text-shadow: 0 0 12px rgba(255, 205, 0, 0.4);
-        }
-        /* Mobile tab view toggles */
-        @media (max-width: 767px) {
-            .mobile-tab-content {
-                display: none;
+
+        @media (min-width: 900px) {
+            .app-container {
+                grid-template-columns: 1fr 380px;
+                align-items: start;
             }
-            .mobile-tab-content.active-tab {
-                display: flex;
-            }
+        }
+
+        /* Card Panels */
+        .panel {
+            background: rgba(24, 34, 50, 0.75);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Dropdown Section Header */
+        .section-nav-card {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+        }
+
+        .section-nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-nav-label {
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-primary);
+        }
+
+        .section-select-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .section-select {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: var(--bg-card);
+            color: var(--text-main);
+            border: 2px solid var(--accent-primary);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 700;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .section-select:hover {
+            border-color: var(--accent-glow);
+            background-color: var(--bg-card-hover);
+        }
+
+        .section-select:focus {
+            box-shadow: 0 0 0 3px rgba(255, 205, 0, 0.35);
+        }
+
+        .section-select optgroup {
+            background: var(--bg-dark);
+            color: var(--accent-primary);
+            font-weight: 800;
+        }
+
+        .section-select option {
+            background: var(--bg-card);
+            color: var(--text-main);
+            padding: 8px;
+            font-weight: 600;
+        }
+
+        .select-arrow {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            width: 18px;
+            height: 18px;
+            fill: var(--accent-primary);
+        }
+
+        /* ==========================================================================
+           3. WHEEL SECTION & CONTROLS
+           ========================================================================== */
+        .wheel-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Wheel Wrapper & Pointer */
+        .wheel-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 420px;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        canvas#wheelCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: var(--shadow-glow);
+            transition: transform 0.05s linear;
+        }
+
+        /* Animated Pointer Pin */
+        .wheel-pointer {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 34px;
+            height: 44px;
+            z-index: 10;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
+            transform-origin: top center;
+            transition: transform 0.1s ease;
+        }
+
+        .wheel-pointer svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .wheel-pointer.tick {
+            transform: translateX(-50%) rotate(-15deg);
+        }
+
+        /* Center Hub Ornament */
+        .wheel-center-cap {
+            position: absolute;
+            width: 64px;
+            height: 64px;
+            background: radial-gradient(circle, #ffffff 0%, var(--accent-primary) 100%);
+            border-radius: 50%;
+            border: 3px solid #ffffff;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.3), 0 4px 15px rgba(255, 205, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .wheel-center-cap::after {
+            content: '';
+            width: 26px;
+            height: 26px;
+            background: var(--bg-dark);
+            border-radius: 50%;
+        }
+
+        /* Buttons Grid */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .btn {
+            border: none;
+            padding: 14px 20px;
+            border-radius: var(--radius-md);
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .btn-spin {
+            grid-column: span 2;
+            background: linear-gradient(135deg, #ffcd00, #e6b800);
+            color: var(--text-dark);
+            box-shadow: 0 4px 20px rgba(255, 205, 0, 0.4);
+            font-size: 1.15rem;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-spin:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(255, 205, 0, 0.6);
+            background: linear-gradient(135deg, #ffe066, #ffcd00);
+        }
+
+        .btn-quick {
+            background: linear-gradient(135deg, #ec4899, #be185d);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.35);
+        }
+
+        .btn-quick:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.55);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card-hover);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #2d3f59;
+            border-color: var(--accent-primary);
+            transform: translateY(-1px);
+        }
+
+        .btn-icon {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        /* ==========================================================================
+           4. SIDEBAR (MEMBERS, ABSENT SYSTEM & HISTORY)
+           ========================================================================== */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 12px;
+            gap: 8px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+
+        .sidebar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge {
+            background: rgba(255, 205, 0, 0.15);
+            color: var(--accent-primary);
+            border: 1px solid var(--border-color);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .list-container {
+            max-height: 280px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 4px;
+            scrollbar-width: thin;
+        }
+
+        .member-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-sm);
+            border: 1px solid transparent;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .member-item:hover {
+            border-color: var(--border-color);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .member-item.absent {
+            opacity: 0.5;
+            background: rgba(239, 68, 68, 0.05);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .member-item.absent .member-name {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .absent-btn {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .absent-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+            color: #ffffff;
+        }
+
+        .absent-btn.is-absent {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: rgba(16, 185, 129, 0.4);
+            color: #6ee7b7;
+        }
+
+        .absent-btn.is-absent:hover {
+            background: rgba(16, 185, 129, 0.3);
+            color: #ffffff;
+        }
+
+        .history-list {
+            max-height: 180px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: rgba(255, 205, 0, 0.08);
+            border: 1px solid rgba(255, 205, 0, 0.2);
+            border-radius: var(--radius-sm);
+            font-size: 0.88rem;
+        }
+
+        .history-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* ==========================================================================
+           5. MODAL & CONFETTI OVERLAY
+           ========================================================================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: var(--bg-card);
+            border: 2px solid var(--accent-primary);
+            border-radius: var(--radius-lg);
+            padding: 32px 28px;
+            width: 100%;
+            max-width: 440px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), var(--shadow-glow);
+            transform: scale(0.8);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .winner-subtitle {
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: var(--accent-primary);
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .winner-name {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 12px;
+            word-break: break-word;
+        }
+
+        .winner-section-badge {
+            display: inline-block;
+            background: rgba(255, 205, 0, 0.15);
+            border: 1px solid var(--border-color);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 24px;
+        }
+
+        .modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Canvas Overlay for Confetti */
+        #confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 999;
         }
     </style>
 </head>
-<body class="h-full flex flex-col overflow-hidden select-none">
+<body>
 
-    <!-- Notification Toast -->
-    <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 md:left-auto md:right-5 md:translate-x-0 z-50 transform translate-y-[-180%] transition-transform duration-300 bg-darkcard border border-gold/40 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 w-[90%] max-w-sm">
-        <i id="toast-icon" class="fas fa-info-circle text-gold text-lg"></i>
-        <span id="toast-message" class="text-xs sm:text-sm font-medium">Notification message</span>
-    </div>
-
-    <!-- HEADER / BRANDING BAR -->
-    <header class="h-16 bg-darkcard border-b border-darkborder px-4 sm:px-6 flex items-center justify-between shrink-0 z-20">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl bg-gold text-darkbg flex items-center justify-center font-black text-xl shadow-md shadow-gold/20">
-                L
-            </div>
-            <div>
-                <h1 class="font-black text-base sm:text-lg text-white leading-tight tracking-tight">STEM 2 <span class="text-gold">Randomizer</span></h1>
-                <p class="text-[10px] sm:text-xs text-slate-400 font-semibold" id="header-section-subtitle">Section: STEM 2</p>
-            </div>
-        </div>
-        <div class="flex items-center gap-2">
-            <button onclick="exportResults()" class="hidden sm:flex bg-darkpanel hover:bg-darkborder text-slate-100 px-3 py-2 rounded-xl text-xs font-bold border border-darkborder transition-all items-center gap-1.5 min-h-[40px]">
-                <i class="fas fa-file-csv text-gold"></i> Export
-            </button>
-            <button onclick="copyChosenNames()" class="hidden sm:flex bg-gold hover:bg-gold-hover text-darkbg px-3 py-2 rounded-xl text-xs font-extrabold shadow-md shadow-gold/20 transition-all items-center gap-1.5 min-h-[40px]">
-                <i class="fas fa-copy"></i> Copy List
-            </button>
-            <button onclick="openHelpModal()" class="w-10 h-10 rounded-xl bg-darkpanel border border-darkborder text-slate-400 hover:text-gold flex items-center justify-center transition-colors min-h-[40px] min-w-[40px]" title="Instructions">
-                <i class="fas fa-question-circle text-lg"></i>
-            </button>
-        </div>
+    <header>
+        <h1>PR2 - GROUP 3</h1>
+        <p>Select your strand & section, mark absentees, spin the wheel, or use Quick Spin!</p>
     </header>
 
-    <!-- MAIN APP CONTENT CONTAINERS -->
-    <div class="flex-1 overflow-hidden flex flex-col md:flex-row relative">
-
-        <!-- SETUP PANEL / TAB 1 -->
-        <section id="tab-setup" class="mobile-tab-content active-tab w-full md:w-80 lg:w-96 bg-darkcard border-r border-darkborder flex-col h-full shrink-0 overflow-y-auto p-4 sm:p-5 space-y-5">
-            <div class="flex items-center justify-between pb-3 border-b border-darkborder">
-                <h3 class="font-bold text-sm uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                    <i class="fas fa-sliders text-gold"></i> Configuration & List
-                </h3>
-                <span id="names-count" class="text-xs bg-gold/10 border border-gold/30 text-gold px-2.5 py-0.5 rounded-full font-bold">0 names</span>
-            </div>
-
-            <!-- Section Input -->
-            <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                    Section Name
-                </label>
-                <input type="text" id="section-name" value="STEM 2" placeholder="e.g., STEM 2, ABM 1" class="w-full min-h-[44px] bg-darkpanel border border-darkborder rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all">
-            </div>
-
-            <!-- Respondent Limit -->
-            <div>
-                <div class="flex justify-between items-center mb-1.5">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">
-                        Target Quota Limit
-                    </label>
-                    <span id="limit-display" class="text-xs font-bold text-gold">11 Target</span>
-                </div>
-                <input type="number" id="respondent-limit" value="11" min="1" max="500" class="w-full min-h-[44px] bg-darkpanel border border-darkborder rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all">
-            </div>
-
-            <!-- Master List Textarea -->
-            <div class="flex-1 flex flex-col">
-                <div class="flex justify-between items-center mb-1.5">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">
-                        Master List (1 per line)
-                    </label>
-                    <button onclick="copyMasterList()" id="copy-master-btn" class="min-h-[36px] text-xs bg-darkpanel hover:bg-darkborder text-slate-200 hover:text-gold border border-darkborder px-2.5 py-1 rounded-lg font-bold transition-all flex items-center gap-1.5">
-                        <i class="fas fa-copy text-[11px]"></i> <span id="copy-master-btn-text">Copy Names</span>
-                    </button>
-                </div>
-                <textarea id="master-list-input" rows="8" placeholder="Paste names here:&#10;Juan Dela Cruz&#10;Maria Santos&#10;Pedro Penduko" class="w-full bg-darkpanel border border-darkborder rounded-xl p-3 text-sm text-white focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all resize-none font-mono"></textarea>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="space-y-2.5 pt-2">
-                <button onclick="loadMasterList()" class="w-full min-h-[48px] bg-gold hover:bg-gold-hover text-darkbg font-extrabold py-3 px-4 rounded-xl text-sm shadow-lg shadow-gold/20 transition-all transform active:scale-95 flex items-center justify-center gap-2">
-                    <i class="fas fa-arrows-rotate"></i> Load Wheel Pool
-                </button>
-                <div class="grid grid-cols-2 gap-2.5">
-                    <button onclick="loadSampleData()" class="min-h-[44px] bg-darkpanel hover:bg-darkborder text-slate-300 border border-darkborder font-semibold py-2 px-3 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5">
-                        <i class="fas fa-wand-magic-sparkles text-gold"></i> Sample List
-                    </button>
-                    <button onclick="clearAllData()" class="min-h-[44px] bg-darkpanel hover:bg-darkborder text-rose-400 border border-darkborder font-semibold py-2 px-3 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5">
-                        <i class="fas fa-trash-can"></i> Clear All
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- WHEEL PANEL / TAB 2 -->
-        <section id="tab-wheel" class="mobile-tab-content flex-1 bg-darkbg flex-col h-full overflow-y-auto p-4 sm:p-6 items-center justify-between relative">
+    <div class="app-container">
+        <!-- LEFT: Wheel & Controls -->
+        <main class="panel wheel-section">
             
-            <!-- Selection Progress Bar Widget -->
-            <div class="w-full max-w-md bg-darkcard border border-darkborder rounded-2xl p-3 shadow-xl shrink-0">
-                <div class="flex justify-between items-center text-xs font-bold mb-1.5">
-                    <span class="text-slate-400 uppercase tracking-wider"><i class="fas fa-bullseye text-gold mr-1"></i> Selection Progress</span>
-                    <span id="progress-indicator" class="text-gold font-extrabold">0 / 11 Selected</span>
+            <!-- Section Selector Dropdown Navigator -->
+            <div class="section-nav-card">
+                <div class="section-nav-header">
+                    <span class="section-nav-label">Select Strand & Section</span>
+                    <span class="badge" id="currentStrandBadge">STEM</span>
                 </div>
-                <div class="w-full bg-darkpanel h-2.5 rounded-full overflow-hidden border border-darkborder">
-                    <div id="progress-bar" class="bg-gradient-to-r from-amber-400 to-gold h-full w-0 transition-all duration-300"></div>
-                </div>
-            </div>
-
-            <!-- Dynamic Wheel Canvas Container -->
-            <div class="w-full flex-1 min-h-[280px] max-h-[420px] my-2 flex items-center justify-center relative">
-                <!-- Pointer Arrow -->
-                <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 z-20 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[22px] border-t-gold filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]"></div>
-                
-                <!-- Canvas Element -->
-                <canvas id="wheel-canvas" class="w-full max-w-[340px] sm:max-w-[380px] aspect-square cursor-pointer drop-shadow-2xl" onclick="startSpin()"></canvas>
-                
-                <!-- Center Play Pin -->
-                <div onclick="startSpin()" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-darkcard border-4 border-gold flex items-center justify-center shadow-2xl cursor-pointer active:scale-95 transition-transform z-10">
-                    <i class="fas fa-play text-gold text-base sm:text-lg ml-0.5"></i>
+                <div class="section-select-wrapper">
+                    <select class="section-select" id="sectionSelect">
+                        <!-- Dynamic Options & Optgroups populated by JS -->
+                    </select>
+                    <svg class="select-arrow" viewBox="0 0 24 24">
+                        <path d="M7 10l5 5 5-5z"/>
+                    </svg>
                 </div>
             </div>
 
-            <!-- Action Controls Row -->
-            <div class="w-full max-w-md grid grid-cols-2 gap-3 shrink-0 pb-16 md:pb-0">
-                <button id="spin-btn" onclick="startSpin()" class="min-h-[50px] bg-gold hover:bg-gold-hover text-darkbg font-black py-3 px-4 rounded-2xl shadow-xl shadow-gold/20 transition-all transform active:scale-95 flex items-center justify-center gap-2 text-xs sm:text-sm uppercase tracking-wider">
-                    <i class="fas fa-dice text-base"></i> Spin Wheel
+            <!-- Wheel Display -->
+            <div class="wheel-wrapper">
+                <div class="wheel-pointer" id="wheelPointer">
+                    <svg viewBox="0 0 30 40">
+                        <polygon points="15,40 0,0 30,0" fill="#ffcd00" stroke="#0b0f19" stroke-width="2" />
+                    </svg>
+                </div>
+                <canvas id="wheelCanvas" width="800" height="800"></canvas>
+                <div class="wheel-center-cap"></div>
+            </div>
+
+            <!-- Controls Buttons -->
+            <div class="controls-grid">
+                <button class="btn btn-spin" id="spinBtn">
+                    <svg class="btn-icon" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+                    SPIN WHEEL
                 </button>
-                <button id="skip-btn" onclick="instantPick()" class="min-h-[50px] bg-darkcard hover:bg-darkpanel text-gold border border-gold/40 font-black py-3 px-4 rounded-2xl shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 text-xs sm:text-sm uppercase tracking-wider">
-                    <i class="fas fa-bolt"></i> Instant Pick
+                
+                <button class="btn btn-quick" id="quickSpinBtn">
+                    <svg class="btn-icon" viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+                    QUICK SPIN
+                </button>
+
+                <button class="btn btn-secondary" id="soundToggleBtn">
+                    <svg class="btn-icon" id="soundIcon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                    <span id="soundText">Sound On</span>
                 </button>
             </div>
-        </section>
+        </main>
 
-        <!-- RESULTS PANEL / TAB 3 -->
-        <section id="tab-results" class="mobile-tab-content w-full md:w-80 lg:w-96 bg-darkcard border-l border-darkborder flex-col h-full shrink-0 p-4 sm:p-5 overflow-hidden">
-            <div class="flex items-center justify-between pb-3 border-b border-darkborder shrink-0">
-                <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-lg bg-gold/10 text-gold flex items-center justify-center border border-gold/30">
-                        <i class="fas fa-clipboard-check text-xs"></i>
+        <!-- RIGHT: Member List, Absent System & History -->
+        <aside class="sidebar">
+            <div class="panel">
+                <div class="sidebar-header">
+                    <div>
+                        <h2>Section Roster</h2>
                     </div>
-                    <h3 class="font-bold text-sm text-white">Chosen Respondents</h3>
+                    <div class="sidebar-actions">
+                        <span class="badge" id="memberCountBadge">0 Active</span>
+                        <button class="btn-secondary" id="resetAbsenteesBtn" style="padding: 4px 8px; font-size: 0.72rem; border-radius: 6px;" title="Reset all members to active">Reset</button>
+                    </div>
                 </div>
-                <span id="chosen-count-badge" class="text-xs bg-gold/10 text-gold border border-gold/30 px-2.5 py-0.5 rounded-full font-extrabold">0 Selected</span>
-            </div>
-
-            <!-- List Container -->
-            <div id="chosen-list-container" class="flex-1 overflow-y-auto space-y-2 py-3 pr-1">
-                <div class="text-center py-16 text-slate-500">
-                    <i class="fas fa-users-slash text-3xl mb-2 opacity-30 text-slate-400"></i>
-                    <p class="text-xs font-semibold text-slate-400">No respondents chosen yet</p>
+                <div class="list-container" id="memberList">
+                    <!-- Dynamic List rendered via JS -->
                 </div>
             </div>
 
-            <!-- Bottom Actions -->
-            <div class="pt-3 border-t border-darkborder shrink-0 space-y-3 pb-16 md:pb-0">
-                <div class="flex items-center justify-between text-xs text-slate-400">
-                    <span id="remaining-quota">Quota left: 11</span>
-                    <button onclick="undoLastSelection()" class="text-slate-400 hover:text-gold font-medium transition-colors flex items-center gap-1">
-                        <i class="fas fa-rotate-left"></i> Undo Last
-                    </button>
+            <div class="panel">
+                <div class="sidebar-header">
+                    <h2>Recent Replacement</h2>
+                    <button class="btn-secondary" id="clearHistoryBtn" style="padding: 4px 8px; font-size: 0.75rem; border-radius: 6px;">Clear</button>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="copyChosenNames()" class="min-h-[44px] bg-gold hover:bg-gold-hover text-darkbg font-extrabold px-3 py-2 rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-1.5">
-                        <i class="fas fa-copy"></i> Copy List
-                    </button>
-                    <button onclick="exportResults()" class="min-h-[44px] bg-darkpanel hover:bg-darkborder text-slate-100 border border-darkborder font-bold px-3 py-2 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5">
-                        <i class="fas fa-file-csv text-gold"></i> Export CSV
-                    </button>
+                <div class="history-list" id="historyList">
+                    <!-- Dynamic History rendered via JS -->
                 </div>
             </div>
-        </section>
-
-    </div>
-
-    <!-- MOBILE BOTTOM NAVIGATION TABS (< 768px) -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-darkcard/95 backdrop-blur-lg border-t border-darkborder flex items-center justify-around z-40 px-2">
-        <button onclick="switchMobileTab('setup')" id="nav-btn-setup" class="flex-1 flex flex-col items-center justify-center py-1 text-slate-400 font-medium text-[11px] gap-1 active-nav">
-            <i class="fas fa-sliders text-base"></i> Setup
-        </button>
-        <button onclick="switchMobileTab('wheel')" id="nav-btn-wheel" class="flex-1 flex flex-col items-center justify-center py-1 text-gold font-bold text-[11px] gap-1">
-            <div class="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center border border-gold/30">
-                <i class="fas fa-circle-notch text-gold text-sm"></i>
-            </div>
-            Wheel
-        </button>
-        <button onclick="switchMobileTab('results')" id="nav-btn-results" class="flex-1 flex flex-col items-center justify-center py-1 text-slate-400 font-medium text-[11px] gap-1 relative">
-            <i class="fas fa-clipboard-list text-base"></i> Selected
-            <span id="mobile-nav-badge" class="absolute top-1 right-6 bg-gold text-darkbg text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center hidden">0</span>
-        </button>
-    </nav>
-
-    <!-- HELP MODAL -->
-    <div id="help-modal" class="fixed inset-0 z-50 bg-darkbg/90 backdrop-blur-sm hidden items-center justify-center p-4">
-        <div class="bg-darkcard border border-darkborder rounded-3xl max-w-sm w-full p-6 shadow-2xl relative">
-            <button onclick="closeHelpModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
-                <i class="fas fa-times text-base"></i>
-            </button>
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-9 h-9 rounded-xl bg-gold text-darkbg flex items-center justify-center font-bold text-base">
-                    <i class="fas fa-info"></i>
-                </div>
-                <h3 class="font-bold text-base text-white">STEM 2 Randomizer</h3>
-            </div>
-            <div class="space-y-2.5 text-xs text-slate-300 leading-relaxed">
-                <p><strong class="text-gold">1. Setup:</strong> Input section name and quota, then paste student names.</p>
-                <p><strong class="text-gold">2. Load Pool:</strong> Click "Load Wheel Pool" to initialize.</p>
-                <p><strong class="text-gold">3. Spin / Instant:</strong> Use "Spin Wheel" for animation or "Instant Pick" to skip directly to a winner.</p>
-                <p><strong class="text-gold">4. Auto-Remove:</strong> Selected students are auto-removed so no repeat picks occur.</p>
-                <p><strong class="text-gold">5. Export:</strong> Copy results or export directly to CSV.</p>
-            </div>
-            <div class="mt-5 pt-3 border-t border-darkborder flex justify-end">
-                <button onclick="closeHelpModal()" class="bg-gold hover:bg-gold-hover text-darkbg font-bold px-4 py-2 rounded-xl text-xs transition-all">Got it</button>
-            </div>
-        </div>
+        </aside>
     </div>
 
     <!-- WINNER MODAL -->
-    <div id="winner-modal" class="fixed inset-0 z-50 bg-darkbg/90 backdrop-blur-md hidden items-center justify-center p-4">
-        <div class="bg-darkcard border border-gold/40 rounded-3xl max-w-xs sm:max-w-sm w-full p-6 shadow-2xl text-center relative glow-gold">
-            <div class="w-16 h-16 rounded-2xl bg-gold text-darkbg mx-auto flex items-center justify-center shadow-lg shadow-gold/30 mb-4 animate-bounce">
-                <i class="fas fa-trophy text-2xl"></i>
+    <div class="modal-overlay" id="winnerModal">
+        <div class="modal-card">
+            <div class="winner-subtitle">🎉 VOLUNTEER</div>
+            <div class="winner-name" id="modalWinnerName">Juan Cruz</div>
+            <div class="winner-section-badge" id="modalWinnerSection">STEM 1</div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-spin" id="keepWinnerBtn">Keep in Wheel & Close</button>
+                <button class="btn btn-quick" id="removeWinnerBtn">Mark Absent / Remove</button>
             </div>
-            <span class="text-[10px] uppercase tracking-widest bg-gold/10 text-gold border border-gold/30 font-extrabold px-3 py-1 rounded-full">Respondent Picked</span>
-            <h2 id="winner-name-display" class="text-2xl font-black text-white mt-3 mb-1 tracking-tight text-glow">Juan Dela Cruz</h2>
-            <p id="winner-section-display" class="text-xs text-slate-400 mb-5 font-medium">Section: STEM 2</p>
-            <button onclick="closeWinnerModal()" class="w-full bg-gold hover:bg-gold-hover text-darkbg font-extrabold py-3 px-5 rounded-xl shadow-lg transition-all uppercase tracking-wider text-xs min-h-[44px]">
-                Continue Selection
-            </button>
         </div>
     </div>
 
-    <!-- LOGIC SCRIPT -->
+    <!-- Confetti Canvas -->
+    <canvas id="confettiCanvas"></canvas>
+
+
     <script>
-        // State
-        let masterList = [];
-        let activePool = [];
-        let chosenRespondents = [];
-        let respondentLimit = 11;
-        let sectionName = "STEM 2";
-        
-        // Canvas & Animation
-        let currentAngle = 0;
-        let isSpinning = false;
-        let spinVelocity = 0;
-        let wheelCanvas, ctx;
+        /* ==========================================================================
+           HARDCODED SCHOOL STRANDS & SECTIONS DATA
+           ========================================================================== */
+        const schoolData = {
+            "STEM (Science, Tech, Engineering, Math)": {
+                "12 - STEM 1": [
+    "Cadayong, Terence Jhay Israel",
+    "Culanding, Reiko Alarca",
+    "Flaviano, Aikain Cabato",
+    "Garcia, Abdul Hameed Yousuf",
+    "Hernandez, Dirk Andrei Lacomba",
+    "Legion, Cris Joefer Concepcion",
+    "Maranan, Nheil Patrick",
+    "Masicap, Mark Rhyvahn Mago",
+    "Orbacedo, Malik Ie Cahayon",
+    "Santos, John Railey Villa",
+    "Vibar, Joshua Jamel Mojica",
+    "Zorca, Neville Macc Krayzer Mercado",
+    "Abendaño, Clarisse Jean",
+    "Anzures, Ylieza May Tañeza",
+    "Bialen, Shane Ashley",
+    "Canillas, Hanna Mae Balbuena",
+    "Cuatimar, Ayessha Lei Llave",
+    "Dela Cruz, Miel Aliyah Rodriguez",
+    "Delos Santos, Iyah D.",
+    "Garcia, Kristine Joy De Guzman",
+    "Jore, Ariane Mae Dela Tina",
+    "Leal, Kristine Jewel Ross",
+    "Magpantay, Ayezha Nicolle Col-long",
+    "Mazo, Alexandra Matthew Dalina",
+    "Mones, Princess Jairra Alvarez",
+    "Onofre, Krizha Mhae Alagos",
+    "Papilirin, Monte Rio Buton",
+    "Ramos, Hersheys Loiss Masicap",
+    "Repas, Princess Amoncio",
+    "Sogue, Princess Anne Labayog",
+    "Villanueva, Hazel Malinao"
+  ],
+               "12 - STEM 3": [
+    "Almeria, Steven Andrave Mendoza",
+    "Bayongan, Djanzen Dela Torre",
+    "Cacho, Alessandre Neon Ogana",
+    "Dagami, King Japhet Nepomuceno",
+    "Holares, Chris Bernal",
+    "Lazaro, Aldritz Dimaala",
+    "Molina, Janred Clark Serapia",
+    "Maala, Jay Tapiru",
+    "Moncal, Aaron John Baylon",
+    "Onsana, John Mark Anthony Paminter",
+    "Pulgar, Mark Anthony Bate-on",
+    "Villa, Zian Catre",
+    "Abion, Lhara Jane Abellano",
+    "Amparo, Sofia Lerasan",
+    "Bandino, Freshan Jane Mandado",
+    "Bonita, Rona Jeraldine Abendaño",
+    "Dalmacio, Jhean Dayze Delfin",
+    "Delos Reyes, Monariza Briones",
+    "Huliganga, Liane Joy Paunil",
+    "Limbo, Myrl Anne Bolinas",
+    "Manggay, Ehra Charmel Nolasco",
+    "Mendoza, Jhaedy Anne Magnaye",
+    "Perico, Clare Edralene Portante",
+    "Rosalim, Jamaica Camacho",
+    "Rotula, Franz Aubrey Acbang",
+    "Sanding, Laura Angela Iglesia",
+    "Sumalinog, Mary Rhine Silibran",
+    "Torres, Brianna Shane Aboracoso",
+    "Villafuerte, Jamaella Suycano",
+    "Yula, Jesie May Lumbania"
+  ],
+                "12 - STEM 4": [
+    "Alap-ap, Marvin Bantillo",
+    "Alarca, Neil Sebastian Arenas",
+    "Bernardo, Rayven James Reyes",
+    "Caguicla, Jose Adrian Lopez",
+    "Gimena, Willsent Steefh Enriquez",
+    "Leander, Kenneth Cuya",
+    "Piad, Gian Carlo Ulanday",
+    "Prakhothang, Kane Noah Ramos",
+    "Sulit, Reyann Benedict Ando",
+    "Valdez, Michael Liam Bingbing",
+    "Abenoja, Christine Joy Vestal",
+    "Andot, Aishelle Mae Tayabas",
+    "Bilan, Zedane Amber Paradero",
+    "Canor, Cassey Robiego",
+    "Celzo, Maeghan Nicerio",
+    "Dela Vega, Mira Ann Zingapan",
+    "Emata, Rhona Lorren Nagaño",
+    "Escasinas, Beatriz Tiangson",
+    "Gargoles, Keiarah Ellise Logro",
+    "Himantog, Rosielyn O.",
+    "Mendija, Rhian Sajuela",
+    "Nueva, Michaela Jeirah Globa",
+    "Poblete, Gabriella Laurice Caldaera",
+    "Ramos, Shana Hershey Hernandez",
+    "Roduta, Annika Faithe Lim-ang",
+    "Santos, Cassandra Athena Mendoza",
+    "Suarez, Juliana Loquinto",
+    "Villaluz, Vanesa Cloe Sotoya"
+  ],
+                "12 - STEM 5": [
+    "Abella, Prince Michael Calapati",
+    "Angcanan, Von Jerick Colima",
+    "Ariza, Ardee Arroyo",
+    "Baldoz, Jan Louie Cagara",
+    "Calarde, Apolo Lenmar Artificio",
+    "Espalmado, Dominic Salera",
+    "Espinosa, Jan Francis",
+    "Garcia, Jan Darhim Balitian",
+    "Loriaga, Dwyane Allen Llenares",
+    "Matcha, Marbee James Vale",
+    "Orcales, Jiro Villarama",
+    "Orias, Dwayne Joey Capangpangan",
+    "Perez, Rhine Adrian Sabellano",
+    "Ringor, Mark John Batac",
+    "Rint, Ronn David Balatico",
+    "Solanoy, Polgendale Macasantos",
+    "Villaluz, Annrey Krrysched Fontelar",
+    "Ablanida, EJ Faye Cueno",
+    "Arebado, Nica Angelou Naranja",
+    "Buen, Dana Gabrielle Almonte",
+    "Concepcion, Paula Graciel Solomon",
+    "Ersando, Franchezca Empress Nicholle Villa",
+    "Espinoza, Athea Nicole Pino",
+    "Gabelo, Princess Marinel Basabe",
+    "Ignacio, Princess Jahsell Galido",
+    "Lepardo, Fiona Lindsay Villa",
+    "Llenares, Zyanna Yuan Peji",
+    "Maguas, Irish Kelsey Savador",
+    "Mendoza, Jhiriene Louise Del Rosario",
+    "Santos, Rosean Elizabeth Erjas",
+    "Tiu, Ckloee Miyavi Grandeza",
+    "Trambulo, Zachy Yohanne Monton",
+    "Villanueva, Kazandra Ersando"
+  ],
+              "12 - STEM 6": [
+    "Alvarez, Rome Morris Caliwan",
+    "Arjona, Jaybe Oxales",
+    "Baliuag, Niño Zcshem Diloy",
+    "Calonia, Mark Louie Pelegrino",
+    "Claris, Earl Mark Tristan Sulit",
+    "Dia, Van Alistair Burce",
+    "Elpedes, Lordben Bermejo",
+    "Gingone, Khlent Winand Aquino",
+    "Ignacio, Angelo Abiera",
+    "Jalandoni, Marc Charlie Jim Saspa",
+    "Mesisgan, Renz Aldrian Quiachon",
+    "Perido, Jayle Justin Langit",
+    "Tayag, John Rafael Garcia",
+    "Villanueva, Elijah Gabriel Bontiago",
+    "Acierto, Gavrielle De Chavez",
+    "Arizapa, Nhoanna Mae Lipon",
+    "Barrios, Ashley Rose Ygot",
+    "Carrera, Marianne Loreinne Alano",
+    "Conchada, Criza Loraine Giga",
+    "De Guzman, Jheanne Kyle Daquera",
+    "Gillego, Kate Shanelle Gardon",
+    "Importa, Riza Mae Gelizon",
+    "Juego, Sophia Lorain Tatel",
+    "Lajara, Ivy Millete Macuha",
+    "Llorente, Sophia Acar",
+    "Mendoza, Nicole Castillo",
+    "Puli, Chean Vinice Muca",
+    "Saquing, Claire Nathalie Bulauiatan",
+    "Tagle, Demi Drew Magpantay",
+    "Villanueva, Keesha Gayle Causaren"
+  ],
+                "12 - STEM 7": [
+    "Amis, Earl Jerros Solayao",
+    "Cabanatan, Carl Aldrin Ocampo",
+    "Carreon, Judiel Gabriel Perez",
+    "Colada, Aldrich Cyrus Aro",
+    "De Leon, Lander Lous Ferrer",
+    "Diamola, Clark Dhaniel Ranes",
+    "Labadan, Aerl Daven Basan",
+    "Malagueño, Jheric Bernal",
+    "Mandragora, Ryan Gerard Cipcon",
+    "Pagurayan, Earl Angelo Perez",
+    "Perlado, Prince Rhyss Anthony Tolentino",
+    "Soñas, John Rey Rosiente",
+    "Tuble, Mike Lorenz Pecson",
+    "Acosta, Zyrene Cassandra Basquez",
+    "Armamento, Naiza Rhein",
+    "Barrios, Keicee Kate Torres",
+    "Casili, Steffany Claire Tampus",
+    "Contero, Mariella Sumayao",
+    "Destreza, Eunice Faye Roxas",
+    "Eyaya, Dewliana Trisha Garcia",
+    "Godoy, Ariana Louise Maturan",
+    "Goopio, Yurial Riez Laus",
+    "Jarabelo, Maria Maja Magistrado",
+    "Manuel, Ashbelle Joie Borre",
+    "Muico, Julianne Marcess Lubigan",
+    "Sierra, Kyla Xylene Escobido",
+    "Tagnong, Jerryrose Narbay",
+    "Tumang, Sophia Aquino",
+    "Villaresis, Heart Shane Macapagal"
+  ],
+                "12 - STEM 8": [
+    "Amparo, Charles Kenji Omandac",
+    "Arellano, Steven Edward Acosta",
+    "Avenido, Vince Reymar Surat",
+    "Cabanatan, John Conrad Dela Cruz",
+    "Coralde, Miles Matthew Dongallo",
+    "Delos Santos, Zhymon Dave Vicedo",
+    "Evangelista, John Kevin Villanueva",
+    "Gomez, John Paul Capones",
+    "Labrador, Kien Adrian Paguirigan",
+    "Muncada, John Penie Flores",
+    "Palma, Khen Jomarie Basmayor",
+    "Petil, Sean Sophie Dimalalu-an",
+    "Renon, Edmar Pineda",
+    "Sailog, Renth Clyde Saura",
+    "Soria, Dwayne John Gacusar",
+    "Adtha, Sarah Chaves",
+    "Catap, Jaene Michelle Rivera",
+    "Dimaano, Justine Grace",
+    "Espino, Sharlyn Ira Abarra",
+    "Gallano, Naomi Argana",
+    "Lorenzo, Jewel Samantha Fenol",
+    "Marcaida, Francheska Vivienne Colocado",
+    "Mesa, Ranlyn Faith Besoña",
+    "Oberes, Megan Dea Casiple",
+    "Oliva, Aizen Jamila Andalajao",
+    "Panisa, Stephanie Shane Fernandez",
+    "Pineda, Vivienne Stefh Ong",
+    "Ramos, Chelsea Krizzle Stephanie Resare",
+    "Velasco, Mary Joy Aunzo"
+  ],
+                "12 - STEM 9": [
+    "Barriatos, Brience Zeroun Sigwald",
+    "Cabesas, Raiven Alexandre Del Monte",
+    "Cantera, Ben Ezekiel Cañares",
+    "Castillo, John Vincent Gutierrez",
+    "De Sevilla, Shann Carl Ogalinola",
+    "Guab, Kent Aaron Alarca",
+    "Paloma, Sunday Angelo Medina",
+    "Peñalba, Sebastian Zane Arellano",
+    "Resare, Aser Thomas Anthony",
+    "Villamayor, Jyrell James Maningas",
+    "Vistal, Christopher Talavera",
+    "Agustin, Jen Denise Agapay",
+    "Avena, Trishia Mae Sadia",
+    "Cabantac, Krisha Dacca",
+    "Catapang, Ella Mae Villaruel",
+    "Eusebio, Bionce Clemente",
+    "Lastimosa, Tanya Kim Fajardo",
+    "Marcaida, Zharina Caliwan",
+    "Miranda, Cass Riley Suarez",
+    "Ohanyere, Goodness Onyinyechukwu Ramos",
+    "Pantua, Sheryl Abuyo",
+    "Ramos, Cristine Jade Novenario",
+    "Rollan, Krislie Ji Torres",
+    "Siglos, Cristine Khate Maligmat",
+    "Tamayo, Catlene Alyssa Cantiga",
+    "Versoza, Jana Sofia",
+    "Vinluan, Krisha Bantoy"
+  ],
+                "12 - STEM 10": [
+    "Amparo, Rysler Bien Aninipot",
+    "Basquiña, Kaiden Leigh Arica",
+    "Cantiga, John Kyle Eredira",
+    "Dungca, Adrian Carl De Mateo",
+    "Luga, Patrick Jhon Basallote",
+    "Maningas, Ezikiel Canapati",
+    "Mansalapuz, Lemar Saja",
+    "Navalta, Evan Cara",
+    "Sortijas, John Gabriel Canilao",
+    "Valera, Kurt Laurence",
+    "Aldave, Cathleen Joyce Sanchez",
+    "Avilla, Althea Divine Guevarra",
+    "Bautista, Celine Joy Rusiana",
+    "Cailao, Kate Christine Salud",
+    "Catibog, Anya Lorraine Coma",
+    "Dela Cruz, Keisha Nicole Mahor",
+    "De Leon, Heiley Keistine Eyana",
+    "Dizon, Katrina Mariz Rosario",
+    "Eustaquio, Riane Barbadillo",
+    "Gano, Hannah Mikaela Padrekis",
+    "Gusi, Jiellian Caith Jomamel",
+    "Gutierrez, Shekinah Khaliah Yem Roderno",
+    "Jimenez, Shania Kate De Aguas",
+    "Latorre, Kate Natalie Arlan",
+    "Macabocsit, Jhunyza Nadonza",
+    "Puda, Michelle Mae Flores",
+    "San Jose, Princess Alexis Pilleren",
+    "Santos, Keesha Avery Dofredo",
+    "Simeon, Althea Nicole Domasig",
+    "Vertudazo, Gwyn Diaz"
+  ],
+                "12 - STEM 11": [
+    "Andalahaw, Khent Harris Medina",
+    "Auro, John Arvin Del Mundo",
+    "Cenia, Kenth Froilan Abuloc",
+    "Ebas, Gab Garcines",
+    "Gecera, Clint Gian Anuat",
+    "Guinto, Edcel Natad",
+    "Lucas, Christian Jayce Reyes",
+    "Martal, Nash Jairus De Vera",
+    "Nolasco, Neil Andrei Zeta",
+    "Panganiban, Ezekiel John Fumar",
+    "Santillan, Ronan Bryant Atilano",
+    "Sulapas, Jeff Patrick Calang",
+    "Tadoy, Allen Jade Sarmiento",
+    "Vertudazo, Ron Jeron Terco",
+    "Zason, Johnuarius Raelee Acala",
+    "Badillo, Aziren Joy Garcia",
+    "Bawar, Princess Mhaya Dela Cruz",
+    "Cano, Kathlene Calimpusan",
+    "Catubig, Naomi Gabrielle Perello",
+    "Crucena, Riyahnn Gymiell Nuestro",
+    "Dela Cruz, Meabellyn Cascasan",
+    "Domingo, Jemima Desiree Sy",
+    "Fernandez, Shayne Frances Limbo",
+    "Jocson, Delsie Mhilen Satimbre",
+    "Matel, Narcel Shanne Borja",
+    "Mojica, Janelle Dellamas",
+    "Oliva, Alecxa Daniella Flores",
+    "Pascua, Jamie Heart Martos",
+    "Sinson, Ma. Deneva Ado",
+    "Tirol, Aiyana Martine Almeria",
+    "Vidallon, Liannah Mae Malabat",
+    "Wakita, Yui Rodil"
+  ]
+            },
+            "ABM (Accountancy, Business, Management)": {
+                  "12 - ABM 1": [
+                    "Castaño, Berlinito Jr. Porcioncula",
+                    "Dela Serna, Dave Emmillien Licdan",
+                    "Dizon, Bhiornd Jexqielle Serato",
+                    "Gabato, Romulo Catoltol",
+                    "Martinez, Karl Izri Dominic Gerpacio",
+                    "Sagun, Precillo Guiller Santos",
+                    "Amistoso, Kyla Andrea Selpides",
+                    "Arcenas, Jallen Ree Sario",
+                    "Bismonte, Maria Sherelyn Bernadez",
+                    "De Jesus, Shelbie Klyte Tenorio",
+                    "Del Rosario, Mariel Jane Puna",
+                    "Flores, Roma Floreida Mikaella Parco",
+                    "Garcia, Aira Hembrador",
+                    "Geriane, Tresha Mae Villacarlos",
+                    "Gumban, Chloe Aizel Rivera",
+                    "Juego, Denise Francois Tatel",
+                    "Lacosta, Princess Fionha Sitchon",
+                    "Madera, Julia Alexa Centeno",
+                    "Malagar, Jasmine Lorenzo",
+                    "Pajanustan, Charise Jian Lobenia",
+                    "Panisales, Maxine Ibarbia",
+                    "Peñaflor, Zherim Ramos",
+                    "Quilaton, Ma. Ysabel Guelas",
+                    "Rosaroso, Macy Valerie Arabis",
+                    "Santos, Carmina Avendaño",
+                    "Tumpalan, Alexsandra Briones"
+                  ],
+"12 - ABM 2": [
+    "Arante, Kizer Jerick Boloy",
+    "Cristobal, Darren Izaiah Gonzales",
+    "De Roxas, Jann Cedric",
+    "Estrera, Alizander Antonio",
+    "Miranda, Alvin Catigbe",
+    "Pereña, Angelo",
+    "Sy, Lois Yuan Oloteo",
+    "Almonguera, Angel Alwina Cruz",
+    "Amores, Euphielaine Jade Operio",
+    "Asistin, Lovely Jerriebeth Reyes",
+    "Bedruz, Andrea Nika Macmac",
+    "Castillo, Mhyca Chrysly Elizalde",
+    "Cipcon, Sheena Mae Cervantes",
+    "Delos Reyes, Rhianne Eunice",
+    "Erni, Frances Julianne Bongon",
+    "Geronimo, Princess Aira Cloribel",
+    "Palmeria, Shekinah",
+    "Plata, Edlyn Atienza",
+    "Quitquitan, Francine Chloe Tacus",
+    "Soller, Patricia Mae Mingoy",
+    "Terrenal, Carla Nicole Carangalan",
+    "Valleras, Dharlyn Joy Ebuenga"
+  ],
+                "12 - ABM 3": [
+    "Aron, Kurt Allen Pahayac",
+    "Daulong, Crisson Goneda",
+    "Dava, Edwin Jr. Pacheco",
+    "Digal, Edwin Ezekiel Punzalan",
+    "Horca, Mark Rhaven Lacza",
+    "Ogalinola, Jayrald Cantay",
+    "Raymundo, Virgilio Ryann Leabres",
+    "Zepeda, Zeuriel Tyren Cabel",
+    "Apolinar, Alyssa Moroscallo",
+    "Beloy, Mhianna Fiona Avila",
+    "Catalan, Shaigeline Bañara",
+    "De Guzman, Elaiza Joyce Frias",
+    "Didulo, Sophia Nichole",
+    "Ferman, Stephanie Gayo",
+    "Gerez, Timothei Maryse",
+    "Gonzales, Alessandra Nicole Suazo",
+    "Lirio, Myla Angela Inonog",
+    "Malonzo, Princess Jaymee Sofia Viado",
+    "Maung, Kimverly Nicole Angeles",
+    "Omnes, Zhayrel Abogado",
+    "Peñafiel, Vanessa Mae Arahan",
+    "Polidario, Cielo Mae Colada",
+    "Saavedra, Leizzy Ann",
+    "Suarez, Martheena Denise Salazar",
+    "Timbang, Arianna Surio"
+  ]
+            },
+            "HUMSS (Humanities & Social Sciences)": {
+                "12 - HUMSS 1": [
+    "Aberion, San Angelo Muyco",
+    "Algarme, Floyd Manuel Francisco",
+    "Arpon, Vince Einnar Ayos",
+    "Bierra, Nikolai Yuri Hernandez",
+    "Borres, Jude Borce",
+    "Catandijan, Vince Kaizen Timbal",
+    "Dalagan, Jhon Rick Bitang",
+    "Ducot, Mark Lorenz Pancho",
+    "Fugado, John Paul Mejos",
+    "Gabiana, Kein Hurt Cayetano",
+    "Jomao-as, Franz Ferdinand Zulueta",
+    "Leachon, James Clarence Rey",
+    "Modesto, Edrian Badillo",
+    "Ortiz, Arvin Dacanay",
+    "Palma, Alvin James",
+    "Poniente, Andrei Espares",
+    "Salvador, Marvin Prince Lallana",
+    "Sumaway, Neil Jherick Terredaño",
+    "Varias, Dave Macalaguim",
+    "Abanes, Mary Joy Aloc",
+    "Ambrosio, Bianca Elaine Agudo",
+    "Arbues, Nhie Anne Imie Mahinay",
+    "Betito, Michelle Kline",
+    "Cuyacot, Vanessa Yanyang",
+    "Derain, Martheena Samantha Reyn Pagkaliwangan",
+    "Fugawan, Akisha Mae Milca",
+    "Jereos, Julliene Nicole Ecraela",
+    "Malazarte, Hannah Mae Timbal",
+    "Mangaya, Ashley Leur Dimanang",
+    "Mendoza, Jesziah Sharmaine Bazarte",
+    "Namit, Sherlyn Roncale",
+    "Ortiz, Krizza Ariana",
+    "Palivino, Mikaela Valdez",
+    "Quejado, Precious May Elveña"
+  ],
 
-        const wheelColors = [
-            '#ffcd00', '#1f2227', '#e6b800', '#2e333d',
-            '#ffd633', '#16181b', '#cca300', '#3a404d'
-        ];
-
-        window.onload = function() {
-            wheelCanvas = document.getElementById('wheel-canvas');
-            ctx = wheelCanvas.getContext('2d');
-            
-            setupCanvasResolution();
-            window.addEventListener('resize', setupCanvasResolution);
-
-            // Listeners
-            document.getElementById('respondent-limit').addEventListener('input', (e) => {
-                respondentLimit = parseInt(e.target.value) || 1;
-                document.getElementById('limit-display').innerText = `${respondentLimit} Target`;
-                updateProgressDisplay();
-            });
-
-            document.getElementById('section-name').addEventListener('input', (e) => {
-                sectionName = e.target.value.trim() || "STEM 2";
-                document.getElementById('header-section-subtitle').innerText = `Section: ${sectionName}`;
-            });
-
-            document.getElementById('master-list-input').addEventListener('input', updateNamesCount);
-
-            // Default setup for mobile tab initialization
-            if (window.innerWidth < 768) {
-                switchMobileTab('wheel');
-            } else {
-                // Ensure desktop shows all panels
-                document.querySelectorAll('.mobile-tab-content').forEach(el => el.style.display = 'flex');
+                "12 - HUMSS 2": [
+    "Adelantad, John Gilbert Triñanez",
+    "Agasang, Gieo Magracia",
+    "Amparo, Jeiden Glyde Peñol",
+    "Ballesteros, Jake Enzo Vallejo",
+    "Bionat, Isaiah Val Cabatan",
+    "Escalante, John Brian Religioso",
+    "Mendoza, Lester Candole",
+    "Oclarit, Kyle Isaac Fabunan",
+    "Pumarejos, Shanlei Beringuela",
+    "Sarona, Dave Lawrence Catubig",
+    "Tasic, Nhiel Cedrick Hernandez",
+    "Teric, Shawn Bricks",
+    "Abliter, Francine Louisse Handog",
+    "Analupa, Jeanna Nicole Ibañez",
+    "Alingod, Danica Malayao",
+    "Borja, Inalyn Pagola",
+    "Buscado, Allyza Mae Flores",
+    "Dag-uman, Prescious Nicolle Sajonia",
+    "Desepeda, Savannah Peñalba",
+    "Francisco, Kurt Aubrey Jimenez",
+    "Gonzaga, Rhian Mae Lomoljo",
+    "Maguling, Klaire Sofia Arevalo",
+    "Malicon, Princess Monica Oquiria",
+    "Mercado, Allyson Valladolid",
+    "Melida, Jiellian Huet",
+    "Nava, Carlene Julien Ilao",
+    "Palti, Bay Queen",
+    "Pamplona, Prinzylle Deceree Caspe",
+    "Pelayo, Keira Ainsley Tilar",
+    "Rabe, Samantha Nicole Macaraan",
+    "Soberano, Eirene Nicole Peralta",
+    "Sonquillo, Alliah Gaile Labaclado",
+    "Torres, Angel Ann Bajamunde",
+    "Villanueva, Melodie Genesera"
+  ],
+                "12 - HUMSS 3": [
+    "Agoncillo, Joseph Adam Bugay",
+    "Amparo, Mash John",
+    "Arandia, Reuel Martin Daep",
+    "Baya, John Caleb Mojica",
+    "Cadavos, Xybert Jules Supla-ag",
+    "Calinog, Erwin Jay Peoro",
+    "Cruz, Rigel",
+    "Dela Cruz, Mark Wencie Busto",
+    "Garcia, Edward Jay",
+    "Iliw-iliw, Asher Jhay",
+    "Isuga, Charls Aldrin Antonio",
+    "Matel, Ralph Vincent Rollo",
+    "Morella, Rylie Gonzales",
+    "Osias, Archie David Gatdula",
+    "Pula, Mark James Daligon",
+    "Ramonal, Jhared James Morfe",
+    "Tejero, Vincent Earl Navarro",
+    "Villa, Christian Perea",
+    "Aniceto, Angelina Kyle Navarro",
+    "Asanza, Salain Mae Rosada",
+    "Barrocan, Eina Jiannezka Salmingo",
+    "Bobis, Ma. Erica Pandes",
+    "Comia, Denise Mikaela Mostrado",
+    "Dalaten, Sofia Kendra Ortiz",
+    "Lamsin, Maria Erica Bajenting",
+    "Lopez, Shaine Janis Angeles",
+    "Maligaya, Andrea Knyth Santiago",
+    "Mina, Kiesha Marie",
+    "Mella, Jasmine Mykee Villanueva",
+    "Pamaus, Wenchelle Anne Casil",
+    "Rejano, Ashell Mae Baronia",
+    "Solano, Hermione Shelby Berdejo",
+    "Tributo, Tristal Jade Inoc",
+    "Villar, Saniyah Elize Limbo"
+  ],
+                "12 - HUMSS 4": [
+    "Ageas, Kyle Ryan Melanog",
+    "Alcantara, Daniel Nicmarx Peregrina",
+    "Arquines, James Lander Salvador",
+    "Baggayan, Don Maco Bacuyag",
+    "Bergundo, Resty Ortiz",
+    "Boneo, Jr. Ronilo Bosito",
+    "Candole, Denmark Divino",
+    "Frejas, Alrry Jhann Ochoa",
+    "Geronimo, Keith Baron Romano",
+    "Magpuri, Slye Exekiel Ducusin",
+    "Malabago, Khane Gabriel Timogan",
+    "Norriga, Adrian Navarro",
+    "Padojinog, Khayle Angelo Vivit",
+    "Rodriguez, Johnrey Azul",
+    "Salcedo, Philip Andrei Casisner",
+    "Sape, Jherimie Sartiga",
+    "Serato, Fhielle Gregory Melgar",
+    "Tabalno, Rodel Anthony Tumolin",
+    "Ursua, Fritz Marck Reyes",
+    "Viola, Jeffrey Cuizon",
+    "Ballera, Lea May Macahilig",
+    "Bermil, Roshelle Maraño",
+    "Cantela, Trizha Juliet Oqueria",
+    "Halili, Princess Aliyah Urbano",
+    "Lauren, Princes Nicole Oporto",
+    "Lunato, Jazhley Faye Bebic",
+    "Pacheca, Charice",
+    "Parcon, Princess Nicole Bahinting",
+    "Quion, Michaela Calley Salvador",
+    "Sandoval, Janna Ashley Limbo",
+    "Santos, Trish Marifel Perlado",
+    "Tayab, Ruth Demi",
+    "Trinidad, Brigitte Anne Caletisin",
+    "Villacruz, Ericka Mae Yangoring",
+    "Yparraguirre, Camie Piguez"
+  ],
+                "12 - HUMSS 5": [
+    "Alarca, Mark Codey Laurence Martonito",
+    "Ardeño, Joshua Luistro",
+    "Avila, Dave Brayan Camacho",
+    "Baracena, Franz Matthew Garcia",
+    "Beato, Gabriel Candari",
+    "Delos Trinos, Jersey James Abes",
+    "Francisco, Vince Bulongon",
+    "Gimao, Liam Albert Alindogan",
+    "Gimena, Wayne Eldrich Enriquez",
+    "Jocson, Prince Mark Jenbert Velasco",
+    "Misola, Kerth Aron Belber",
+    "Nanong, Christian Clyd Angeles",
+    "Patoy, John Mark Ornopia",
+    "Ramos, Revo Antazo",
+    "Salvador, Shawn Christoph Huevos",
+    "Santos, Cody Yohan Ersando",
+    "Sarimos, Gabriel Moreno",
+    "Sarmiento, Francis Reiven Tolentino",
+    "Villanueva, Carl Justine Bruce",
+    "Alberto, Jhongee Marian Joyce Letheyo",
+    "Alvar, Joyce Olga Bermas",
+    "Bacalando, Ashlee Marie Pongase",
+    "Borg, Pauline Lustre",
+    "Compañero, Sheina Ricafort",
+    "Daña, Jay Ann Senit",
+    "Encarnacion, Angel Venice Orbello",
+    "Flores, Althea Bernadette Pollcena",
+    "Grebialde, Catherine Claire Acorda",
+    "Lisay, Choline Jaldo",
+    "Lucero, Brianna Ayze",
+    "Miole, Shieryl Mhae Ordinario",
+    "Nicanor, Princess Rhianah Bacaycay",
+    "Parco, Jennylyn Aguinid",
+    "Precioso, Jedah Mae Parco",
+    "Punzalan, Aliah Yzabel Avila"
+  ],
+                  "12 - HUMSS 6": [
+    "Alduñar, Fernando Jr. Villanueva",
+    "Ariola, Jaredd Castillon",
+    "Balacano, Yohan Roden Delos Santos",
+    "Daiz, Paul Miguel Loreto",
+    "Deximo, Neo Marquin Flores",
+    "Dimol, Prince Diomel Ceron",
+    "Galamgam, Mark Raven Tumamak",
+    "Garcia, Ram Armogela",
+    "Jacutina, Kenneth Estrella",
+    "Laguidao, Jaime Yuan Cerio",
+    "Laysa, Ron Jacob Pazon",
+    "Malabago, Charles Andrew",
+    "Maniego, John Yuri Oquailda",
+    "Maraveles, Daniel Omillion",
+    "Masicap, Mikki Enabore",
+    "Nueva, Khinno Camarce",
+    "Pagulong, John Lesther Taban",
+    "Rosido, Cyrus Andrei Liveta",
+    "Cua, Hannah Andrea Pareño",
+    "Fat, Gennica Orias",
+    "Garcia, Sygread Zathine Salomon",
+    "Itliong, Nhaiden Acac",
+    "Legaspi, Kaycee Garcia",
+    "Lungcup, Deniela Villanueva",
+    "Pajares, Julie Asas",
+    "Pascual, Jeszyll Rhymes Villagonzalo",
+    "Quinio, Rhowence Shane Wenceslao",
+    "Sazon, Denelle Keigh Leachon",
+    "Talagtag, Hannah Alexis",
+    "Tenio, Ma. Lourdes Fatima Engco"
+  ]
+                
+            },
+            "TVL (Technical-Vocational-Livelihood)": {
+                "12 - TVL ICT": [
+    "Amora, Keon Genesis Manguera",
+    "Amper, Ehmar Jhun Silud",
+    "Barcibal, Ver Achilles Romero",
+    "Behagan, Russel Vincent Limos",
+    "Concepcion, Sebastyn Ramos",
+    "De Vera, Sean Matthew Marilag",
+    "Geraban, Renz Raily Gache",
+    "Loyola, Christian Karl Pertez",
+    "Navarro, Eli Boy C.",
+    "Nazareno, Alexander Noda Martinez",
+    "Sumilang, Reniel Moratalla",
+    "Tolentino, Prince Stephen Montinez",
+    "Umbay, Avinazh Josh Montecillo",
+    "Verzosa, Seth Ian Villanueva",
+    "Cresencio, Sophia Audrey Abarra",
+    "Mahinay, Shena Mae Dela Cruz",
+    "Zapanta, Maria Mimoza Almoradie"
+  ],
+                "12 - TVL HE": [
+    "Abinan, Khyle Christian Gallentes",
+    "Agbisit, Collet Ramos",
+    "Alico, Chlimz Marc Laoyon",
+    "Arididon, Dwayne Justine Calderon",
+    "Del Prado, James Aron Cedon",
+    "Estabillo, Francis S.",
+    "Ganaden, Jude Matthew Bullas",
+    "Garduce, Mark Khian Alarcon",
+    "Gaspar, Gian Rhailey Basco",
+    "Gumboc, Jared John Marcelo Cangayda",
+    "Hernandez, John Christian Escalante",
+    "Mojica, Mark Andrei Parilla",
+    "Narvaez, Riel Erih De Luna",
+    "Nunag, Reign Axle Aure",
+    "Pangilinan, Kent Dexter Perez",
+    "Raluto, Adriane Gabriel Aleria",
+    "Talisic, Kent Anthony Antonio",
+    "Umali, Zeth Christian Esarda",
+    "Vida, Meidrick Ember A.",
+    "Vigan, David III Nicor",
+    "Vivar, Klyde Russel Rebistual",
+    "Benolirao, Arianne Fajardo",
+    "Bueza, Ella Nicole Villalobos",
+    "Canseco, Princess Haillen Guarin",
+    "Cruz, Krishen Cassandra Burgos",
+    "De Vera, Jehleel Red Hernandez",
+    "Diokno, Leiden Ann Cadevida",
+    "Estrada, Sharmaine Marie Bernardo",
+    "Fernandez, Jean Enriquez",
+    "Fresnido, Liz Jerlaine Garinga",
+    "Macalam, Jazrylle Kaye Caharian",
+    "Mallannao, Eril Chen Vinarao",
+    "Nacion, Fiona Michaela Arevalo",
+    "Poyaoan, Mikhaela Euna Abaoag",
+    "Perico, Aleisha Jane Sarmiento",
+    "Pondolanan, Hannah Marie Colocado",
+    "Regala, Shayne Daniella Ellamil",
+    "Requesa, Rian Janallie Tadia",
+    "Rosario, Althea Maquuiling",
+    "Siscario, Nica Jesleimae Panganiban",
+    "Torino, Ariane Kate Palma"
+  ]
             }
-
-            loadSampleData();
         };
 
-        function setupCanvasResolution() {
-            if (!wheelCanvas) return;
-            const rect = wheelCanvas.getBoundingClientRect();
-            const size = Math.min(rect.width || 340, 380);
-            wheelCanvas.width = size * 2; // HiDPI
-            wheelCanvas.height = size * 2;
-            drawWheel();
-        }
+        // High-contrast Segment Color Palette themed around #ffcd00
+        const PALETTE = [
+            "#ffcd00", "#3b82f6", "#ec4899", "#10b981", 
+            "#8b5cf6", "#f97316", "#06b6d4", "#f43f5e"
+        ];
 
-        function switchMobileTab(tabName) {
-            if (window.innerWidth >= 768) return;
+        /* ==========================================================================
+           APP STATE & INITIALIZATION
+           ========================================================================== */
+        let currentSectionKey = "";
+        let currentStrandName = "";
+        
+        // Active student list mapping and absentee tracking
+        let rawLists = {}; 
+        let absenteesMap = {}; // Tracks set of absent names per section: { "STEM 1": Set(["Name"]) }
+        let winnerHistory = [];
+        
+        let startAngle = 0;
+        let isSpinning = false;
+        let soundEnabled = true;
+        let currentWinnerName = "";
 
-            document.querySelectorAll('.mobile-tab-content').forEach(tab => {
-                tab.classList.remove('active-tab');
-            });
+        // DOM Elements
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const sectionSelect = document.getElementById('sectionSelect');
+        const currentStrandBadge = document.getElementById('currentStrandBadge');
+        const memberListContainer = document.getElementById('memberList');
+        const memberCountBadge = document.getElementById('memberCountBadge');
+        const resetAbsenteesBtn = document.getElementById('resetAbsenteesBtn');
+        const historyListContainer = document.getElementById('historyList');
+        const pointer = document.getElementById('wheelPointer');
 
-            const targetTab = document.getElementById(`tab-${tabName}`);
-            if (targetTab) targetTab.classList.add('active-tab');
+        const spinBtn = document.getElementById('spinBtn');
+        const quickSpinBtn = document.getElementById('quickSpinBtn');
+        const soundToggleBtn = document.getElementById('soundToggleBtn');
+        const soundText = document.getElementById('soundText');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
-            // Reset navigation highlights
-            ['setup', 'wheel', 'results'].forEach(t => {
-                const btn = document.getElementById(`nav-btn-${t}`);
-                if (btn) {
-                    if (t === tabName) {
-                        btn.className = "flex-1 flex flex-col items-center justify-center py-1 text-gold font-bold text-[11px] gap-1";
-                    } else {
-                        btn.className = "flex-1 flex flex-col items-center justify-center py-1 text-slate-400 font-medium text-[11px] gap-1";
+        const winnerModal = document.getElementById('winnerModal');
+        const modalWinnerName = document.getElementById('modalWinnerName');
+        const modalWinnerSection = document.getElementById('modalWinnerSection');
+        const keepWinnerBtn = document.getElementById('keepWinnerBtn');
+        const removeWinnerBtn = document.getElementById('removeWinnerBtn');
+
+        // Initialize active student lists and dropdown menu options
+        function initDataAndDropdown() {
+            sectionSelect.innerHTML = '';
+            let isFirstSet = false;
+
+            for (let strand in schoolData) {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = strand;
+
+                for (let sec in schoolData[strand]) {
+                    const option = document.createElement('option');
+                    option.value = sec;
+                    option.textContent = sec;
+                    option.dataset.strand = strand.split(' ')[0]; // Short strand tag
+                    optgroup.appendChild(option);
+
+                    rawLists[sec] = schoolData[strand][sec];
+                    absenteesMap[sec] = new Set();
+
+                    if (!isFirstSet) {
+                        currentSectionKey = sec;
+                        currentStrandName = strand.split(' ')[0];
+                        isFirstSet = true;
                     }
                 }
-            });
-
-            if (tabName === 'wheel') setTimeout(setupCanvasResolution, 50);
-        }
-
-        function updateNamesCount() {
-            const rawText = document.getElementById('master-list-input').value;
-            const names = rawText.split('\n').map(n => n.trim()).filter(n => n.length > 0);
-            document.getElementById('names-count').innerText = `${names.length} names`;
-        }
-
-        function loadSampleData() {
-            const sampleNames = [
-                "Juan Dela Cruz", "Maria Santos", "Pedro Penduko", "Ana Reyes", 
-                "Jose Rizal", "Andres Bonifacio", "Apolinario Mabini", "Gabriela Silang",
-                "Emilio Aguinaldo", "Melchora Aquino", "Antonio Luna", "Gregoria de Jesus",
-                "Marcelo del Pilar", "Juan Luna", "Diego Silang", "Francisco Baltazar",
-                "Graciano Lopez Jaena", "Leona Florentino", "Tandang Sora", "Miguel Malvar",
-                "Simeon Ola", "Trinidad Tecson", "Pio Valenzuela", "Jose Palma", "Rajah Sulayman"
-            ];
-            document.getElementById('master-list-input').value = sampleNames.join('\n');
-            document.getElementById('section-name').value = "STEM 2";
-            document.getElementById('respondent-limit').value = 11;
-            respondentLimit = 11;
-            sectionName = "STEM 2";
-            document.getElementById('limit-display').innerText = `11 Target`;
-            document.getElementById('header-section-subtitle').innerText = `Section: STEM 2`;
-            
-            updateNamesCount();
-            loadMasterList();
-            showToast("Sample list loaded (25 students)", "success");
-        }
-
-        function loadMasterList() {
-            const rawText = document.getElementById('master-list-input').value;
-            masterList = rawText.split('\n').map(n => n.trim()).filter(n => n.length > 0);
-            
-            if (masterList.length === 0) {
-                showToast("Please enter names in the list.", "error");
-                return;
+                sectionSelect.appendChild(optgroup);
             }
 
-            activePool = [...masterList];
-            chosenRespondents = [];
-            currentAngle = 0;
-            
-            updateChosenListUI();
-            updateProgressDisplay();
-            drawWheel();
-            showToast(`Loaded ${masterList.length} names onto wheel!`, "success");
+            sectionSelect.value = currentSectionKey;
+            currentStrandBadge.textContent = currentStrandName;
         }
 
+        // Get currently active students in wheel pool
+        function getActiveStudents(secKey) {
+            const raw = rawLists[secKey] || [];
+            const absentees = absenteesMap[secKey] || new Set();
+            return raw.filter(name => !absentees.has(name));
+        }
+
+        /* ==========================================================================
+           WEB AUDIO API (SOUND EFFECTS SYNTHESIZER)
+           ========================================================================== */
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        // Ticker Sound Click
+        function playTickSound() {
+            if (!soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(650, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(140, ctx.currentTime + 0.04);
+
+                gain.gain.setValueAtTime(0.18, ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.04);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start();
+                osc.stop(ctx.currentTime + 0.04);
+            } catch (e) { console.error(e); }
+        }
+
+        // Victory Chime / Fanfare
+        function playVictorySound() {
+            if (!soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+
+                    const startTime = ctx.currentTime + (idx * 0.08);
+                    gain.gain.setValueAtTime(0.2, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
+
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+
+                    osc.start(startTime);
+                    osc.stop(startTime + 0.3);
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        /* ==========================================================================
+           WHEEL CANVAS RENDERING
+           ========================================================================== */
         function drawWheel() {
-            if (!ctx || !wheelCanvas) return;
-            const width = wheelCanvas.width;
-            const height = wheelCanvas.height;
-            const centerX = width / 2;
-            const centerY = height / 2;
-            const radius = Math.min(centerX, centerY) - 16;
+            const items = getActiveStudents(currentSectionKey);
+            const numOptions = items.length;
+            const width = canvas.width;
+            const height = canvas.height;
+            const center = width / 2;
+            const outsideRadius = center - 15;
 
             ctx.clearRect(0, 0, width, height);
 
-            if (activePool.length === 0) {
+            if (numOptions === 0) {
+                // Empty state wheel
+                ctx.fillStyle = '#182232';
                 ctx.beginPath();
-                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-                ctx.fillStyle = '#16181b';
+                ctx.arc(center, center, outsideRadius, 0, 2 * Math.PI);
                 ctx.fill();
-                ctx.lineWidth = 6;
-                ctx.strokeStyle = '#2e333d';
-                ctx.stroke();
 
-                ctx.fillStyle = '#ffcd00';
-                ctx.font = 'bold 24px Inter';
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = 'bold 28px "Plus Jakarta Sans"';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText('Pool Empty / Quota Met', centerX, centerY);
+                ctx.fillText('All Members Absent!', center, center);
                 return;
             }
 
-            const sliceAngle = (2 * Math.PI) / activePool.length;
+            const arcSize = (2 * Math.PI) / numOptions;
 
-            ctx.save();
-            ctx.translate(centerX, centerY);
-            ctx.rotate(currentAngle);
+            ctx.font = 'bold 22px "Plus Jakarta Sans"';
 
-            for (let i = 0; i < activePool.length; i++) {
-                const startAngle = i * sliceAngle;
-                const endAngle = (i + 1) * sliceAngle;
-
+            for (let i = 0; i < numOptions; i++) {
+                const angle = startAngle + i * arcSize;
+                const fillColor = PALETTE[i % PALETTE.length];
+                
+                // Segment Background
+                ctx.fillStyle = fillColor;
                 ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.arc(0, 0, radius, startAngle, endAngle);
-                ctx.closePath();
-
-                const color = wheelColors[i % wheelColors.length];
-                ctx.fillStyle = color;
+                ctx.arc(center, center, outsideRadius, angle, angle + arcSize, false);
+                ctx.arc(center, center, 0, angle + arcSize, angle, true);
                 ctx.fill();
-                ctx.lineWidth = 3;
-                ctx.strokeStyle = '#0c0d0e';
+                ctx.strokeStyle = '#0b0f19';
+                ctx.lineWidth = 4;
                 ctx.stroke();
 
+                // Segment Label Contrast Adjustment
                 ctx.save();
-                ctx.rotate(startAngle + sliceAngle / 2);
-                ctx.textAlign = 'right';
-                ctx.textBaseline = 'middle';
+                // Dark text on bright Yellow (#ffcd00) segment, White on others
+                ctx.fillStyle = fillColor === "#ffcd00" ? "#0f172a" : "#ffffff";
                 
-                ctx.fillStyle = (color === '#ffcd00' || color === '#ffd633' || color === '#e6b800') ? '#0c0d0e' : '#ffffff';
-                ctx.font = 'bold 20px Inter';
-                
-                let displayName = activePool[i];
-                if (displayName.length > 15) displayName = displayName.substring(0, 13) + '...';
-                
-                ctx.fillText(displayName, radius - 28, 0);
+                ctx.translate(
+                    center + Math.cos(angle + arcSize / 2) * (outsideRadius - 100),
+                    center + Math.sin(angle + arcSize / 2) * (outsideRadius - 100)
+                );
+                ctx.rotate(angle + arcSize / 2 + Math.PI);
+
+                const name = items[i];
+                const truncatedName = name.length > 16 ? name.substring(0, 14) + '..' : name;
+                ctx.fillText(truncatedName, 0, 0);
                 ctx.restore();
             }
-
-            ctx.restore();
-
-            // Outer Ring
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-            ctx.lineWidth = 10;
-            ctx.strokeStyle = '#ffcd00';
-            ctx.stroke();
         }
 
-        function startSpin() {
-            if (isSpinning) return;
+        /* ==========================================================================
+           SPIN LOGIC & PHYSICS
+           ========================================================================== */
+        let lastTickSegment = -1;
 
-            if (activePool.length === 0) {
-                showToast("Active pool is empty!", "error");
-                return;
-            }
+        function triggerPointerAnimation() {
+            pointer.classList.add('tick');
+            setTimeout(() => pointer.classList.remove('tick'), 50);
+        }
 
-            if (chosenRespondents.length >= respondentLimit) {
-                showToast(`Target limit of ${respondentLimit} reached!`, "info");
-                return;
+        function checkTickSound(currentAngle, numOptions) {
+            if (numOptions <= 0) return;
+            const arcSize = (2 * Math.PI) / numOptions;
+            // Top pointer is aligned with 3/2 PI (270deg)
+            const normalizedAngle = (3 * Math.PI / 2 - currentAngle) % (2 * Math.PI);
+            const positiveAngle = normalizedAngle < 0 ? normalizedAngle + 2 * Math.PI : normalizedAngle;
+            const currentSegment = Math.floor(positiveAngle / arcSize);
+
+            if (currentSegment !== lastTickSegment) {
+                lastTickSegment = currentSegment;
+                playTickSound();
+                triggerPointerAnimation();
             }
+        }
+
+        function executeSpin(duration, extraRotations) {
+            const items = getActiveStudents(currentSectionKey);
+            if (items.length === 0 || isSpinning) return;
 
             isSpinning = true;
-            toggleButtons(true);
+            toggleButtons(false);
 
-            spinVelocity = 0.35 + Math.random() * 0.25;
-            const friction = 0.982;
+            const numOptions = items.length;
+            const startTimestamp = performance.now();
+            const initialAngle = startAngle;
+            // Random target angle offset
+            const randomOffset = Math.random() * Math.PI * 2;
+            const totalRotation = extraRotations * Math.PI * 2 + randomOffset;
 
-            function animateSpin() {
-                currentAngle += spinVelocity;
-                spinVelocity *= friction;
+            function animate(now) {
+                const elapsed = now - startTimestamp;
+                const progress = Math.min(elapsed / duration, 1);
 
+                // Cubic Ease Out
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                
+                startAngle = initialAngle + totalRotation * easeOut;
                 drawWheel();
+                checkTickSound(startAngle, numOptions);
 
-                if (spinVelocity > 0.002) {
-                    requestAnimationFrame(animateSpin);
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
                 } else {
-                    isSpinning = false;
-                    toggleButtons(false);
-                    determineWinner();
+                    finalizeSpin(items);
                 }
             }
 
-            requestAnimationFrame(animateSpin);
+            requestAnimationFrame(animate);
         }
 
-        function instantPick() {
+        function finalizeSpin(items) {
+            isSpinning = false;
+            toggleButtons(true);
+
+            const numOptions = items.length;
+            const arcSize = (2 * Math.PI) / numOptions;
+            // Determine winner aligned with top pin (270deg)
+            const normalizedAngle = (3 * Math.PI / 2 - startAngle) % (2 * Math.PI);
+            const positiveAngle = normalizedAngle < 0 ? normalizedAngle + 2 * Math.PI : normalizedAngle;
+            
+            const winningIndex = Math.floor(positiveAngle / arcSize);
+            currentWinnerName = items[winningIndex];
+
+            // Record History
+            addHistoryRecord(currentWinnerName, currentSectionKey);
+
+            // Audio & Visual Effects
+            playVictorySound();
+            launchConfetti();
+
+            // Display Winner Modal
+            modalWinnerName.textContent = currentWinnerName;
+            modalWinnerSection.textContent = currentSectionKey;
+            winnerModal.classList.add('active');
+        }
+
+        function toggleButtons(enabled) {
+            spinBtn.disabled = !enabled;
+            quickSpinBtn.disabled = !enabled;
+            sectionSelect.disabled = !enabled;
+            resetAbsenteesBtn.disabled = !enabled;
+        }
+
+        /* ==========================================================================
+           UI UPDATERS & ABSENTEE MANAGEMENT
+           ========================================================================== */
+        function toggleAbsentStatus(name) {
             if (isSpinning) return;
-
-            if (activePool.length === 0) {
-                showToast("Active pool is empty!", "error");
-                return;
-            }
-
-            if (chosenRespondents.length >= respondentLimit) {
-                showToast(`Target limit of ${respondentLimit} reached!`, "info");
-                return;
-            }
-
-            const randomIndex = Math.floor(Math.random() * activePool.length);
-            const numSlices = activePool.length;
-            const sliceAngle = (2 * Math.PI) / numSlices;
-            currentAngle = 1.5 * Math.PI - (randomIndex + 0.5) * sliceAngle;
-
-            const winner = activePool[randomIndex];
-            activePool.splice(randomIndex, 1);
-            
-            chosenRespondents.push({
-                name: winner,
-                section: sectionName,
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            });
-
-            updateChosenListUI();
-            updateProgressDisplay();
-            drawWheel();
-
-            triggerConfetti();
-            showWinnerModal(winner);
-        }
-
-        function determineWinner() {
-            const numSlices = activePool.length;
-            const sliceAngle = (2 * Math.PI) / numSlices;
-
-            let normalizedAngle = currentAngle % (2 * Math.PI);
-            if (normalizedAngle < 0) normalizedAngle += 2 * Math.PI;
-
-            const pointerAngle = (1.5 * Math.PI - normalizedAngle + 2 * Math.PI) % (2 * Math.PI);
-            const winningIndex = Math.floor(pointerAngle / sliceAngle) % numSlices;
-
-            const winner = activePool[winningIndex];
-            activePool.splice(winningIndex, 1);
-            
-            chosenRespondents.push({
-                name: winner,
-                section: sectionName,
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            });
-
-            updateChosenListUI();
-            updateProgressDisplay();
-            drawWheel();
-
-            triggerConfetti();
-            showWinnerModal(winner);
-        }
-
-        function toggleButtons(disabled) {
-            const spinBtn = document.getElementById('spin-btn');
-            const skipBtn = document.getElementById('skip-btn');
-            spinBtn.disabled = disabled;
-            skipBtn.disabled = disabled;
-            spinBtn.style.opacity = disabled ? "0.5" : "1";
-            skipBtn.style.opacity = disabled ? "0.5" : "1";
-        }
-
-        function updateProgressDisplay() {
-            const count = chosenRespondents.length;
-            const percentage = Math.min(100, Math.round((count / respondentLimit) * 100));
-            
-            document.getElementById('progress-indicator').innerText = `${count} / ${respondentLimit} Selected (${percentage}%)`;
-            document.getElementById('progress-bar').style.width = `${percentage}%`;
-            document.getElementById('chosen-count-badge').innerText = `${count} Selected`;
-            document.getElementById('remaining-quota').innerText = `Quota left: ${Math.max(0, respondentLimit - count)}`;
-            
-            // Update Mobile badge
-            const mobileBadge = document.getElementById('mobile-nav-badge');
-            if (count > 0) {
-                mobileBadge.innerText = count;
-                mobileBadge.classList.remove('hidden');
+            const absentees = absenteesMap[currentSectionKey];
+            if (absentees.has(name)) {
+                absentees.delete(name);
             } else {
-                mobileBadge.classList.add('hidden');
+                absentees.add(name);
             }
+            updateMemberList();
+            drawWheel();
         }
 
-        function updateChosenListUI() {
-            const container = document.getElementById('chosen-list-container');
-            if (chosenRespondents.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-16 text-slate-500">
-                        <i class="fas fa-users-slash text-3xl mb-2 opacity-30 text-slate-400"></i>
-                        <p class="text-xs font-semibold text-slate-400">No respondents chosen yet</p>
-                    </div>
-                `;
-                return;
-            }
+        function updateMemberList() {
+            const rawList = rawLists[currentSectionKey] || [];
+            const absentees = absenteesMap[currentSectionKey] || new Set();
+            const activeCount = rawList.length - absentees.size;
+            
+            memberListContainer.innerHTML = '';
+            memberCountBadge.textContent = `${activeCount} Active / ${absentees.size} Absent`;
 
-            container.innerHTML = '';
-            chosenRespondents.forEach((item, index) => {
-                const card = document.createElement('div');
-                card.className = "bg-darkpanel border border-darkborder rounded-xl p-2.5 flex items-center justify-between shadow-sm";
-                card.innerHTML = `
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-6 h-6 rounded-lg bg-gold/20 text-gold font-black text-[11px] flex items-center justify-center border border-gold/30 shrink-0">
-                            ${index + 1}
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-xs text-white">${item.name}</h4>
-                            <p class="text-[10px] text-slate-400">${item.section} • ${item.timestamp}</p>
-                        </div>
-                    </div>
-                    <button onclick="removeChosenRespondent(${index})" class="text-slate-500 hover:text-rose-400 p-1.5 transition-colors" title="Remove">
-                        <i class="fas fa-times text-xs"></i>
-                    </button>
-                `;
-                container.appendChild(card);
+            rawList.forEach(name => {
+                const isAbsent = absentees.has(name);
+                const item = document.createElement('div');
+                item.className = `member-item ${isAbsent ? 'absent' : ''}`;
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'member-name';
+                nameSpan.textContent = name;
+
+                const btn = document.createElement('button');
+                btn.className = `absent-btn ${isAbsent ? 'is-absent' : ''}`;
+                btn.textContent = isAbsent ? 'Mark Present' : 'Mark Absent';
+                btn.addEventListener('click', () => toggleAbsentStatus(name));
+
+                item.appendChild(nameSpan);
+                item.appendChild(btn);
+                memberListContainer.appendChild(item);
             });
         }
 
-        function undoLastSelection() {
-            if (chosenRespondents.length === 0) return;
-            removeChosenRespondent(chosenRespondents.length - 1);
+        function addHistoryRecord(name, section) {
+            const record = {
+                name,
+                section,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+            winnerHistory.unshift(record);
+            renderHistory();
         }
 
-        function removeChosenRespondent(index) {
-            const removed = chosenRespondents.splice(index, 1)[0];
-            if (removed) {
-                activePool.push(removed.name);
-                updateChosenListUI();
-                updateProgressDisplay();
+        function renderHistory() {
+            historyListContainer.innerHTML = '';
+            if (winnerHistory.length === 0) {
+                historyListContainer.innerHTML = `
+                    <div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 12px 0;">
+                        No spins yet in this session.
+                    </div>`;
+                return;
+            }
+
+            winnerHistory.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'history-item';
+                el.innerHTML = `
+                    <div>
+                        <strong style="color: #ffffff;">${item.name}</strong>
+                        <span style="font-size: 0.75rem; color: var(--accent-primary); margin-left: 6px;">${item.section}</span>
+                    </div>
+                    <span class="history-time">${item.time}</span>
+                `;
+                historyListContainer.appendChild(el);
+            });
+        }
+
+        /* ==========================================================================
+           CELEBRATION CANVAS CONFETTI
+           ========================================================================== */
+        const confettiCanvas = document.getElementById('confettiCanvas');
+        const cCtx = confettiCanvas.getContext('2d');
+        let particles = [];
+
+        function resizeConfettiCanvas() {
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeConfettiCanvas);
+        resizeConfettiCanvas();
+
+        function launchConfetti() {
+            particles = [];
+            const colors = ['#ffcd00', '#ffe066', '#ec4899', '#10b981', '#3b82f6', '#ffffff'];
+            for (let i = 0; i < 130; i++) {
+                particles.push({
+                    x: confettiCanvas.width / 2,
+                    y: confettiCanvas.height / 2 - 50,
+                    vx: (Math.random() - 0.5) * 18,
+                    vy: (Math.random() - 0.7) * 18,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    size: Math.random() * 8 + 4,
+                    rotation: Math.random() * 360,
+                    rSpeed: (Math.random() - 0.5) * 10,
+                    opacity: 1
+                });
+            }
+            requestAnimationFrame(animateConfetti);
+        }
+
+        function animateConfetti() {
+            cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            particles.forEach((p, index) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.3; // Gravity
+                p.opacity -= 0.012;
+                p.rotation += p.rSpeed;
+
+                cCtx.save();
+                cCtx.globalAlpha = Math.max(0, p.opacity);
+                cCtx.fillStyle = p.color;
+                cCtx.translate(p.x, p.y);
+                cCtx.rotate((p.rotation * Math.PI) / 180);
+                cCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                cCtx.restore();
+
+                if (p.opacity <= 0) {
+                    particles.splice(index, 1);
+                }
+            });
+
+            if (particles.length > 0) {
+                requestAnimationFrame(animateConfetti);
+            }
+        }
+
+        /* ==========================================================================
+           EVENT LISTENERS & BINDINGS
+           ========================================================================== */
+        // Dropdown Selection Event Listener
+        sectionSelect.addEventListener('change', (e) => {
+            if (isSpinning) return;
+            currentSectionKey = e.target.value;
+            const selectedOpt = e.target.options[e.target.selectedIndex];
+            currentStrandBadge.textContent = selectedOpt.dataset.strand || "SECTION";
+            
+            updateMemberList();
+            drawWheel();
+        });
+
+        // Reset All Absentees for current section
+        resetAbsenteesBtn.addEventListener('click', () => {
+            if (isSpinning) return;
+            absenteesMap[currentSectionKey].clear();
+            updateMemberList();
+            drawWheel();
+        });
+
+        // Spin Buttons
+        spinBtn.addEventListener('click', () => executeSpin(4500, 5));
+        quickSpinBtn.addEventListener('click', () => executeSpin(800, 2));
+
+        // Sound Toggle
+        soundToggleBtn.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            soundText.textContent = soundEnabled ? 'Sound On' : 'Sound Off';
+            soundToggleBtn.style.opacity = soundEnabled ? '1' : '0.6';
+        });
+
+        clearHistoryBtn.addEventListener('click', () => {
+            winnerHistory = [];
+            renderHistory();
+        });
+
+        // Modal Action 1: Keep winner in wheel
+        keepWinnerBtn.addEventListener('click', () => {
+            winnerModal.classList.remove('active');
+        });
+
+        // Modal Action 2: Mark winner absent / remove from wheel
+        removeWinnerBtn.addEventListener('click', () => {
+            if (currentWinnerName && absenteesMap[currentSectionKey]) {
+                absenteesMap[currentSectionKey].add(currentWinnerName);
+                updateMemberList();
                 drawWheel();
-                showToast(`Returned ${removed.name} to wheel`, "info");
             }
-        }
+            winnerModal.classList.remove('active');
+        });
 
-        function clearAllData() {
-            document.getElementById('master-list-input').value = '';
-            masterList = [];
-            activePool = [];
-            chosenRespondents = [];
-            updateNamesCount();
-            updateChosenListUI();
-            updateProgressDisplay();
-            drawWheel();
-            showToast("All data cleared.", "info");
-        }
-
-        function showWinnerModal(name) {
-            document.getElementById('winner-name-display').innerText = name;
-            document.getElementById('winner-section-display').innerText = `Section: ${sectionName} • Sample #${chosenRespondents.length} of ${respondentLimit}`;
-            document.getElementById('winner-modal').classList.remove('hidden');
-            document.getElementById('winner-modal').classList.add('flex');
-        }
-
-        function closeWinnerModal() {
-            document.getElementById('winner-modal').classList.remove('flex');
-            document.getElementById('winner-modal').classList.add('hidden');
-        }
-
-        function openHelpModal() {
-            document.getElementById('help-modal').classList.remove('hidden');
-            document.getElementById('help-modal').classList.add('flex');
-        }
-
-        function closeHelpModal() {
-            document.getElementById('help-modal').classList.remove('flex');
-            document.getElementById('help-modal').classList.add('hidden');
-        }
-
-        function showToast(message, type = 'info') {
-            const toast = document.getElementById('toast');
-            const msgEl = document.getElementById('toast-message');
-            const iconEl = document.getElementById('toast-icon');
-
-            msgEl.innerText = message;
-            if (type === 'success') {
-                iconEl.className = "fas fa-check-circle text-emerald-400 text-base";
-            } else if (type === 'error') {
-                iconEl.className = "fas fa-exclamation-circle text-rose-400 text-base";
-            } else {
-                iconEl.className = "fas fa-info-circle text-gold text-base";
-            }
-
-            toast.classList.remove('translate-y-[-180%]');
-            toast.classList.add('translate-y-0');
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-0');
-                toast.classList.add('translate-y-[-180%]');
-            }, 2500);
-        }
-
-        function triggerConfetti() {
-            confetti({
-                particleCount: 70,
-                spread: 50,
-                colors: ['#ffcd00', '#ffffff', '#e6b800'],
-                origin: { y: 0.6 }
-            });
-        }
-
-        function copyMasterList() {
-            const rawText = document.getElementById('master-list-input').value;
-            if (!rawText.trim()) {
-                showToast("Master list is empty!", "error");
-                return;
-            }
-
-            const textarea = document.createElement('textarea');
-            textarea.value = rawText;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-
-            const btnText = document.getElementById('copy-master-btn-text');
-            btnText.innerText = "Copied!";
-            setTimeout(() => { btnText.innerText = "Copy Names"; }, 1800);
-
-            showToast("Copied master list to clipboard!", "success");
-        }
-
-        function copyChosenNames() {
-            if (chosenRespondents.length === 0) {
-                showToast("No chosen respondents to copy.", "error");
-                return;
-            }
-
-            let textToCopy = `STEM 2 Randomizer - Selected Respondents\nSection: ${sectionName}\nTotal: ${chosenRespondents.length} / ${respondentLimit}\n\n`;
-            chosenRespondents.forEach((item, idx) => {
-                textToCopy += `${idx + 1}. ${item.name}\n`;
-            });
-
-            const textarea = document.createElement('textarea');
-            textarea.value = textToCopy;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-
-            showToast("Copied chosen respondents list!", "success");
-        }
-
-        function exportResults() {
-            if (chosenRespondents.length === 0) {
-                showToast("No respondents to export.", "error");
-                return;
-            }
-
-            let csvContent = "data:text/csv;charset=utf-8,No,Respondent Name,Section,Timestamp\n";
-            chosenRespondents.forEach((item, idx) => {
-                csvContent += `${idx + 1},"${item.name}","${item.section}","${item.timestamp}"\n`;
-            });
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `STEM2_Respondents_${sectionName.replace(/\s+/g, '_')}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            showToast("Exported CSV file!", "success");
-        }
+        // App Initialization
+        initDataAndDropdown();
+        updateMemberList();
+        renderHistory();
+        drawWheel();
     </script>
 </body>
 </html>
