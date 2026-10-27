@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Air Canvas - AI Finger Drawing</title>
-    <!-- Tailwind CSS for modern styling -->
+    <title>Neon Gesture Text Magic</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -16,6 +16,8 @@
                         panelBg: '#111827',
                         neonCyan: '#00f2fe',
                         neonPink: '#ff007f',
+                        neonPurple: '#b026ff',
+                        neonYellow: '#ffe600'
                     }
                 }
             }
@@ -23,8 +25,8 @@
     </script>
     <!-- FontAwesome for sleek icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts Inter & Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
     
     <!-- MediaPipe Hands & Camera Utils -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -38,7 +40,9 @@
             overflow: hidden;
             touch-action: none;
         }
-        /* Custom scrollbar */
+        .display-font {
+            font-family: 'Outfit', sans-serif;
+        }
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -50,17 +54,29 @@
             background: rgba(75, 85, 99, 0.5);
             border-radius: 9999px;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(107, 114, 128, 0.8);
-        }
-        /* Neon Glow Utility */
-        .neon-glow {
-            filter: drop-shadow(0 0 10px currentColor) drop-shadow(0 0 20px currentColor);
-        }
         .glass-panel {
-            background: rgba(17, 24, 39, 0.75);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .neon-glow-cyan {
+            text-shadow: 0 0 10px #00f2fe, 0 0 20px #00f2fe, 0 0 40px #00f2fe, 0 0 80px #00f2fe;
+        }
+        .neon-glow-pink {
+            text-shadow: 0 0 10px #ff007f, 0 0 20px #ff007f, 0 0 40px #ff007f, 0 0 80px #ff007f;
+        }
+        .neon-glow-yellow {
+            text-shadow: 0 0 10px #ffe600, 0 0 20px #ffe600, 0 0 40px #ffe600, 0 0 80px #ffe600;
+        }
+        .neon-glow-purple {
+            text-shadow: 0 0 10px #b026ff, 0 0 20px #b026ff, 0 0 40px #b026ff, 0 0 80px #b026ff;
+        }
+        @keyframes float-anim {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-10px) scale(1.02); }
+        }
+        .floating-text {
+            animation: float-anim 2.5s ease-in-out infinite;
         }
     </style>
 </head>
@@ -69,30 +85,31 @@
     <!-- Header / Navbar -->
     <header class="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-6 py-4 glass-panel border-b border-gray-800">
         <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-cyan-500/30">
-                <i class="fa-solid fa-wand-magic-sparkles text-white text-lg"></i>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-pink-500 to-purple-500 flex items-center justify-center shadow-lg shadow-pink-500/30">
+                <i class="fa-solid fa-hand-sparkles text-white text-lg"></i>
             </div>
             <div>
-                <h1 class="font-bold text-lg tracking-wide bg-gradient-to-r from-cyan-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">Neon Air Canvas</h1>
-                <p class="text-xs text-gray-400">Point index finger to draw in mid-air</p>
+                <h1 class="font-bold text-lg tracking-wide bg-gradient-to-r from-cyan-400 via-pink-400 to-yellow-300 bg-clip-text text-transparent display-font">Neon Gesture Magic</h1>
+                <p class="text-xs text-gray-400">1: I | 2: LOVE | 3: YOU | 4: QUIAN</p>
             </div>
         </div>
 
         <div class="flex items-center space-x-4">
             <!-- Status Badge -->
-            <div id="status-badge" class="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-medium">
+            <div id="status-badge" class="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-medium">
                 <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                 <span id="status-text">Loading AI Model...</span>
             </div>
 
-            <!-- Toggle Mirror Video -->
+            <!-- FPS Indicator -->
+            <div class="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700 text-gray-300 text-xs font-mono">
+                <i class="fa-solid fa-gauge-high text-cyan-400"></i>
+                <span id="fps-display">0 FPS</span>
+            </div>
+
+            <!-- Mirror Video Toggle -->
             <button id="btn-mirror" title="Mirror Camera" class="p-2.5 rounded-xl bg-gray-800/80 hover:bg-gray-700 text-gray-300 hover:text-white transition border border-gray-700">
                 <i class="fa-solid fa-arrows-split-up-and-left text-sm"></i>
-            </button>
-
-            <!-- Toggle HUD Visibility -->
-            <button id="btn-toggle-hud" title="Toggle HUD" class="p-2.5 rounded-xl bg-gray-800/80 hover:bg-gray-700 text-gray-300 hover:text-white transition border border-gray-700">
-                <i class="fa-solid fa-eye text-sm"></i>
             </button>
         </div>
     </header>
@@ -100,16 +117,17 @@
     <!-- Main Workspace -->
     <main class="relative flex-1 w-full h-full flex items-center justify-center bg-black overflow-hidden">
         
-        <!-- Video Element (Hidden from direct view, processed by MediaPipe) -->
-        <video id="webcam" class="absolute inset-0 w-full h-full object-cover transform -scale-x-100 pointer-events-none opacity-80" autoplay playsinline muted></video>
+        <!-- Video Element -->
+        <video id="webcam" class="absolute inset-0 w-full h-full object-cover transform -scale-x-100 pointer-events-none opacity-85" autoplay playsinline muted></video>
 
-        <!-- Drawing Canvas -->
-        <canvas id="drawing-canvas" class="absolute inset-0 w-full h-full z-10 pointer-events-none"></canvas>
+        <!-- Canvas for Skeleton & Particle Effects -->
+        <canvas id="output-canvas" class="absolute inset-0 w-full h-full z-10 pointer-events-none"></canvas>
 
-        <!-- Finger Cursor Indicator -->
-        <div id="finger-cursor" class="absolute z-20 w-8 h-8 rounded-full border-2 border-cyan-400 bg-cyan-400/20 pointer-events-none transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-75 hidden shadow-[0_0_15px_#00f2fe]">
-            <div class="absolute inset-2 rounded-full bg-cyan-400 animate-ping opacity-75"></div>
-            <div class="absolute inset-2.5 rounded-full bg-white"></div>
+        <!-- Dynamic Giant Gesture Text Overlay -->
+        <div id="gesture-overlay" class="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none transition-all duration-300">
+            <!-- Dynamically populated main text -->
+            <div id="giant-text" class="display-font font-black text-7xl md:text-9xl uppercase tracking-wider opacity-0 transform scale-50 transition-all duration-300 text-center"></div>
+            <div id="gesture-subtext" class="mt-4 px-6 py-2 rounded-full glass-panel text-white/80 text-sm font-medium tracking-widest uppercase opacity-0 transform translate-y-4 transition-all duration-300 shadow-2xl"></div>
         </div>
 
         <!-- Toast Notification Box -->
@@ -118,158 +136,62 @@
             <span id="toast-message">Notification message</span>
         </div>
 
-        <!-- Floating HUD Control Panel -->
-        <div id="hud-panel" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-30 flex flex-wrap items-center justify-center gap-3 p-3 rounded-2xl glass-panel shadow-2xl transition-all duration-300 max-w-[95vw]">
-            
-            <!-- Color Presets -->
-            <div class="flex items-center space-x-1.5 bg-gray-900/60 p-1.5 rounded-xl border border-gray-800">
-                <button class="color-btn w-7 h-7 rounded-lg bg-[#00f2fe] ring-2 ring-white/50 transition transform hover:scale-110 focus:outline-none" data-color="#00f2fe" title="Neon Cyan"></button>
-                <button class="color-btn w-7 h-7 rounded-lg bg-[#ff007f] transition transform hover:scale-110 focus:outline-none" data-color="#ff007f" title="Neon Pink"></button>
-                <button class="color-btn w-7 h-7 rounded-lg bg-[#00ff66] transition transform hover:scale-110 focus:outline-none" data-color="#00ff66" title="Neon Green"></button>
-                <button class="color-btn w-7 h-7 rounded-lg bg-[#ffe600] transition transform hover:scale-110 focus:outline-none" data-color="#ffe600" title="Neon Yellow"></button>
-                <button class="color-btn w-7 h-7 rounded-lg bg-[#b026ff] transition transform hover:scale-110 focus:outline-none" data-color="#b026ff" title="Neon Purple"></button>
-                <button class="color-btn w-7 h-7 rounded-lg bg-[#ffffff] transition transform hover:scale-110 focus:outline-none" data-color="#ffffff" title="Pure White"></button>
-                <!-- Custom Color Picker -->
-                <div class="relative w-7 h-7 rounded-lg overflow-hidden border border-gray-600 cursor-pointer hover:scale-110 transition">
-                    <input type="color" id="color-picker" value="#00f2fe" class="absolute -inset-2 w-12 h-12 cursor-pointer bg-transparent border-0 p-0">
-                </div>
+        <!-- Floating HUD Quick Legend Panel -->
+        <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-30 flex flex-wrap items-center justify-center gap-3 px-6 py-3 rounded-2xl glass-panel shadow-2xl">
+            <div class="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-gray-900/60 border border-gray-800">
+                <span class="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 font-bold text-xs flex items-center justify-center border border-cyan-500/40">1</span>
+                <span class="text-xs text-gray-300 font-medium">I</span>
             </div>
-
-            <!-- Divider -->
-            <div class="h-8 w-px bg-gray-800 hidden sm:block"></div>
-
-            <!-- Brush Size Slider -->
-            <div class="flex items-center space-x-2 bg-gray-900/60 px-3 py-2 rounded-xl border border-gray-800">
-                <i class="fa-solid fa-paintbrush text-xs text-gray-400"></i>
-                <input type="range" id="brush-size" min="2" max="40" value="10" class="w-20 accent-cyan-400 cursor-pointer">
-                <span id="size-display" class="text-xs font-mono text-gray-300 w-5 text-right">10</span>
+            <div class="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-gray-900/60 border border-gray-800">
+                <span class="w-6 h-6 rounded-lg bg-pink-500/20 text-pink-400 font-bold text-xs flex items-center justify-center border border-pink-500/40">2</span>
+                <span class="text-xs text-gray-300 font-medium">LOVE</span>
             </div>
-
-            <!-- Divider -->
-            <div class="h-8 w-px bg-gray-800 hidden sm:block"></div>
-
-            <!-- Mode Selector (Draw vs Eraser) -->
-            <div class="flex items-center space-x-1 bg-gray-900/60 p-1 rounded-xl border border-gray-800">
-                <button id="btn-mode-draw" class="px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-400 text-xs font-medium flex items-center space-x-1.5 transition">
-                    <i class="fa-solid fa-pencil"></i>
-                    <span class="hidden md:inline">Draw</span>
-                </button>
-                <button id="btn-mode-erase" class="px-3 py-1.5 rounded-lg text-gray-400 hover:text-white text-xs font-medium flex items-center space-x-1.5 transition">
-                    <i class="fa-solid fa-eraser"></i>
-                    <span class="hidden md:inline">Eraser</span>
-                </button>
+            <div class="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-gray-900/60 border border-gray-800">
+                <span class="w-6 h-6 rounded-lg bg-yellow-500/20 text-yellow-400 font-bold text-xs flex items-center justify-center border border-yellow-500/40">3</span>
+                <span class="text-xs text-gray-300 font-medium">YOU</span>
             </div>
-
-            <!-- Divider -->
-            <div class="h-8 w-px bg-gray-800 hidden sm:block"></div>
-
-            <!-- Action Buttons: Undo, Redo, Clear, Save -->
-            <div class="flex items-center space-x-1">
-                <button id="btn-undo" title="Undo (Ctrl+Z)" class="p-2.5 rounded-xl bg-gray-900/60 hover:bg-gray-800 text-gray-300 hover:text-white transition border border-gray-800 disabled:opacity-40 disabled:cursor-not-allowed">
-                    <i class="fa-solid fa-rotate-left text-xs"></i>
-                </button>
-                <button id="btn-redo" title="Redo (Ctrl+Y)" class="p-2.5 rounded-xl bg-gray-900/60 hover:bg-gray-800 text-gray-300 hover:text-white transition border border-gray-800 disabled:opacity-40 disabled:cursor-not-allowed">
-                    <i class="fa-solid fa-rotate-right text-xs"></i>
-                </button>
-                <button id="btn-clear" title="Clear Canvas" class="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-medium transition border border-rose-500/30 flex items-center space-x-1.5">
-                    <i class="fa-solid fa-trash-can text-xs"></i>
-                    <span class="hidden md:inline">Clear</span>
-                </button>
-                <button id="btn-save" title="Save Artwork" class="px-3 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-medium transition border border-cyan-500/30 flex items-center space-x-1.5">
-                    <i class="fa-solid fa-download text-xs"></i>
-                    <span class="hidden md:inline">Save</span>
-                </button>
+            <div class="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-gray-900/60 border border-gray-800">
+                <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 font-bold text-xs flex items-center justify-center border border-purple-500/40">4</span>
+                <span class="text-xs text-gray-300 font-medium">QUIAN</span>
             </div>
-
         </div>
 
     </main>
 
-    <!-- JavaScript Application Logic -->
+    <!-- Application Script -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const videoElement = document.getElementById('webcam');
-            const canvasElement = document.getElementById('drawing-canvas');
+            const canvasElement = document.getElementById('output-canvas');
             const ctx = canvasElement.getContext('2d');
-            const fingerCursor = document.getElementById('finger-cursor');
             const statusBadge = document.getElementById('status-badge');
             const statusText = document.getElementById('status-text');
-            
-            // Controls
-            const colorPicker = document.getElementById('color-picker');
-            const colorBtns = document.querySelectorAll('.color-btn');
-            const brushSizeInput = document.getElementById('brush-size');
-            const sizeDisplay = document.getElementById('size-display');
-            const btnModeDraw = document.getElementById('btn-mode-draw');
-            const btnModeErase = document.getElementById('btn-mode-erase');
-            const btnUndo = document.getElementById('btn-undo');
-            const btnRedo = document.getElementById('btn-redo');
-            const btnClear = document.getElementById('btn-clear');
-            const btnSave = document.getElementById('btn-save');
+            const fpsDisplay = document.getElementById('fps-display');
             const btnMirror = document.getElementById('btn-mirror');
-            const btnToggleHud = document.getElementById('btn-toggle-hud');
-            const hudPanel = document.getElementById('hud-panel');
+            
+            const giantText = document.getElementById('giant-text');
+            const gestureSubtext = document.getElementById('gesture-subtext');
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toast-message');
 
-            // Application State
-            let currentColor = '#00f2fe';
-            let currentSize = 10;
-            let isEraser = false;
             let isMirrored = true;
-            let hudVisible = true;
-            
-            // Drawing & History state
-            let history = [];
-            let redoStack = [];
-            let maxHistorySteps = 15;
-            let isDrawing = false;
-            let currentPath = [];
-            let lastX = null;
-            let lastY = null;
+            let lastGesture = -1;
+            let particleArray = [];
 
-            // Gesture smoothing variables (Exponential Moving Average)
-            let smoothX = null;
-            let smoothY = null;
-            const smoothingFactor = 0.4; // 0 = max smooth/lag, 1 = no smoothing
+            // FPS calculation variables
+            let frameCount = 0;
+            let lastFpsUpdate = performance.now();
+            let currentFps = 0;
 
-            // Initialize Canvas Dimensions
+            // Resize Canvas
             function resizeCanvas() {
-                const width = window.innerWidth;
-                const height = window.innerHeight;
-                
-                // Create temporary canvas to preserve content on resize
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = canvasElement.width || width;
-                tempCanvas.height = canvasElement.height || height;
-                const tempCtx = tempCanvas.getContext('2d');
-                tempCtx.drawImage(canvasElement, 0, 0);
-
-                canvasElement.width = width;
-                canvasElement.height = height;
-
-                // Restore content
-                ctx.drawImage(tempCanvas, 0, 0, width, height);
+                canvasElement.width = window.innerWidth;
+                canvasElement.height = window.innerHeight;
             }
             window.addEventListener('resize', resizeCanvas);
             resizeCanvas();
 
-            // Save state to history for Undo/Redo
-            function saveState() {
-                if (history.length >= maxHistorySteps) {
-                    history.shift();
-                }
-                history.push(ctx.getImageData(0, 0, canvasElement.width, canvasElement.height));
-                redoStack = []; // Clear redo stack on new action
-                updateUndoRedoButtons();
-            }
-
-            function updateUndoRedoButtons() {
-                btnUndo.disabled = history.length === 0;
-                btnRedo.disabled = redoStack.length === 0;
-            }
-
-            // Toast notification helper
+            // Toast Notification Helper
             let toastTimeout = null;
             function showToast(message, iconClass = "fa-solid fa-circle-info") {
                 document.getElementById('toast-icon').className = iconClass + " text-cyan-400";
@@ -284,95 +206,6 @@
                 }, 2500);
             }
 
-            // Event Listeners for Controls
-            colorBtns.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    colorBtns.forEach(b => b.classList.remove('ring-2', 'ring-white/50'));
-                    btn.classList.add('ring-2', 'ring-white/50');
-                    currentColor = btn.getAttribute('data-color');
-                    colorPicker.value = currentColor;
-                    if (isEraser) setDrawMode();
-                    showToast(`Color changed to ${currentColor}`, 'fa-solid fa-palette');
-                });
-            });
-
-            colorPicker.addEventListener('input', (e) => {
-                currentColor = e.target.value;
-                colorBtns.forEach(b => b.classList.remove('ring-2', 'ring-white/50'));
-                if (isEraser) setDrawMode();
-            });
-
-            brushSizeInput.addEventListener('input', (e) => {
-                currentSize = parseInt(e.target.value);
-                sizeDisplay.textContent = currentSize;
-            });
-
-            function setDrawMode() {
-                isEraser = false;
-                btnModeDraw.className = "px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-400 text-xs font-medium flex items-center space-x-1.5 transition";
-                btnModeErase.className = "px-3 py-1.5 rounded-lg text-gray-400 hover:text-white text-xs font-medium flex items-center space-x-1.5 transition";
-                showToast("Draw Mode Active", "fa-solid fa-pencil");
-            }
-
-            function setEraserMode() {
-                isEraser = true;
-                btnModeErase.className = "px-3 py-1.5 rounded-lg bg-rose-500/20 text-rose-400 text-xs font-medium flex items-center space-x-1.5 transition";
-                btnModeDraw.className = "px-3 py-1.5 rounded-lg text-gray-400 hover:text-white text-xs font-medium flex items-center space-x-1.5 transition";
-                showToast("Eraser Mode Active", "fa-solid fa-eraser");
-            }
-
-            btnModeDraw.addEventListener('click', setDrawMode);
-            btnModeErase.addEventListener('click', setEraserMode);
-
-            // Undo
-            btnUndo.addEventListener('click', () => {
-                if (history.length === 0) return;
-                redoStack.push(ctx.getImageData(0, 0, canvasElement.width, canvasElement.height));
-                const previousState = history.pop();
-                ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-                ctx.putImageData(previousState, 0, 0);
-                updateUndoRedoButtons();
-                showToast("Undone last stroke", "fa-solid fa-rotate-left");
-            });
-
-            // Redo
-            btnRedo.addEventListener('click', () => {
-                if (redoStack.length === 0) return;
-                history.push(ctx.getImageData(0, 0, canvasElement.width, canvasElement.height));
-                const nextState = redoStack.pop();
-                ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-                ctx.putImageData(nextState, 0, 0);
-                updateUndoRedoButtons();
-                showToast("Redone stroke", "fa-solid fa-rotate-right");
-            });
-
-            // Clear
-            btnClear.addEventListener('click', () => {
-                saveState();
-                ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-                showToast("Canvas cleared", "fa-solid fa-trash-can");
-            });
-
-            // Save
-            btnSave.addEventListener('click', () => {
-                // Create a composite image (background black/transparent + drawing)
-                const saveCanvas = document.createElement('canvas');
-                saveCanvas.width = canvasElement.width;
-                saveCanvas.height = canvasElement.height;
-                const sCtx = saveCanvas.getContext('2d');
-                
-                // Draw dark background for neon pop
-                sCtx.fillStyle = '#0b0f19';
-                sCtx.fillRect(0, 0, saveCanvas.width, saveCanvas.height);
-                sCtx.drawImage(canvasElement, 0, 0);
-
-                const link = document.createElement('a');
-                link.download = `neon-air-art-${Date.now()}.png`;
-                link.href = saveCanvas.toDataURL('image/png');
-                link.click();
-                showToast("Artwork saved successfully!", "fa-solid fa-download");
-            });
-
             // Mirror Toggle
             btnMirror.addEventListener('click', () => {
                 isMirrored = !isMirrored;
@@ -385,136 +218,234 @@
                 }
             });
 
-            // Toggle HUD
-            btnToggleHud.addEventListener('click', () => {
-                hudVisible = !hudVisible;
-                if (hudVisible) {
-                    hudPanel.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
-                    showToast("HUD Visible", "fa-solid fa-eye");
+            // Particle Class for Sparkles around hand
+            class Particle {
+                constructor(x, y, color) {
+                    this.x = x;
+                    this.y = y;
+                    this.color = color;
+                    this.size = Math.random() * 6 + 2;
+                    this.speedX = (Math.random() - 0.5) * 6;
+                    this.speedY = (Math.random() - 0.5) * 6;
+                    this.life = 1.0;
+                    this.decay = Math.random() * 0.03 + 0.02;
+                }
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    this.life -= this.decay;
+                }
+                draw(context) {
+                    context.save();
+                    context.globalAlpha = Math.max(0, this.life);
+                    context.fillStyle = this.color;
+                    context.shadowColor = this.color;
+                    context.shadowBlur = 12;
+                    context.beginPath();
+                    context.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    context.fill();
+                    context.restore();
+                }
+            }
+
+            function spawnParticles(x, y, count, color) {
+                for (let i = 0; i < count; i++) {
+                    particleArray.push(new Particle(x, y, color));
+                }
+            }
+
+            // Gesture logic based on raised fingers
+            function countRaisedFingers(landmarks) {
+                // Landmark indices:
+                // Thumb: tip 4, ip 3, mcp 2
+                // Index: tip 8, pip 6
+                // Middle: tip 12, pip 10
+                // Ring: tip 16, pip 14
+                // Pinky: tip 20, pip 18
+                
+                let raisedCount = 0;
+
+                // Hand handedness check or simple vertical orientation heuristic
+                // For index, middle, ring, pinky: compare tip Y with PIP Y (smaller Y is higher on screen)
+                const fingers = [
+                    { tip: 8, pip: 6 },
+                    { tip: 12, pip: 10 },
+                    { tip: 16, pip: 14 },
+                    { tip: 20, pip: 18 }
+                ];
+
+                fingers.forEach(f => {
+                    if (landmarks[f.tip].y < landmarks[f.pip].y) {
+                        raisedCount++;
+                    }
+                });
+
+                // Thumb check (compare tip 4 with mcp 2 or ip 3 depending on hand orientation, let's use distance from wrist or x-axis relative to mcp)
+                // Simplified stable thumb check: check distance between thumb tip (4) and pinky mcp (17) or index mcp (5)
+                const thumbTip = landmarks[4];
+                const indexMcp = landmarks[5];
+                const wrist = landmarks[0];
+                
+                // If thumb tip is extended outward horizontally or vertically from palm center
+                const thumbDist = Math.hypot(thumbTip.x - indexMcp.x, thumbTip.y - indexMcp.y);
+                if (thumbDist > 0.12) {
+                    raisedCount++;
+                }
+
+                return Math.min(5, raisedCount);
+            }
+
+            function updateUIForGesture(count, handX, handY) {
+                if (count === lastGesture) return;
+                lastGesture = count;
+
+                // Reset classes
+                giantText.className = "display-font font-black text-7xl md:text-9xl uppercase tracking-wider transition-all duration-300 text-center";
+                giantText.classList.remove('floating-text', 'neon-glow-cyan', 'neon-glow-pink', 'neon-glow-yellow', 'neon-glow-purple');
+                gestureSubtext.classList.remove('opacity-100', 'translate-y-0');
+                gestureSubtext.classList.add('opacity-0', 'translate-y-4');
+
+                if (count === 1) {
+                    giantText.textContent = "I";
+                    giantText.classList.add('neon-glow-cyan', 'text-cyan-400', 'opacity-100', 'scale-100', 'floating-text');
+                    gestureSubtext.textContent = "Gesture: 1 Finger • Expression of Self";
+                    gestureSubtext.classList.remove('opacity-0', 'translate-y-4');
+                    gestureSubtext.classList.add('opacity-100', 'translate-y-0');
+                    spawnParticles(handX, handY, 35, '#00f2fe');
+                } else if (count === 2) {
+                    giantText.textContent = "LOVE";
+                    giantText.classList.add('neon-glow-pink', 'text-pink-500', 'opacity-100', 'scale-100', 'floating-text');
+                    gestureSubtext.textContent = "Gesture: 2 Fingers • Pure Affection";
+                    gestureSubtext.classList.remove('opacity-0', 'translate-y-4');
+                    gestureSubtext.classList.add('opacity-100', 'translate-y-0');
+                    spawnParticles(handX, handY, 45, '#ff007f');
+                } else if (count === 3) {
+                    giantText.textContent = "YOU";
+                    giantText.classList.add('neon-glow-yellow', 'text-yellow-400', 'opacity-100', 'scale-100', 'floating-text');
+                    gestureSubtext.textContent = "Gesture: 3 Fingers • Dedicated Connection";
+                    gestureSubtext.classList.remove('opacity-0', 'translate-y-4');
+                    gestureSubtext.classList.add('opacity-100', 'translate-y-0');
+                    spawnParticles(handX, handY, 45, '#ffe600');
+                } else if (count >= 4) {
+                    giantText.textContent = "QUIAN";
+                    giantText.classList.add('neon-glow-purple', 'text-purple-400', 'opacity-100', 'scale-100', 'floating-text');
+                    gestureSubtext.textContent = `Gesture: ${count} Fingers • Special Name`;
+                    gestureSubtext.classList.remove('opacity-0', 'translate-y-4');
+                    gestureSubtext.classList.add('opacity-100', 'translate-y-0');
+                    spawnParticles(handX, handY, 60, '#b026ff');
                 } else {
-                    hudPanel.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10');
-                    showToast("HUD Hidden (Press button again to restore)", "fa-solid fa-eye-slash");
+                    giantText.classList.add('opacity-0', 'scale-50');
+                    lastGesture = 0;
                 }
-            });
+            }
 
-            // Keyboard Shortcuts
-            window.addEventListener('keydown', (e) => {
-                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-                    e.preventDefault();
-                    btnUndo.click();
-                } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
-                    e.preventDefault();
-                    btnRedo.click();
-                }
-            });
-
-            // --- MediaPipe Hands Setup ---
+            // MediaPipe Results Handler
             function onResults(results) {
-                // Update Status
+                // Update FPS
+                frameCount++;
+                const now = performance.now();
+                if (now - lastFpsUpdate >= 1000) {
+                    currentFps = Math.round((frameCount * 1000) / (now - lastFpsUpdate));
+                    fpsDisplay.textContent = `${currentFps} FPS`;
+                    frameCount = 0;
+                    lastFpsUpdate = now;
+                }
+
+                // Update Status Badge
                 statusBadge.className = "flex items-center space-x-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium";
                 statusText.textContent = "AI Tracking Active";
 
+                // Clear Canvas
+                ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+                // Render Particles
+                for (let i = particleArray.length - 1; i >= 0; i--) {
+                    particleArray[i].update();
+                    particleArray[i].draw(ctx);
+                    if (particleArray[i].life <= 0) {
+                        particleArray.splice(i, 1);
+                    }
+                }
+
                 if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                    // Grab primary hand's index fingertip (Landmark 8)
                     const landmarks = results.multiHandLandmarks[0];
-                    const indexTip = landmarks[8];
+                    
+                    // Draw Skeleton Connections & Neon Points
+                    drawHandSkeleton(landmarks);
 
-                    // Map coordinates to canvas dimensions
-                    // Note: MediaPipe coordinates are normalized [0.0, 1.0]
-                    let targetX = indexTip.x * canvasElement.width;
-                    const targetY = indexTip.y * canvasElement.height;
+                    // Count fingers
+                    const fingersUp = countRaisedFingers(landmarks);
 
-                    // Account for mirror mode on X axis
+                    // Palm center for particle emitter
+                    let palmX = landmarks[9].x * canvasElement.width;
+                    const palmY = landmarks[9].y * canvasElement.height;
                     if (isMirrored) {
-                        targetX = canvasElement.width - targetX;
+                        palmX = canvasElement.width - palmX;
                     }
 
-                    // Apply Exponential Moving Average for fluid tracking without jitter
-                    if (smoothX === null || smoothY === null) {
-                        smoothX = targetX;
-                        smoothY = targetY;
-                    } else {
-                        smoothX = smoothX + smoothingFactor * (targetX - smoothX);
-                        smoothY = smoothY + smoothingFactor * (targetY - smoothY);
-                    }
-
-                    // Update cursor UI position
-                    fingerCursor.style.display = 'block';
-                    fingerCursor.style.left = `${smoothX}px`;
-                    fingerCursor.style.top = `${smoothY}px`;
-
-                    // Gesture detection: Check if index is raised and other fingers are folded (simple heuristic)
-                    // Compare index tip (8) y with index PIP (6) y. If tip is higher (smaller Y), it's pointing/extended.
-                    const isIndexExtended = indexTip.y < landmarks[6].y;
-                    const isMiddleFolded = landmarks[12].y > landmarks[10].y; // Middle finger lower than PIP
-
-                    // Trigger drawing if hand gesture indicates drawing (Index extended)
-                    if (isIndexExtended) {
-                        if (!isDrawing) {
-                            // Start new stroke
-                            isDrawing = true;
-                            saveState();
-                            lastX = smoothX;
-                            lastY = smoothY;
-                        } else {
-                            // Draw glowing line segment
-                            drawLineSegment(lastX, lastY, smoothX, smoothY);
-                            lastX = smoothX;
-                            lastY = smoothY;
-                        }
-                    } else {
-                        isDrawing = false;
-                        lastX = null;
-                        lastY = null;
-                    }
-
+                    updateUIForGesture(fingersUp, palmX, palmY);
                 } else {
-                    // Hand lost
-                    fingerCursor.style.display = 'none';
-                    if (isDrawing) {
-                        isDrawing = false;
-                        lastX = null;
-                        lastY = null;
+                    // No hand detected, fade out text if idle for a while
+                    if (lastGesture !== 0) {
+                        updateUIForGesture(0, 0, 0);
                     }
                 }
             }
 
-            // Draw Neon Stroke Segment
-            function drawLineSegment(x1, y1, x2, y2) {
+            // Draw futuristic neon hand skeleton
+            const CONNECTIONS = [
+                [0,1],[1,2],[2,3],[3,4], // Thumb
+                [0,5],[5,6],[6,7],[7,8], // Index
+                [5,9],[9,10],[10,11],[11,12], // Middle
+                [9,13],[13,14],[14,15],[15,16], // Ring
+                [13,17],[17,18],[18,19],[19,20], // Pinky
+                [0,17] // Palm base
+            ];
+
+            function drawHandSkeleton(landmarks) {
                 ctx.save();
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
+                ctx.lineWidth = 3;
+                ctx.shadowColor = '#00f2fe';
+                ctx.shadowBlur = 15;
+                ctx.strokeStyle = 'rgba(0, 242, 254, 0.7)';
 
-                if (isEraser) {
-                    ctx.globalCompositeOperation = 'destination-out';
-                    ctx.lineWidth = currentSize * 2;
-                    ctx.beginPath();
-                    ctx.moveTo(x1, y1);
-                    ctx.lineTo(x2, y2);
-                    ctx.stroke();
-                } else {
-                    ctx.globalCompositeOperation = 'source-over';
+                // Draw connections
+                CONNECTIONS.forEach(([start, end]) => {
+                    const p1 = landmarks[start];
+                    const p2 = landmarks[end];
                     
-                    // Multi-pass neon glow effect
-                    // Outer glow
-                    ctx.strokeStyle = currentColor;
-                    ctx.lineWidth = currentSize * 2.5;
-                    ctx.shadowColor = currentColor;
-                    ctx.shadowBlur = 25;
+                    let x1 = p1.x * canvasElement.width;
+                    let y1 = p1.y * canvasElement.height;
+                    let x2 = p2.x * canvasElement.width;
+                    let y2 = p2.y * canvasElement.height;
+
+                    if (isMirrored) {
+                        x1 = canvasElement.width - x1;
+                        x2 = canvasElement.width - x2;
+                    }
+
                     ctx.beginPath();
                     ctx.moveTo(x1, y1);
                     ctx.lineTo(x2, y2);
                     ctx.stroke();
+                });
 
-                    // Inner core brightness
-                    ctx.strokeStyle = '#ffffff';
-                    ctx.lineWidth = Math.max(2, currentSize * 0.4);
+                // Draw Landmark Nodes
+                landmarks.forEach((lm, idx) => {
+                    let x = lm.x * canvasElement.width;
+                    let y = lm.y * canvasElement.height;
+                    if (isMirrored) {
+                        x = canvasElement.width - x;
+                    }
+
+                    ctx.fillStyle = idx === 4 || idx === 8 || idx === 12 || idx === 16 || idx === 20 ? '#ff007f' : '#ffffff';
+                    ctx.shadowColor = ctx.fillStyle;
                     ctx.shadowBlur = 10;
                     ctx.beginPath();
-                    ctx.moveTo(x1, y1);
-                    ctx.lineTo(x2, y2);
-                    ctx.stroke();
-                }
+                    ctx.arc(x, y, idx === 8 ? 7 : 4, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
                 ctx.restore();
             }
 
@@ -526,13 +457,13 @@
             hands.setOptions({
                 maxNumHands: 1,
                 modelComplexity: 1,
-                minDetectionConfidence: 0.65,
-                minTrackingConfidence: 0.65
+                minDetectionConfidence: 0.7,
+                minTrackingConfidence: 0.7
             });
 
             hands.onResults(onResults);
 
-            // Initialize Camera Stream
+            // Initialize Camera
             const camera = new Camera(videoElement, {
                 onFrame: async () => {
                     await hands.send({ image: videoElement });
@@ -543,13 +474,13 @@
 
             camera.start()
                 .then(() => {
-                    showToast("Webcam & AI Initialized Successfully!", "fa-solid fa-video");
+                    showToast("Webcam & AI Model Loaded Successfully!", "fa-solid fa-video");
                 })
                 .catch(err => {
                     console.error("Camera access error:", err);
                     statusBadge.className = "flex items-center space-x-2 px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium";
                     statusText.textContent = "Camera Access Denied/Error";
-                    showToast("Please allow webcam permissions to use air drawing.", "fa-solid fa-triangle-exclamation");
+                    showToast("Please allow camera permissions to use gesture detection.", "fa-solid fa-triangle-exclamation");
                 });
         });
     </script>
