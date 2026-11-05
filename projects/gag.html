@@ -1243,23 +1243,38 @@
             }
         }
 
+        // --- UPDATE WEATHER PARTICLES ---
         function updateWeatherParticles(delta, elapsed) {
             weatherParticles.forEach(p => {
                 if (p.type === 'rain') {
                     p.mesh.position.y -= p.speed * delta;
-                    if (p.mesh.position.y < 0) {
-                        p.mesh.position.y = 30;
-                        p.mesh.position.x = playerGroup.position.x + (Math.random() - 0.5) * 50;
-                        p.mesh.position.z = playerGroup.position.z + (Math.random() - 0.5) * 50;
-                    }
+                    if (p.mesh.position.y < 0) p.mesh.position.y = 35;
                 } else if (p.type === 'snow') {
                     p.mesh.position.y -= p.speed * delta;
-                    p.mesh.position.x += Math.sin(elapsed + p.mesh.position.z) * 0.02;
-                    if (p.mesh.position.y < 0) {
-                        p.mesh.position.y = 30;
-                    }
+                    p.mesh.position.x += Math.sin(elapsed + p.mesh.position.z) * 0.05;
+                    if (p.mesh.position.y < 0) p.mesh.position.y = 35;
                 }
             });
+        }
+
+        function createPet(type) {
+            if (petMesh) scene.remove(petMesh);
+            petMesh = new THREE.Group();
+            let bodyColor = type === 'dog' ? 0x8b4513 : 0xffcc00;
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.8), new THREE.MeshStandardMaterial({ color: bodyColor }));
+            body.position.y = 0.3;
+            petMesh.add(body);
+            petMesh.position.copy(playerGroup.position).add(new THREE.Vector3(-1.5, 0, -1.5));
+            scene.add(petMesh);
+        }
+
+        function spawnWaterParticles(pos) {
+            for (let i = 0; i < 12; i++) {
+                const p = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.08), new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.8 }));
+                p.position.copy(pos).add(new THREE.Vector3((Math.random()-0.5)*1.2, 0.5, (Math.random()-0.5)*1.2));
+                scene.add(p);
+                particles.push({ mesh: p, vel: new THREE.Vector3((Math.random()-0.5)*2, Math.random()*2 + 1, (Math.random()-0.5)*2), life: 0.6 });
+            }
         }
 
         function spawnSparkleParticles(pos, color = 0xfacc15) {
@@ -1513,9 +1528,10 @@
         function updatePlayerHandItem() {
             if (currentHandMesh) { playerHandAnchor.remove(currentHandMesh); currentHandMesh = null; }
             if (gameState.heldItem) {
-                // Scale flexed crop proportionally so huge/colossal items look massive in hand
-                const flexScale = Math.min(gameState.heldItem.scale * 0.4, 4.0);
+                // Ensure the held mesh reads the full exact scale factor so Huge/Colossal crops appear properly massive when flexed
+                const flexScale = Math.min(gameState.heldItem.scale * 0.55, 6.0);
                 currentHandMesh = createCropMesh(gameState.heldItem.type, 2, flexScale, gameState.heldItem.weatherTag);
+                currentHandMesh.position.set(0.1, 0.2, 0.2);
                 playerHandAnchor.add(currentHandMesh);
             }
         }
