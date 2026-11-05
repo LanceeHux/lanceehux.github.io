@@ -237,9 +237,6 @@
                 <button id="btn-seeds" class="roblox-btn roblox-btn-purple p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
                     <span>🌱</span> <span>Seeds</span>
                 </button>
-                <button id="btn-shop" class="roblox-btn roblox-btn-green p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
-                    <span>🛒</span> <span>Shop</span>
-                </button>
                 <button id="btn-quests" class="roblox-btn p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
                     <span>📜</span> <span class="hidden md:inline">Quests</span>
                 </button>
@@ -373,15 +370,16 @@
         <div class="roblox-panel w-full max-w-2xl rounded-3xl p-6 flex flex-col max-h-[85vh] border-blue-500/30">
             <div class="flex justify-between items-center pb-4 border-b border-slate-700">
                 <div class="flex items-center space-x-3">
-                    <span class="text-3xl">🛒</span>
-                    <h2 class="font-fredoka text-2xl text-slate-100">Garden Shop</h2>
+                    <span class="text-3xl">🏬</span>
+                    <h2 class="font-fredoka text-2xl text-slate-100">Village Market Kiosk</h2>
                 </div>
                 <button class="btn-close-modal text-slate-400 hover:text-white font-fredoka text-2xl">✕</button>
             </div>
             <div class="flex space-x-2 my-4">
                 <button class="shop-tab active px-4 py-2 rounded-xl font-fredoka text-sm bg-blue-600 text-white" data-tab="seeds">Seeds</button>
-                <button class="shop-tab px-4 py-2 rounded-xl font-fredoka text-sm bg-slate-800 text-slate-400 hover:bg-slate-700" data-tab="upgrades">Tools & Upgrades</button>
+                <button class="shop-tab px-4 py-2 rounded-xl font-fredoka text-sm bg-slate-800 text-slate-400 hover:bg-slate-700" data-tab="upgrades">Tools & Weapons</button>
                 <button class="shop-tab px-4 py-2 rounded-xl font-fredoka text-sm bg-slate-800 text-slate-400 hover:bg-slate-700" data-tab="expansions">Land Plots</button>
+                <button class="shop-tab px-4 py-2 rounded-xl font-fredoka text-sm bg-green-600 text-white" data-tab="sell">💰 Sell Crops</button>
             </div>
             <div id="shop-items-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-2 flex-1 my-2"></div>
         </div>
@@ -403,7 +401,47 @@
 
     <!-- THREE.JS ENGINE & GAME LOGIC -->
     <script>
-        // --- SYNTHESIZED AUDIO ENGINE ---
+        // --- GLOBAL GAME DATA DECLARATIONS ---
+        const WEAPONS = {
+            fist: { id: 'fist', name: 'Bare Fists', icon: '👊', damage: 25, price: 0 },
+            wood_sword: { id: 'wood_sword', name: 'Wooden Sword', icon: '🗡️', damage: 50, price: 150 },
+            iron_sword: { id: 'iron_sword', name: 'Iron Sword', icon: '⚔️', damage: 90, price: 400 },
+            magic_wand: { id: 'magic_wand', name: 'Magic Wand', icon: '🪄', damage: 160, price: 900 }
+        };
+
+        const CROPS = {
+            carrot: { id: 'carrot', name: 'Carrot', icon: '🥕', seedPrice: 10, sellPrice: 22, growthTime: 8, color: 0xff7700, stemColor: 0x22aa33, xp: 12 },
+            tomato: { id: 'tomato', name: 'Tomato', icon: '🍅', seedPrice: 25, sellPrice: 55, growthTime: 14, color: 0xee2222, stemColor: 0x22aa33, xp: 25 },
+            corn: { id: 'corn', name: 'Corn', icon: '🌽', seedPrice: 60, sellPrice: 135, growthTime: 22, color: 0xffdd00, stemColor: 0x33b522, xp: 55 },
+            pumpkin: { id: 'pumpkin', name: 'Pumpkin', icon: '🎃', seedPrice: 140, sellPrice: 320, growthTime: 35, color: 0xff5500, stemColor: 0x118822, xp: 120 },
+            golden_berry: { id: 'golden_berry', name: 'Golden Berry', icon: '🫐', seedPrice: 350, sellPrice: 900, growthTime: 50, color: 0xffd700, stemColor: 0x8800cc, xp: 300 }
+        };
+
+        let gameState = {
+            gameStarted: false,
+            difficulty: 'Peaceful',
+            coins: 100,
+            xp: 0,
+            level: 1,
+            selectedSlot: 0,
+            unlockedPlots: 4,
+            waterCanCapacity: 10,
+            waterCanLevel: 1,
+            equippedWeapon: 'fist',
+            unlockedWeapons: ['fist'],
+            equippedSeed: 'carrot_seed',
+            heldCrop: null,
+            harvestedVault: { carrot: 0, tomato: 0, corn: 0, pumpkin: 0, golden_berry: 0 },
+            seedsInventory: { carrot_seed: 5, tomato_seed: 2, corn_seed: 0, pumpkin_seed: 0, golden_berry_seed: 0 },
+            inventory: { waterCan: 10, fertilizer: 3 },
+            plots: [],
+            quests: [
+                { id: 'harvest_carrots', text: 'Harvest 3 Carrots', target: 3, progress: 0, reward: 50, rewardXp: 40, cropId: 'carrot', completed: false },
+                { id: 'water_crops', text: 'Water Crops 10 Times', target: 10, progress: 0, reward: 80, rewardXp: 60, completed: false },
+                { id: 'earn_coins', text: 'Reach 300 Coins', target: 300, progress: 100, reward: 150, rewardXp: 100, completed: false }
+            ]
+        };
+
         class SoundEngine {
             constructor() { this.ctx = null; }
             init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
@@ -421,78 +459,21 @@
                 osc.stop(this.ctx.currentTime + duration);
             }
             playPlant() { this.playTone(300, 'sine', 0.1, 0.3); setTimeout(() => this.playTone(450, 'sine', 0.15, 0.2), 60); }
-            playWater() {
-                if (!this.ctx) return;
-                for (let i = 0; i < 3; i++) {
-                    setTimeout(() => this.playTone(600 + Math.random() * 300, 'triangle', 0.08, 0.15), i * 50);
-                }
-            }
-            playHarvest() {
-                [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
-                    setTimeout(() => this.playTone(freq, 'sine', 0.2, 0.25), idx * 70);
-                });
-            }
+            playWater() { if (!this.ctx) return; for (let i = 0; i < 3; i++) setTimeout(() => this.playTone(600 + Math.random() * 300, 'triangle', 0.08, 0.15), i * 50); }
+            playHarvest() { const notes = [523.25, 659.25, 783.99, 1046.50]; notes.forEach((freq, idx) => setTimeout(() => this.playTone(freq, 'sine', 0.2, 0.25), idx * 70)); }
             playCoin() { this.playTone(987.77, 'sine', 0.08, 0.2); setTimeout(() => this.playTone(1318.51, 'sine', 0.25, 0.3), 80); }
-            playLevelUp() {
-                [400, 500, 600, 800, 1000, 1200].forEach((f, i) => {
-                    setTimeout(() => this.playTone(f, 'triangle', 0.25, 0.25), i * 80);
-                });
-            }
+            playLevelUp() { [400, 500, 600, 800, 1000, 1200].forEach((f, i) => setTimeout(() => this.playTone(f, 'triangle', 0.25, 0.25), i * 80)); }
         }
+
         const audio = new SoundEngine();
 
-        // --- 10 EXTENDED CROP DEFINITIONS ---
-        const CROPS = {
-            carrot: { id: 'carrot', name: 'Carrot', icon: '🥕', seedPrice: 10, sellPrice: 22, growthTime: 6, color: 0xff7700, stemColor: 0x22aa33, xp: 12 },
-            tomato: { id: 'tomato', name: 'Tomato', icon: '🍅', seedPrice: 25, sellPrice: 55, growthTime: 10, color: 0xee2222, stemColor: 0x22aa33, xp: 25 },
-            corn: { id: 'corn', name: 'Corn', icon: '🌽', seedPrice: 60, sellPrice: 135, growthTime: 16, color: 0xffdd00, stemColor: 0x33b522, xp: 55 },
-            pumpkin: { id: 'pumpkin', name: 'Pumpkin', icon: '🎃', seedPrice: 120, sellPrice: 280, growthTime: 24, color: 0xff5500, stemColor: 0x118822, xp: 110 },
-            golden_berry: { id: 'golden_berry', name: 'Golden Berry', icon: '🫐', seedPrice: 300, sellPrice: 750, growthTime: 36, color: 0xffd700, stemColor: 0x8800cc, xp: 240 },
-            eggplant: { id: 'eggplant', name: 'Eggplant', icon: '🍆', seedPrice: 45, sellPrice: 105, growthTime: 14, color: 0x6b21a8, stemColor: 0x15803d, xp: 45 },
-            strawberry: { id: 'strawberry', name: 'Strawberry', icon: '🍓', seedPrice: 85, sellPrice: 190, growthTime: 18, color: 0xef4444, stemColor: 0x22c55e, xp: 75 },
-            watermelon: { id: 'watermelon', name: 'Watermelon', icon: '🍉', seedPrice: 180, sellPrice: 420, growthTime: 30, color: 0x15803d, stemColor: 0x4ade80, xp: 160 },
-            sunflower: { id: 'sunflower', name: 'Sunflower', icon: '🌻', seedPrice: 220, sellPrice: 520, growthTime: 32, color: 0xfacc15, stemColor: 0x166534, xp: 200 },
-            dragon_fruit: { id: 'dragon_fruit', name: 'Dragon Fruit', icon: '🐉', seedPrice: 500, sellPrice: 1400, growthTime: 45, color: 0xf43f5e, stemColor: 0x10b981, xp: 400 }
-        };
-
-        const WEAPONS = {
-            fist: { name: 'Bare Fists', icon: '👊', damage: 25, price: 0 },
-            wood_sword: { name: 'Wooden Sword', icon: '🗡️', damage: 55, price: 150 },
-            iron_sword: { name: 'Iron Sword', icon: '⚔️', damage: 100, price: 400 },
-            magic_wand: { name: 'Magic Wand', icon: '🪄', damage: 180, price: 900 }
-        };
-
-        // --- GAME STATE & LOCALSTORAGE ---
-        let gameState = {
-            difficulty: 'Monster',
-            gameStarted: false,
-            coins: 120,
-            xp: 0,
-            level: 1,
-            selectedSlot: 0,
-            unlockedPlots: 4,
-            waterCanCapacity: 10,
-            waterCanLevel: 1,
-            equippedWeapon: 'fist',
-            unlockedWeapons: ['fist'],
-            heldCrop: null,
-            plots: [],
-            harvestedVault: {
-                carrot: 0, tomato: 0, corn: 0, pumpkin: 0, golden_berry: 0,
-                eggplant: 0, strawberry: 0, watermelon: 0, sunflower: 0, dragon_fruit: 0
-            },
-            seedsInventory: {
-                carrot_seed: 5, tomato_seed: 2, corn_seed: 0, pumpkin_seed: 0, golden_berry_seed: 0,
-                eggplant_seed: 0, strawberry_seed: 0, watermelon_seed: 0, sunflower_seed: 0, dragon_fruit_seed: 0
-            },
-            inventory: { hoe: 1, waterCan: 10, fertilizer: 3 },
-            equippedSeed: 'carrot_seed',
-            quests: [
-                { id: 'harvest_carrots', text: 'Harvest 3 Carrots', target: 3, progress: 0, reward: 50, rewardXp: 40, cropId: 'carrot', completed: false },
-                { id: 'water_crops', text: 'Water Crops 10 Times', target: 10, progress: 0, reward: 80, rewardXp: 60, completed: false },
-                { id: 'earn_coins', text: 'Reach 500 Coins', target: 500, progress: 120, reward: 200, rewardXp: 120, completed: false }
-            ]
-        };
+        // --- CROP TIER PROBABILITIES & MULTIPLIERS ---
+        function generateCropTier() {
+            const rand = Math.random();
+            if (rand < 0.65) return { tier: 'small', label: 'Small', mult: 1.0, scale: 0.95 };
+            if (rand < 0.90) return { tier: 'medium', label: 'Medium', mult: 1.8, scale: 1.55 };
+            return { tier: 'huge', label: 'HUGE 🌟', mult: 4.0, scale: 2.35 };
+        }
 
         function saveGame() { 
             // Serialize current plot state before saving to localStorage
@@ -505,7 +486,10 @@
                     type: p.crop.type,
                     stage: p.crop.stage,
                     growthProgress: p.crop.growthProgress,
-                    isGiant: p.crop.isGiant
+                    tier: p.crop.tier || 'small',
+                    label: p.crop.label || 'Small',
+                    mult: p.crop.mult || 1.0,
+                    scale: p.crop.scale || 0.95
                 } : null
             }));
             localStorage.setItem('grow_garden_save_v3', JSON.stringify(gameState)); 
@@ -1093,7 +1077,7 @@
 
                 if (savedPlot && savedPlot.crop) {
                     cropData = { ...savedPlot.crop };
-                    cropMeshObj = createCropMesh(cropData.type, cropData.stage, cropData.isGiant);
+                    cropMeshObj = createCropMesh(cropData.type, cropData.stage, cropData.scale, cropData.tier === 'huge');
                     cropMeshObj.position.y = 0.2;
                     plotMesh.add(cropMeshObj);
                 }
@@ -1111,11 +1095,10 @@
             }
         }
 
-        // --- CROP MESH CREATOR (10 DISTINCT GEOMETRIES) ---
-        function createCropMesh(cropType, stage, isGiant = false) {
+        // --- CROP MESH CREATOR WITH DYNAMIC TIER SCALING ---
+        function createCropMesh(cropType, stage, scaleFactor = 1.0, isHuge = false) {
             const group = new THREE.Group();
             const data = CROPS[cropType] || CROPS.carrot;
-            const scaleFactor = isGiant ? 1.85 : 1.0;
 
             if (stage === 0) {
                 // Sprout
@@ -1138,8 +1121,8 @@
                     group.add(leaf);
                 }
             } else if (stage >= 2) {
-                // Fully Harvestable Crops
-                const fruitMat = new THREE.MeshStandardMaterial({ color: isGiant ? 0xffd700 : data.color, roughness: 0.4, metalness: isGiant ? 0.6 : 0.1 });
+                // Fully Harvestable Crops with Tier Colors
+                const fruitMat = new THREE.MeshStandardMaterial({ color: isHuge ? 0xffd700 : data.color, roughness: 0.4, metalness: isHuge ? 0.6 : 0.1 });
                 const stemMat = new THREE.MeshStandardMaterial({ color: data.stemColor, roughness: 0.7 });
 
                 if (cropType === 'carrot') {
@@ -1377,9 +1360,10 @@
                 return;
             }
 
-            // Market Sell
+            // Market Shop Front Counter Interaction
             if (playerGroup.position.distanceTo(new THREE.Vector3(-14, 0, 4)) < 4.5) {
-                performSellVaultAll();
+                renderShopItems('seeds');
+                document.getElementById('shop-modal').classList.remove('hidden');
                 return;
             }
 
@@ -1399,15 +1383,15 @@
                 return;
             }
 
-            // Plant Seed
+            // Plant Seed with Randomized Size Tier
             if (tool && tool.endsWith('_seed') && plot.isTilled && !plot.crop) {
                 if (gameState.seedsInventory[tool] > 0) {
                     gameState.seedsInventory[tool]--;
                     const cropType = tool.replace('_seed', '');
-                    const isGiant = Math.random() < 0.08;
+                    const tierInfo = generateCropTier();
 
-                    plot.crop = { type: cropType, stage: 0, growthProgress: 0, isGiant: isGiant };
-                    plot.cropMesh = createCropMesh(cropType, 0, isGiant);
+                    plot.crop = { type: cropType, stage: 0, growthProgress: 0, ...tierInfo };
+                    plot.cropMesh = createCropMesh(cropType, 0, tierInfo.scale, tierInfo.tier === 'huge');
                     plot.cropMesh.position.y = 0.2;
                     plot.mesh.add(plot.cropMesh);
 
@@ -1446,7 +1430,7 @@
                     gameState.inventory.fertilizer--;
                     plot.crop.stage = 2;
                     plot.mesh.remove(plot.cropMesh);
-                    plot.cropMesh = createCropMesh(plot.crop.type, 2, plot.crop.isGiant);
+                    plot.cropMesh = createCropMesh(plot.crop.type, 2, plot.crop.scale || 1.0, plot.crop.tier === 'huge');
                     plot.mesh.add(plot.cropMesh);
                     audio.playHarvest();
                     spawnSparkleParticles(plot.mesh.position, 0xec4899);
@@ -1457,21 +1441,23 @@
                 return;
             }
 
-            // Harvest
+            // Harvest Crop
             if (plot.crop && plot.crop.stage >= 2) {
                 const cropType = plot.crop.type;
-                const isGiant = plot.crop.isGiant;
+                const tierLabel = plot.crop.label || 'Small';
+                const mult = plot.crop.mult || 1.0;
+                const scale = plot.crop.scale || 0.95;
 
-                gameState.heldCrop = { type: cropType, isGiant: isGiant };
-                gameState.harvestedVault[cropType] = (gameState.harvestedVault[cropType] || 0) + (isGiant ? 2 : 1);
+                gameState.heldCrop = { type: cropType, label: tierLabel, mult: mult, scale: scale, tier: plot.crop.tier };
+                gameState.harvestedVault[cropType] = (gameState.harvestedVault[cropType] || 0) + 1;
                 updatePlayerHandItem();
 
-                const xpEarned = Math.round(CROPS[cropType].xp * (isGiant ? 3 : 1));
+                const xpEarned = Math.round(CROPS[cropType].xp * mult);
                 addXP(xpEarned);
 
                 audio.playHarvest();
                 spawnSparkleParticles(plot.mesh.position, 0xfacc15);
-                showFloatingText(`Harvested ${CROPS[cropType].name}!`, plot.mesh.position);
+                showFloatingText(`Harvested ${tierLabel} ${CROPS[cropType].name}!`, plot.mesh.position);
                 trackQuestProgress('harvest_carrots', 1, cropType);
 
                 plot.mesh.remove(plot.cropMesh);
@@ -1488,38 +1474,9 @@
         function updatePlayerHandItem() {
             if (currentHandMesh) { playerHandAnchor.remove(currentHandMesh); currentHandMesh = null; }
             if (gameState.heldCrop) {
-                currentHandMesh = createCropMesh(gameState.heldCrop.type, 2, gameState.heldCrop.isGiant);
-                currentHandMesh.scale.set(0.9, 0.9, 0.9);
+                currentHandMesh = createCropMesh(gameState.heldCrop.type, 2, gameState.heldCrop.scale || 0.9, gameState.heldCrop.tier === 'huge');
+                currentHandMesh.scale.multiplyScalar(0.7);
                 playerHandAnchor.add(currentHandMesh);
-            }
-        }
-
-        function performSellVaultAll() {
-            let total = 0;
-            if (gameState.heldCrop) {
-                const data = CROPS[gameState.heldCrop.type];
-                total += Math.round(data.sellPrice * (gameState.heldCrop.isGiant ? 4 : 1));
-                gameState.heldCrop = null;
-                updatePlayerHandItem();
-            }
-
-            Object.keys(gameState.harvestedVault).forEach(k => {
-                const count = gameState.harvestedVault[k];
-                if (count > 0 && CROPS[k]) {
-                    total += count * CROPS[k].sellPrice;
-                    gameState.harvestedVault[k] = 0;
-                }
-            });
-
-            if (total > 0) {
-                addCoins(total);
-                audio.playCoin();
-                spawnSparkleParticles(new THREE.Vector3(-14, 1.5, 4), 0xfacc15);
-                showFloatingText(`+${total} Coins Sold!`, new THREE.Vector3(-14, 2.5, 4));
-                updateUI();
-                saveGame();
-            } else {
-                showFloatingText("No produce to sell!", playerGroup.position);
             }
         }
 
@@ -1535,7 +1492,7 @@
                     if (targetStage !== plot.crop.stage) {
                         plot.crop.stage = targetStage;
                         plot.mesh.remove(plot.cropMesh);
-                        plot.cropMesh = createCropMesh(plot.crop.type, targetStage, plot.crop.isGiant);
+                        plot.cropMesh = createCropMesh(plot.crop.type, targetStage, plot.crop.scale || 1.0, plot.crop.tier === 'huge');
                         plot.mesh.add(plot.cropMesh);
                         spawnSparkleParticles(plot.mesh.position, 0x38bdf8);
                         stateChanged = true;
@@ -1648,7 +1605,7 @@
 
             if (playerGroup.position.distanceTo(new THREE.Vector3(-14, 0, 4)) < 4.5) {
                 promptEl.style.opacity = '1';
-                promptText.innerText = 'Press E / Tap 💰 to Sell All Harvested Produce!';
+                promptText.innerText = 'Press E / Tap ✋ to Open Market Kiosk & Sell!';
                 if (touchSellBtn) touchSellBtn.classList.remove('hidden');
                 return;
             } else if (touchSellBtn) touchSellBtn.classList.add('hidden');
@@ -1657,7 +1614,7 @@
                 promptEl.style.opacity = '1';
                 if (!plot.isTilled) promptText.innerText = 'Till Dirt Plot (Use Hoe)';
                 else if (!plot.crop) promptText.innerText = 'Plant Seed';
-                else if (plot.crop.stage >= 2) promptText.innerText = 'Harvest Crop!';
+                else if (plot.crop.stage >= 2) promptText.innerText = `Harvest ${plot.crop.label || ''} Crop!`;
                 else if (!plot.isWatered) promptText.innerText = 'Water Crop';
                 else promptText.innerText = 'Crop Growing...';
             } else {
@@ -1730,7 +1687,8 @@
             const barnModal = document.getElementById('barn-modal');
             const seedsModal = document.getElementById('seeds-modal');
 
-            document.getElementById('btn-shop').onclick = () => { renderShopItems('seeds'); shopModal.classList.remove('hidden'); };
+            const shopBtn = document.getElementById('btn-shop');
+            if (shopBtn) shopBtn.onclick = () => { renderShopItems('seeds'); shopModal.classList.remove('hidden'); };
             document.getElementById('btn-quests').onclick = () => { renderQuests(); questsModal.classList.remove('hidden'); };
             document.getElementById('btn-barn').onclick = () => { renderBarnVault(); barnModal.classList.remove('hidden'); };
             document.getElementById('btn-seeds').onclick = () => { renderSeedsInventory(); seedsModal.classList.remove('hidden'); };
@@ -1855,7 +1813,7 @@
                             <span class="text-3xl">${crop.icon}</span>
                             <div>
                                 <div class="font-fredoka text-slate-100">${crop.name} Seeds</div>
-                                <div class="text-xs text-amber-400 font-bold">Price: ${crop.seedPrice}G | Yield: ${crop.sellPrice}G</div>
+                                <div class="text-xs text-amber-400 font-bold">Price: ${crop.seedPrice}G | Base Yield: ${crop.sellPrice}G</div>
                             </div>
                         </div>
                         <button class="roblox-btn roblox-btn-green px-3 py-1.5 rounded-xl text-xs font-fredoka">Buy (${crop.seedPrice}G)</button>
@@ -1871,6 +1829,71 @@
                     };
                     container.appendChild(div);
                 });
+            } else if (tab === 'sell') {
+                // Dedicated Sell Tab inside Shop Modal
+                let totalValue = 0;
+                Object.keys(gameState.harvestedVault).forEach(k => {
+                    const count = gameState.harvestedVault[k];
+                    const data = CROPS[k];
+                    if (!data) return;
+                    const itemTotal = count * data.sellPrice;
+                    totalValue += itemTotal;
+
+                    const div = document.createElement('div');
+                    div.className = 'roblox-panel p-3 rounded-2xl flex items-center justify-between border-slate-700';
+                    div.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <span class="text-3xl">${data.icon}</span>
+                            <div>
+                                <div class="font-fredoka text-slate-100">${data.name}</div>
+                                <div class="text-xs text-amber-400 font-bold">Vault Qty: ${count} (${data.sellPrice}G ea)</div>
+                            </div>
+                        </div>
+                        <button class="roblox-btn roblox-btn-green px-3 py-1.5 rounded-xl text-xs font-fredoka" ${count <= 0 ? 'disabled style="opacity:0.5"' : ''}>
+                            Sell (${itemTotal}G)
+                        </button>
+                    `;
+                    div.querySelector('button').onclick = () => {
+                        if (count > 0) {
+                            addCoins(itemTotal);
+                            gameState.harvestedVault[k] = 0;
+                            audio.playCoin();
+                            renderShopItems('sell');
+                            updateUI();
+                            saveGame();
+                        }
+                    };
+                    container.appendChild(div);
+                });
+
+                if (gameState.heldCrop) {
+                    const data = CROPS[gameState.heldCrop.type];
+                    const val = Math.round(data.sellPrice * (gameState.heldCrop.mult || 1.0));
+                    const sellHeldDiv = document.createElement('div');
+                    sellHeldDiv.className = 'roblox-panel p-4 rounded-2xl flex items-center justify-between border-amber-400 bg-amber-950/20 col-span-2 mb-2';
+                    sellHeldDiv.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <span class="text-3xl">${data.icon}</span>
+                            <div>
+                                <div class="font-fredoka text-amber-400">Held ${gameState.heldCrop.label || ''} ${data.name}</div>
+                                <div class="text-xs text-slate-300">Valued at ${val} Coins</div>
+                            </div>
+                        </div>
+                        <button class="roblox-btn roblox-btn-amber px-4 py-2 rounded-xl text-xs font-fredoka">
+                            Sell Held Crop (${val}G)
+                        </button>
+                    `;
+                    sellHeldDiv.querySelector('button').onclick = () => {
+                        addCoins(val);
+                        gameState.heldCrop = null;
+                        updatePlayerHandItem();
+                        audio.playCoin();
+                        renderShopItems('sell');
+                        updateUI();
+                        saveGame();
+                    };
+                    container.prepend(sellHeldDiv);
+                }
             } else if (tab === 'upgrades') {
                 // Weapons Upgrades
                 Object.keys(WEAPONS).forEach(wKey => {
