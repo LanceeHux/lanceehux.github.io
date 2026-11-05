@@ -215,14 +215,19 @@
                 </div>
             </div>
 
-            <!-- Center Clock / Day Cycle & Difficulty Mode Indicator -->
+            <!-- Center Clock / Day Cycle & Weather & Difficulty Mode Indicator -->
             <div class="flex flex-col items-center space-y-1 pointer-events-auto">
                 <div class="roblox-panel px-4 py-2 rounded-2xl flex items-center space-x-2">
                     <span id="day-icon" class="text-xl">☀️</span>
                     <span id="day-time-text" class="font-fredoka text-slate-200 text-sm">Daytime</span>
                 </div>
-                <div id="difficulty-badge" class="px-3 py-0.5 rounded-full text-[10px] font-fredoka uppercase tracking-wider bg-green-600 text-white">
-                    Mode: Peaceful
+                <div class="flex items-center space-x-2">
+                    <div id="difficulty-badge" class="px-3 py-0.5 rounded-full text-[10px] font-fredoka uppercase tracking-wider bg-green-600 text-white">
+                        Peaceful
+                    </div>
+                    <div id="weather-badge" class="px-3 py-0.5 rounded-full text-[10px] font-fredoka uppercase tracking-wider bg-blue-600 text-white">
+                        ☀️ Sunny & Clear
+                    </div>
                 </div>
             </div>
 
@@ -263,7 +268,6 @@
             <div class="absolute bottom-6 right-6 flex flex-col items-end space-y-3">
                 <div class="flex space-x-3 items-end">
                     <button id="btn-touch-attack" class="touch-action-btn roblox-btn-red text-xl font-fredoka shadow-lg">👊</button>
-                    <button id="btn-touch-sell" class="touch-action-btn roblox-btn-green text-lg font-fredoka shadow-lg hidden">💰</button>
                     <button id="btn-touch-interact" class="touch-action-btn roblox-btn text-xl font-fredoka shadow-lg">✋</button>
                 </div>
                 <button id="btn-touch-jump" class="touch-action-btn roblox-btn-amber text-lg font-fredoka shadow-lg mr-6">⬆️</button>
@@ -341,10 +345,7 @@
             </div>
             
             <div class="flex justify-between items-center my-3 px-2">
-                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Stored Produce</span>
-                <button id="btn-sell-all-vault" class="roblox-btn roblox-btn-green px-4 py-2 rounded-xl font-fredoka text-xs">
-                    Sell All Produce 💰
-                </button>
+                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Stored Produce (Individual Inventory)</span>
             </div>
 
             <div id="vault-items-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto pr-2 flex-1 my-2"></div>
@@ -420,7 +421,7 @@
         let gameState = {
             gameStarted: false,
             difficulty: 'Peaceful',
-            coins: 100,
+            coins: 120,
             xp: 0,
             level: 1,
             selectedSlot: 0,
@@ -430,15 +431,17 @@
             equippedWeapon: 'fist',
             unlockedWeapons: ['fist'],
             equippedSeed: 'carrot_seed',
-            heldCrop: null,
-            harvestedVault: { carrot: 0, tomato: 0, corn: 0, pumpkin: 0, golden_berry: 0 },
+            heldItem: null,
+            harvestedVault: [],
             seedsInventory: { carrot_seed: 5, tomato_seed: 2, corn_seed: 0, pumpkin_seed: 0, golden_berry_seed: 0 },
             inventory: { waterCan: 10, fertilizer: 3 },
             plots: [],
+            currentWeather: { type: 'Clear', label: '☀️ Sunny & Clear', effect: 'Normal' },
+            weatherTimer: 60,
             quests: [
                 { id: 'harvest_carrots', text: 'Harvest 3 Carrots', target: 3, progress: 0, reward: 50, rewardXp: 40, cropId: 'carrot', completed: false },
                 { id: 'water_crops', text: 'Water Crops 10 Times', target: 10, progress: 0, reward: 80, rewardXp: 60, completed: false },
-                { id: 'earn_coins', text: 'Reach 300 Coins', target: 300, progress: 100, reward: 150, rewardXp: 100, completed: false }
+                { id: 'earn_coins', text: 'Reach 300 Coins', target: 300, progress: 120, reward: 150, rewardXp: 100, completed: false }
             ]
         };
 
@@ -467,16 +470,23 @@
 
         const audio = new SoundEngine();
 
-        // --- CROP TIER PROBABILITIES & MULTIPLIERS ---
+        // --- CROP TIER PROBABILITIES & MASSIVE GIANT SCALES (Up to 50x) ---
         function generateCropTier() {
             const rand = Math.random();
-            if (rand < 0.65) return { tier: 'small', label: 'Small', mult: 1.0, scale: 0.95 };
-            if (rand < 0.90) return { tier: 'medium', label: 'Medium', mult: 1.8, scale: 1.55 };
-            return { tier: 'huge', label: 'HUGE 🌟', mult: 4.0, scale: 2.35 };
+            if (rand < 0.60) {
+                return { tier: 'small', label: 'Small', mult: 1.0, scale: 0.95, weight: +(Math.random() * 1.5 + 0.5).toFixed(1) };
+            } else if (rand < 0.85) {
+                return { tier: 'medium', label: 'Medium', mult: 2.0, scale: 1.6, weight: +(Math.random() * 4 + 2).toFixed(1) };
+            } else if (rand < 0.95) {
+                return { tier: 'large', label: 'Large (5x)', mult: 6.0, scale: 3.2, weight: +(Math.random() * 15 + 10).toFixed(1) };
+            } else if (rand < 0.99) {
+                return { tier: 'huge', label: 'HUGE (20x) 🌟', mult: 20.0, scale: 6.5, weight: +(Math.random() * 60 + 35).toFixed(1) };
+            } else {
+                return { tier: 'colossal', label: 'COLOSSAL (50x) 👑', mult: 60.0, scale: 12.0, weight: +(Math.random() * 180 + 120).toFixed(1) };
+            }
         }
 
-        function saveGame() { 
-            // Serialize current plot state before saving to localStorage
+        function saveGame() {
             gameState.plots = farmPlots.map(p => ({
                 id: p.id,
                 isUnlocked: p.isUnlocked,
@@ -486,35 +496,52 @@
                     type: p.crop.type,
                     stage: p.crop.stage,
                     growthProgress: p.crop.growthProgress,
-                    tier: p.crop.tier || 'small',
-                    label: p.crop.label || 'Small',
-                    mult: p.crop.mult || 1.0,
-                    scale: p.crop.scale || 0.95
+                    tier: p.crop.tier,
+                    label: p.crop.label,
+                    mult: p.crop.mult,
+                    scale: p.crop.scale,
+                    weight: p.crop.weight,
+                    weatherTag: p.crop.weatherTag || null
                 } : null
             }));
-            localStorage.setItem('grow_garden_save_v3', JSON.stringify(gameState)); 
+            try {
+                localStorage.setItem('grow_garden_save_v5', JSON.stringify(gameState));
+            } catch (e) {
+                console.error("Failed to save to localStorage:", e);
+            }
         }
 
         function loadGame() {
-            const saved = localStorage.getItem('grow_garden_save_v3');
+            const saved = localStorage.getItem('grow_garden_save_v5');
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
-                    gameState = { ...gameState, ...parsed };
+                    gameState = {
+                        ...gameState,
+                        ...parsed,
+                        harvestedVault: parsed.harvestedVault || [],
+                        seedsInventory: { ...gameState.seedsInventory, ...(parsed.seedsInventory || {}) },
+                        inventory: { ...gameState.inventory, ...(parsed.inventory || {}) },
+                        unlockedWeapons: parsed.unlockedWeapons || ['fist'],
+                        quests: gameState.quests.map(q => {
+                            const found = (parsed.quests || []).find(pq => pq.id === q.id);
+                            return found ? { ...q, ...found } : q;
+                        })
+                    };
                 } catch(e) { console.error("Error loading save", e); }
             }
         }
 
-        // --- THREE.JS SYSTEM VARIABLES ---
         let scene, camera, renderer, clock;
         let playerGroup, humanoidLimbs = {}, playerHandAnchor, currentHandMesh = null;
         let weaponHandAnchor, currentWeaponMesh = null;
         let sunLight, ambientLight;
         let farmPlots = [];
         let particles = [];
+        let weatherParticles = [];
         let monsters = [];
         let animatedTrees = [];
-        let colliders = []; // Array of bounding boxes for solid objects
+        let colliders = [];
         let ghostsSpawnedTonight = 0;
         let isNightTime = false;
 
@@ -525,7 +552,6 @@
         let cameraOffset = new THREE.Vector3(0, 8, 12);
         let cameraAngleY = 0;
 
-        // Procedural Texture Generators
         function createCobbleTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 256; canvas.height = 256;
@@ -556,7 +582,6 @@
         }
 
         function buildEnvironment() {
-            // Main Grass Floor
             const grassGeo = new THREE.PlaneGeometry(120, 120);
             const grassMat = new THREE.MeshStandardMaterial({ color: 0x48bb78, roughness: 0.85 });
             const grass = new THREE.Mesh(grassGeo, grassMat);
@@ -564,7 +589,6 @@
             grass.receiveShadow = true;
             scene.add(grass);
 
-            // Sidewalk / Cobble Pathways surrounding farm grid
             const cobbleTex = createCobbleTexture();
             cobbleTex.repeat.set(4, 12);
             const pathMat = new THREE.MeshStandardMaterial({ map: cobbleTex, roughness: 0.7 });
@@ -577,23 +601,17 @@
             path2.rotation.x = -Math.PI / 2; path2.position.set(8, 0.01, 0);
             path2.receiveShadow = true; scene.add(path2);
 
-            // Farmhouse Structure
             createFarmhouse(new THREE.Vector3(0, 0, -18));
-
-            // Wooden Fence Surroundings (Perimeter with Entrance Gate)
             createWoodenFences();
 
-            // Street Lampposts with Warm Light
             createLamppost(new THREE.Vector3(-7, 0, 10));
             createLamppost(new THREE.Vector3(7, 0, 10));
             createLamppost(new THREE.Vector3(-7, 0, -10));
             createLamppost(new THREE.Vector3(7, 0, -10));
 
-            // Well & Market Kiosk
             createWell(new THREE.Vector3(14, 0, 4));
             createMarketKiosk(new THREE.Vector3(-14, 0, 4));
 
-            // Animated Wind Swaying Trees
             for (let i = -45; i <= 45; i += 16) {
                 if (Math.abs(i) > 8) {
                     createTree(new THREE.Vector3(i, 0, -40));
@@ -740,7 +758,7 @@
             setupMobileControls();
             setupInputListeners();
 
-            if (gameState.heldCrop) {
+            if (gameState.heldItem) {
                 updatePlayerHandItem();
             }
 
@@ -767,13 +785,11 @@
         function createMarketKiosk(pos) {
             const group = new THREE.Group();
             
-            // Stone Base / Foundation
             const baseMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.8 });
             const base = new THREE.Mesh(new THREE.BoxGeometry(6, 0.4, 4), baseMat);
             base.position.y = 0.2; base.castShadow = true; base.receiveShadow = true;
             group.add(base);
 
-            // Wooden Counter & Walls
             const woodMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.7 });
             const counter = new THREE.Mesh(new THREE.BoxGeometry(5.2, 1.4, 1.2), woodMat);
             counter.position.set(0, 0.9, 1.1); counter.castShadow = true; group.add(counter);
@@ -785,7 +801,6 @@
             sideWallL.position.set(-2.45, 2.2, -0.15); sideWallL.castShadow = true; group.add(sideWallL);
             const sideWallR = sideWallL.clone(); sideWallR.position.x = 2.45; group.add(sideWallR);
 
-            // Awning Roof (Striped Canvas Canopy)
             const canvasMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.5 });
             const stripeMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
             for(let i = -2.5; i < 2.5; i += 0.8) {
@@ -796,13 +811,11 @@
                 group.add(stripe);
             }
 
-            // Pillars
             const pillarMat = new THREE.MeshStandardMaterial({ color: 0x5c3a1b });
             const p1 = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 3.2, 8), pillarMat);
             p1.position.set(-2.3, 2.5, 1.5); p1.castShadow = true; group.add(p1);
             const p2 = p1.clone(); p2.position.x = 2.3; group.add(p2);
 
-            // Wooden Storefront Sign
             const signBoard = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.0, 0.2), new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.6 }));
             signBoard.position.set(0, 4.6, 2.2); signBoard.castShadow = true; group.add(signBoard);
 
@@ -810,7 +823,6 @@
             const signBorder = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.6, 0.25), signTextMat);
             signBorder.position.set(0, 4.6, 2.2); group.add(signBorder);
 
-            // Display Items on Counter (Produce Jars & Baskets)
             const jarMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.7 });
             const jar1 = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.5, 8), jarMat);
             jar1.position.set(-1.4, 1.85, 1.1); group.add(jar1);
@@ -822,7 +834,6 @@
             group.position.copy(pos);
             scene.add(group);
 
-            // Add solid collision box for the Shop Kiosk
             colliders.push(new THREE.Box3().setFromObject(group));
         }
 
@@ -842,7 +853,6 @@
             houseGroup.position.copy(pos);
             scene.add(houseGroup);
 
-            // Add solid collision box for Farmhouse
             colliders.push(new THREE.Box3().setFromObject(houseGroup));
         }
 
@@ -861,7 +871,6 @@
             group.position.copy(pos);
             scene.add(group);
 
-            // Add solid collision box for Water Well
             colliders.push(new THREE.Box3().setFromObject(group));
         }
 
@@ -881,22 +890,20 @@
                 fenceGroup.add(seg);
             }
 
-            // Outer Perimeter Bounds (-25 to 25) with Front Entrance Gate Gap
             for(let i = -24; i <= 24; i += 2.2) {
                 addFenceSegment(i, -25, 0);
-                if (Math.abs(i) > 4) addFenceSegment(i, 25, 0); // Entrance Gate
+                if (Math.abs(i) > 4) addFenceSegment(i, 25, 0);
                 addFenceSegment(-25, i, Math.PI / 2);
                 addFenceSegment(25, i, Math.PI / 2);
             }
 
             scene.add(fenceGroup);
 
-            // Add collision bounds for perimeter walls
-            colliders.push(new THREE.Box3(new THREE.Vector3(-26, 0, -26), new THREE.Vector3(26, 5, -24))); // Back fence
-            colliders.push(new THREE.Box3(new THREE.Vector3(-26, 0, -26), new THREE.Vector3(-24, 5, 26))); // Left fence
-            colliders.push(new THREE.Box3(new THREE.Vector3(24, 0, -26), new THREE.Vector3(26, 5, 26)));  // Right fence
-            colliders.push(new THREE.Box3(new THREE.Vector3(-26, 0, 24), new THREE.Vector3(-4, 5, 26)));  // Front left fence
-            colliders.push(new THREE.Box3(new THREE.Vector3(4, 0, 24), new THREE.Vector3(26, 5, 26)));   // Front right fence
+            colliders.push(new THREE.Box3(new THREE.Vector3(-26, 0, -26), new THREE.Vector3(26, 5, -24)));
+            colliders.push(new THREE.Box3(new THREE.Vector3(-26, 0, -26), new THREE.Vector3(-24, 5, 26)));
+            colliders.push(new THREE.Box3(new THREE.Vector3(24, 0, -26), new THREE.Vector3(26, 5, 26)));
+            colliders.push(new THREE.Box3(new THREE.Vector3(-26, 0, 24), new THREE.Vector3(-4, 5, 26)));
+            colliders.push(new THREE.Box3(new THREE.Vector3(4, 0, 24), new THREE.Vector3(26, 5, 26)));
         }
 
         // --- MONSTER INVASION ENGINE ---
@@ -912,7 +919,6 @@
             head.position.y = 1.6;
             group.add(head);
 
-            // Glowing Red Eyes
             const eyeMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000 });
             const eye1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.1), eyeMat);
             eye1.position.set(-0.15, 1.65, 0.35);
@@ -920,7 +926,6 @@
             eye2.position.x = 0.15;
             group.add(eye1); group.add(eye2);
 
-            // Spawn at entrance gate path (0, 0, 26)
             group.position.set((Math.random() - 0.5) * 3, 0, 26);
             scene.add(group);
 
@@ -939,7 +944,6 @@
             for (let i = monsters.length - 1; i >= 0; i--) {
                 const m = monsters[i];
 
-                // Find closest plot with a crop to attack
                 if (!m.targetPlot || !m.targetPlot.crop) {
                     let plotsWithCrops = farmPlots.filter(p => p.crop);
                     if (plotsWithCrops.length > 0) {
@@ -949,7 +953,6 @@
 
                 let targetPos = m.targetPlot ? m.targetPlot.mesh.position.clone() : new THREE.Vector3(0, 0, 0);
 
-                // Entrance Pathway Routing: First walk inside gate (Z: 10), then head to target plot
                 if (m.mesh.position.z > 12) {
                     targetPos = new THREE.Vector3(0, 0, 10);
                 }
@@ -960,9 +963,8 @@
                     dir.normalize();
                     m.mesh.position.addScaledVector(dir, m.speed * delta);
                     m.mesh.lookAt(targetPos);
-                    m.mesh.position.y = Math.sin(clock.getElapsedTime() * 4) * 0.15; // Floating ghost motion
+                    m.mesh.position.y = Math.sin(clock.getElapsedTime() * 4) * 0.15;
                 } else if (m.targetPlot && m.targetPlot.crop) {
-                    // Devour crop!
                     m.targetPlot.mesh.remove(m.targetPlot.cropMesh);
                     m.targetPlot.crop = null;
                     m.targetPlot.cropMesh = null;
@@ -977,7 +979,6 @@
             const wData = WEAPONS[gameState.equippedWeapon] || WEAPONS.fist;
             const attackRange = 3.5;
 
-            // Attack animation swing: rotate arm & weapon forward quickly
             humanoidLimbs.rightArm.rotation.x = -1.6;
             humanoidLimbs.rightArm.rotation.y = -0.4;
             setTimeout(() => {
@@ -1009,23 +1010,6 @@
             if (!hitAny) {
                 showFloatingText("Swing!", playerGroup.position);
             }
-        }
-
-        function createFarmhouse(pos) {
-            const houseGroup = new THREE.Group();
-            const wallMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.8 });
-            const roofMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.5 });
-
-            const body = new THREE.Mesh(new THREE.BoxGeometry(8, 5, 6), wallMat);
-            body.position.y = 2.5; body.castShadow = true; body.receiveShadow = true;
-            houseGroup.add(body);
-
-            const roof = new THREE.Mesh(new THREE.ConeGeometry(6.5, 3.5, 4), roofMat);
-            roof.position.y = 6.25; roof.rotation.y = Math.PI / 4; roof.castShadow = true;
-            houseGroup.add(roof);
-
-            houseGroup.position.copy(pos);
-            scene.add(houseGroup);
         }
 
         function buildFarmGrid() {
@@ -1077,7 +1061,7 @@
 
                 if (savedPlot && savedPlot.crop) {
                     cropData = { ...savedPlot.crop };
-                    cropMeshObj = createCropMesh(cropData.type, cropData.stage, cropData.scale, cropData.tier === 'huge');
+                    cropMeshObj = createCropMesh(cropData.type, cropData.stage, cropData.scale, cropData.weatherTag);
                     cropMeshObj.position.y = 0.2;
                     plotMesh.add(cropMeshObj);
                 }
@@ -1095,13 +1079,27 @@
             }
         }
 
-        // --- CROP MESH CREATOR WITH DYNAMIC TIER SCALING ---
-        function createCropMesh(cropType, stage, scaleFactor = 1.0, isHuge = false) {
+        function createCropMesh(cropType, stage, scaleFactor = 1.0, weatherTag = null) {
             const group = new THREE.Group();
             const data = CROPS[cropType] || CROPS.carrot;
 
+            let colorHex = data.color;
+            let roughnessVal = 0.4;
+            let emissiveHex = 0x000000;
+            let emissiveInt = 0;
+
+            if (weatherTag === 'wet') {
+                colorHex = 0x1e3a8a;
+                roughnessVal = 0.1;
+            } else if (weatherTag === 'glowing') {
+                emissiveHex = 0xa855f7;
+                emissiveInt = 0.9;
+            } else if (weatherTag === 'frozen') {
+                colorHex = 0x93c5fd;
+                roughnessVal = 0.2;
+            }
+
             if (stage === 0) {
-                // Sprout
                 const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.35, 5), new THREE.MeshStandardMaterial({ color: 0x4ade80 }));
                 stem.position.y = 0.18;
                 group.add(stem);
@@ -1110,7 +1108,6 @@
                 leaf1.rotation.z = -Math.PI / 6;
                 group.add(leaf1);
             } else if (stage === 1) {
-                // Bush/Stalk stage
                 const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.65, 6), new THREE.MeshStandardMaterial({ color: data.stemColor }));
                 stem.position.y = 0.32;
                 group.add(stem);
@@ -1121,8 +1118,7 @@
                     group.add(leaf);
                 }
             } else if (stage >= 2) {
-                // Fully Harvestable Crops with Tier Colors
-                const fruitMat = new THREE.MeshStandardMaterial({ color: isHuge ? 0xffd700 : data.color, roughness: 0.4, metalness: isHuge ? 0.6 : 0.1 });
+                const fruitMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: roughnessVal, emissive: emissiveHex, emissiveIntensity: emissiveInt });
                 const stemMat = new THREE.MeshStandardMaterial({ color: data.stemColor, roughness: 0.7 });
 
                 if (cropType === 'carrot') {
@@ -1166,45 +1162,7 @@
                     const pStem = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.08, 0.3, 6), stemMat);
                     pStem.position.set(0, 0.7, 0);
                     group.add(pStem);
-                } else if (cropType === 'eggplant') {
-                    const egg = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.8, 8), fruitMat);
-                    egg.position.y = 0.45;
-                    group.add(egg);
-                    const cap = new THREE.Mesh(new THREE.DodecahedronGeometry(0.2), stemMat);
-                    cap.position.y = 0.85;
-                    group.add(cap);
-                } else if (cropType === 'strawberry') {
-                    const berry = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.5, 6), fruitMat);
-                    berry.rotation.x = Math.PI;
-                    berry.position.y = 0.35;
-                    group.add(berry);
-                    const cap = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.03, 0.4), stemMat);
-                    cap.position.y = 0.6;
-                    group.add(cap);
-                } else if (cropType === 'watermelon') {
-                    const melon = new THREE.Mesh(new THREE.SphereGeometry(0.48, 8, 6), fruitMat);
-                    melon.scale.set(1.3, 0.9, 1.0);
-                    melon.position.y = 0.4;
-                    group.add(melon);
-                } else if (cropType === 'sunflower') {
-                    const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 1.6, 6), stemMat);
-                    stalk.position.y = 0.8;
-                    group.add(stalk);
-                    const flower = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.08, 10), fruitMat);
-                    flower.position.set(0, 1.6, 0.1);
-                    flower.rotation.x = 0.4;
-                    group.add(flower);
-                } else if (cropType === 'dragon_fruit') {
-                    const fruit = new THREE.Mesh(new THREE.DodecahedronGeometry(0.4), fruitMat);
-                    fruit.position.y = 0.5;
-                    group.add(fruit);
-                    for(let i=0; i<6; i++) {
-                        const petal = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.25, 4), stemMat);
-                        petal.position.set(Math.sin(i)*0.3, 0.5, Math.cos(i)*0.3);
-                        group.add(petal);
-                    }
                 } else {
-                    // Golden Berry
                     const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.45, 0), fruitMat);
                     crystal.position.y = 0.65;
                     group.add(crystal);
@@ -1215,22 +1173,101 @@
             return group;
         }
 
-        // --- PARTICLES ENGINE ---
-        function spawnWaterParticles(pos) {
-            for (let i = 0; i < 10; i++) {
-                const p = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.08), new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.8 }));
-                p.position.copy(pos).add(new THREE.Vector3((Math.random()-0.5)*1.2, 0.5, (Math.random()-0.5)*1.2));
-                scene.add(p);
-                particles.push({ mesh: p, vel: new THREE.Vector3((Math.random()-0.5)*2, Math.random()*2 + 1, (Math.random()-0.5)*2), life: 0.5 });
+        function updateWeather(delta) {
+            gameState.weatherTimer -= delta;
+            if (gameState.weatherTimer <= 0) {
+                triggerRandomWeather();
+                gameState.weatherTimer = 90 + Math.random() * 90;
             }
         }
 
+        function triggerRandomWeather() {
+            const weathers = [
+                { type: 'Clear', label: '☀️ Sunny & Clear', effect: 'Normal', chance: 0.4 },
+                { type: 'Rainy', label: '🌧️ Rainy Weather', effect: 'wet', bonusMult: 1.5, chance: 0.25 },
+                { type: 'Thunderstorm', label: '⚡ Thunderstorm', effect: 'glowing', bonusMult: 2.5, chance: 0.15 },
+                { type: 'Snowy', label: '❄️ Snowy Winter', effect: 'frozen', bonusMult: 2.0, chance: 0.2 }
+            ];
+
+            const rand = Math.random();
+            let accum = 0;
+            let selected = weathers[0];
+            for (let w of weathers) {
+                accum += w.chance;
+                if (rand <= accum) { selected = w; break; }
+            }
+
+            gameState.currentWeather = selected;
+            showFloatingText(`🌦️ Weather: ${selected.label}`, playerGroup.position);
+
+            const wBadge = document.getElementById('weather-badge');
+            if (wBadge) wBadge.innerText = selected.label;
+
+            // Clear previous weather atmosphere particles
+            weatherParticles.forEach(p => scene.remove(p.mesh));
+            weatherParticles = [];
+
+            // Spawn atmospheric particles based on weather type
+            if (selected.type === 'Rainy' || selected.type === 'Thunderstorm') {
+                for (let i = 0; i < 150; i++) {
+                    const drop = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.04, 0.6, 0.04),
+                        new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.6 })
+                    );
+                    drop.position.set((Math.random() - 0.5) * 60, Math.random() * 30 + 5, (Math.random() - 0.5) * 60);
+                    scene.add(drop);
+                    weatherParticles.push({ mesh: drop, type: 'rain', speed: 22 + Math.random() * 10 });
+                }
+            } else if (selected.type === 'Snowy') {
+                for (let i = 0; i < 120; i++) {
+                    const flake = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.1, 6, 6),
+                        new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 })
+                    );
+                    flake.position.set((Math.random() - 0.5) * 60, Math.random() * 30 + 5, (Math.random() - 0.5) * 60);
+                    scene.add(flake);
+                    weatherParticles.push({ mesh: flake, type: 'snow', speed: 3 + Math.random() * 3 });
+                }
+            }
+
+            if (selected.effect !== 'Normal') {
+                farmPlots.forEach(plot => {
+                    if (plot.crop && Math.random() < 0.65) {
+                        plot.crop.weatherTag = selected.effect;
+                        plot.crop.mult *= selected.bonusMult;
+                        plot.mesh.remove(plot.cropMesh);
+                        plot.cropMesh = createCropMesh(plot.crop.type, plot.crop.stage, plot.crop.scale, plot.crop.weatherTag);
+                        plot.mesh.add(plot.cropMesh);
+                    }
+                });
+            }
+        }
+
+        function updateWeatherParticles(delta, elapsed) {
+            weatherParticles.forEach(p => {
+                if (p.type === 'rain') {
+                    p.mesh.position.y -= p.speed * delta;
+                    if (p.mesh.position.y < 0) {
+                        p.mesh.position.y = 30;
+                        p.mesh.position.x = playerGroup.position.x + (Math.random() - 0.5) * 50;
+                        p.mesh.position.z = playerGroup.position.z + (Math.random() - 0.5) * 50;
+                    }
+                } else if (p.type === 'snow') {
+                    p.mesh.position.y -= p.speed * delta;
+                    p.mesh.position.x += Math.sin(elapsed + p.mesh.position.z) * 0.02;
+                    if (p.mesh.position.y < 0) {
+                        p.mesh.position.y = 30;
+                    }
+                }
+            });
+        }
+
         function spawnSparkleParticles(pos, color = 0xfacc15) {
-            for (let i = 0; i < 12; i++) {
+            for (let i = 0; i < 15; i++) {
                 const p = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.1), new THREE.MeshBasicMaterial({ color: color }));
                 p.position.copy(pos).add(new THREE.Vector3((Math.random()-0.5)*0.8, 0.4, (Math.random()-0.5)*0.8));
                 scene.add(p);
-                particles.push({ mesh: p, vel: new THREE.Vector3((Math.random()-0.5)*3, Math.random()*3 + 1, (Math.random()-0.5)*3), life: 0.7 });
+                particles.push({ mesh: p, vel: new THREE.Vector3((Math.random()-0.5)*3, Math.random()*3 + 1, (Math.random()-0.5)*3), life: 0.8 });
             }
         }
 
@@ -1240,7 +1277,7 @@
                 p.life -= delta;
                 p.mesh.position.addScaledVector(p.vel, delta);
                 p.vel.y -= 9.8 * delta;
-                p.mesh.scale.multiplyScalar(0.95);
+                p.mesh.scale.multiplyScalar(0.96);
                 if (p.life <= 0) {
                     scene.remove(p.mesh);
                     particles.splice(i, 1);
@@ -1248,7 +1285,6 @@
             }
         }
 
-        // --- INPUT & CONTROLS ---
         function setupInputListeners() {
             window.addEventListener('keydown', (e) => {
                 audio.init();
@@ -1329,7 +1365,6 @@
 
             document.getElementById('btn-touch-interact').onclick = () => performInteraction();
             document.getElementById('btn-touch-jump').onclick = () => { if (isGrounded) { playerVelY = 7.5; isGrounded = false; } };
-            document.getElementById('btn-touch-sell').onclick = () => performSellVaultAll();
             document.getElementById('btn-touch-attack').onclick = () => playerAttack();
         }
 
@@ -1349,7 +1384,6 @@
         }
 
         function performInteraction() {
-            // Refill Water
             if (playerGroup.position.distanceTo(new THREE.Vector3(14, 0, 4)) < 4.0) {
                 gameState.inventory.waterCan = gameState.waterCanCapacity;
                 audio.playWater();
@@ -1360,7 +1394,6 @@
                 return;
             }
 
-            // Market Shop Front Counter Interaction
             if (playerGroup.position.distanceTo(new THREE.Vector3(-14, 0, 4)) < 4.5) {
                 renderShopItems('seeds');
                 document.getElementById('shop-modal').classList.remove('hidden');
@@ -1372,7 +1405,6 @@
 
             const tool = getActiveItem();
 
-            // Till
             if (tool === 'hoe' && !plot.isTilled) {
                 plot.isTilled = true;
                 plot.soilMesh.material.color.setHex(0x361f0d);
@@ -1383,15 +1415,21 @@
                 return;
             }
 
-            // Plant Seed with Randomized Size Tier
             if (tool && tool.endsWith('_seed') && plot.isTilled && !plot.crop) {
                 if (gameState.seedsInventory[tool] > 0) {
                     gameState.seedsInventory[tool]--;
                     const cropType = tool.replace('_seed', '');
                     const tierInfo = generateCropTier();
+                    let wTag = null;
+                    let finalMult = tierInfo.mult;
 
-                    plot.crop = { type: cropType, stage: 0, growthProgress: 0, ...tierInfo };
-                    plot.cropMesh = createCropMesh(cropType, 0, tierInfo.scale, tierInfo.tier === 'huge');
+                    if (gameState.currentWeather.effect !== 'Normal' && Math.random() < 0.5) {
+                        wTag = gameState.currentWeather.effect;
+                        finalMult *= gameState.currentWeather.bonusMult;
+                    }
+
+                    plot.crop = { type: cropType, stage: 0, growthProgress: 0, ...tierInfo, mult: finalMult, weatherTag: wTag };
+                    plot.cropMesh = createCropMesh(cropType, 0, tierInfo.scale, wTag);
                     plot.cropMesh.position.y = 0.2;
                     plot.mesh.add(plot.cropMesh);
 
@@ -1406,7 +1444,6 @@
                 return;
             }
 
-            // Water
             if (tool === 'waterCan' && plot.crop && !plot.isWatered) {
                 if (gameState.inventory.waterCan > 0) {
                     gameState.inventory.waterCan--;
@@ -1424,13 +1461,12 @@
                 return;
             }
 
-            // Fertilizer
             if (tool === 'fertilizer' && plot.crop && plot.crop.stage < 2) {
                 if (gameState.inventory.fertilizer > 0) {
                     gameState.inventory.fertilizer--;
                     plot.crop.stage = 2;
                     plot.mesh.remove(plot.cropMesh);
-                    plot.cropMesh = createCropMesh(plot.crop.type, 2, plot.crop.scale || 1.0, plot.crop.tier === 'huge');
+                    plot.cropMesh = createCropMesh(plot.crop.type, 2, plot.crop.scale || 1.0, plot.crop.weatherTag);
                     plot.mesh.add(plot.cropMesh);
                     audio.playHarvest();
                     spawnSparkleParticles(plot.mesh.position, 0xec4899);
@@ -1441,23 +1477,26 @@
                 return;
             }
 
-            // Harvest Crop
             if (plot.crop && plot.crop.stage >= 2) {
                 const cropType = plot.crop.type;
-                const tierLabel = plot.crop.label || 'Small';
-                const mult = plot.crop.mult || 1.0;
-                const scale = plot.crop.scale || 0.95;
+                const harvestedItem = {
+                    id: 'crop_' + Math.random().toString(36).substring(2, 9),
+                    type: cropType,
+                    label: plot.crop.label || 'Small',
+                    mult: plot.crop.mult || 1.0,
+                    scale: plot.crop.scale || 0.95,
+                    weight: plot.crop.weight || 1.0,
+                    weatherTag: plot.crop.weatherTag || null
+                };
 
-                gameState.heldCrop = { type: cropType, label: tierLabel, mult: mult, scale: scale, tier: plot.crop.tier };
-                gameState.harvestedVault[cropType] = (gameState.harvestedVault[cropType] || 0) + 1;
-                updatePlayerHandItem();
+                gameState.harvestedVault.push(harvestedItem);
 
-                const xpEarned = Math.round(CROPS[cropType].xp * mult);
+                const xpEarned = Math.round(CROPS[cropType].xp * harvestedItem.mult);
                 addXP(xpEarned);
 
                 audio.playHarvest();
                 spawnSparkleParticles(plot.mesh.position, 0xfacc15);
-                showFloatingText(`Harvested ${tierLabel} ${CROPS[cropType].name}!`, plot.mesh.position);
+                showFloatingText(`Harvested ${harvestedItem.label} ${CROPS[cropType].name} (${harvestedItem.weight}KG)!`, plot.mesh.position);
                 trackQuestProgress('harvest_carrots', 1, cropType);
 
                 plot.mesh.remove(plot.cropMesh);
@@ -1473,9 +1512,10 @@
 
         function updatePlayerHandItem() {
             if (currentHandMesh) { playerHandAnchor.remove(currentHandMesh); currentHandMesh = null; }
-            if (gameState.heldCrop) {
-                currentHandMesh = createCropMesh(gameState.heldCrop.type, 2, gameState.heldCrop.scale || 0.9, gameState.heldCrop.tier === 'huge');
-                currentHandMesh.scale.multiplyScalar(0.7);
+            if (gameState.heldItem) {
+                // Scale flexed crop proportionally so huge/colossal items look massive in hand
+                const flexScale = Math.min(gameState.heldItem.scale * 0.4, 4.0);
+                currentHandMesh = createCropMesh(gameState.heldItem.type, 2, flexScale, gameState.heldItem.weatherTag);
                 playerHandAnchor.add(currentHandMesh);
             }
         }
@@ -1492,7 +1532,7 @@
                     if (targetStage !== plot.crop.stage) {
                         plot.crop.stage = targetStage;
                         plot.mesh.remove(plot.cropMesh);
-                        plot.cropMesh = createCropMesh(plot.crop.type, targetStage, plot.crop.scale || 1.0, plot.crop.tier === 'huge');
+                        plot.cropMesh = createCropMesh(plot.crop.type, targetStage, plot.crop.scale || 1.0, plot.crop.weatherTag);
                         plot.mesh.add(plot.cropMesh);
                         spawnSparkleParticles(plot.mesh.position, 0x38bdf8);
                         stateChanged = true;
@@ -1553,14 +1593,15 @@
             document.getElementById('player-level-badge').innerText = `L${gameState.level}`;
 
             const badge = document.getElementById('difficulty-badge');
-            badge.innerText = `Mode: ${gameState.difficulty}`;
-            badge.className = `px-3 py-0.5 rounded-full text-[10px] font-fredoka uppercase tracking-wider ${gameState.difficulty === 'Monster' ? 'bg-red-600 text-white' : 'bg-green-600 text-white'}`;
+            badge.innerText = gameState.difficulty;
+
+            const weatherBadge = document.getElementById('weather-badge');
+            if (weatherBadge) weatherBadge.innerText = gameState.currentWeather.label;
 
             const xpNeeded = gameState.level * 100;
             document.getElementById('xp-text').innerText = `${gameState.xp}/${xpNeeded} XP`;
             document.getElementById('xp-bar').style.width = `${(gameState.xp / xpNeeded) * 100}%`;
 
-            // Hotbar Rendering
             const eqSeed = CROPS[gameState.equippedSeed.replace('_seed', '')];
             const eqWep = WEAPONS[gameState.equippedWeapon];
             const items = [
@@ -1586,29 +1627,26 @@
             });
 
             const activeItem = items[gameState.selectedSlot];
-            document.getElementById('active-item-name').innerText = `${activeItem.name} (${gameState.selectedSlot + 1})${gameState.heldCrop ? ` | Holding: ${CROPS[gameState.heldCrop.type].name}` : ''}`;
+            document.getElementById('active-item-name').innerText = `${activeItem.name} (${gameState.selectedSlot + 1})${gameState.heldItem ? ` | Flexing: ${CROPS[gameState.heldItem.type].name} (${gameState.heldItem.weight}KG)` : ''}`;
             updateActionPrompt();
         }
 
         function updateActionPrompt() {
             const promptEl = document.getElementById('action-prompt');
             const promptText = document.getElementById('prompt-text');
-            const touchSellBtn = document.getElementById('btn-touch-sell');
             const plot = getClosestPlot();
 
             if (playerGroup.position.distanceTo(new THREE.Vector3(14, 0, 4)) < 4.0) {
                 promptEl.style.opacity = '1';
                 promptText.innerText = 'Refill Water Can at Well';
-                if (touchSellBtn) touchSellBtn.classList.add('hidden');
                 return;
             }
 
             if (playerGroup.position.distanceTo(new THREE.Vector3(-14, 0, 4)) < 4.5) {
                 promptEl.style.opacity = '1';
                 promptText.innerText = 'Press E / Tap ✋ to Open Market Kiosk & Sell!';
-                if (touchSellBtn) touchSellBtn.classList.remove('hidden');
                 return;
-            } else if (touchSellBtn) touchSellBtn.classList.add('hidden');
+            }
 
             if (plot && plot.isUnlocked) {
                 promptEl.style.opacity = '1';
@@ -1622,15 +1660,18 @@
             }
         }
 
-        // --- MODAL RENDERING ---
         function setupModals() {
-            // Landing Screen Mode Selection
+            const btnShop = document.getElementById('btn-shop');
+            if (btnShop) {
+                btnShop.onclick = () => { renderShopItems('seeds'); document.getElementById('shop-modal').classList.remove('hidden'); };
+            }
+
             document.getElementById('btn-start-peaceful').onclick = () => startGame('Peaceful');
             document.getElementById('btn-start-monster').onclick = () => startGame('Monster');
 
             document.getElementById('btn-settings').onclick = () => {
                 saveGame();
-                document.getElementById('export-textarea').value = localStorage.getItem('grow_garden_save_v3') || '';
+                document.getElementById('export-textarea').value = localStorage.getItem('grow_garden_save_v5') || '';
                 document.getElementById('settings-modal').classList.remove('hidden');
             };
 
@@ -1650,10 +1691,11 @@
                 if (text) {
                     try {
                         JSON.parse(text);
-                        localStorage.setItem('grow_garden_save_v3', text);
+                        localStorage.setItem('grow_garden_save_v5', text);
                         loadGame();
                         buildFarmGrid();
                         updateEquippedWeaponMesh();
+                        updatePlayerHandItem();
                         updateUI();
                         document.getElementById('settings-modal').classList.add('hidden');
                         showFloatingText("Save Restored Successfully!", playerGroup.position);
@@ -1687,8 +1729,6 @@
             const barnModal = document.getElementById('barn-modal');
             const seedsModal = document.getElementById('seeds-modal');
 
-            const shopBtn = document.getElementById('btn-shop');
-            if (shopBtn) shopBtn.onclick = () => { renderShopItems('seeds'); shopModal.classList.remove('hidden'); };
             document.getElementById('btn-quests').onclick = () => { renderQuests(); questsModal.classList.remove('hidden'); };
             document.getElementById('btn-barn').onclick = () => { renderBarnVault(); barnModal.classList.remove('hidden'); };
             document.getElementById('btn-seeds').onclick = () => { renderSeedsInventory(); seedsModal.classList.remove('hidden'); };
@@ -1710,8 +1750,6 @@
                     renderShopItems(e.target.dataset.tab);
                 };
             });
-
-            document.getElementById('btn-sell-all-vault').onclick = () => { performSellVaultAll(); renderBarnVault(); };
         }
 
         function startGame(mode) {
@@ -1729,37 +1767,66 @@
             container.innerHTML = '';
             let totalValue = 0;
 
-            Object.keys(gameState.harvestedVault).forEach(k => {
-                const count = gameState.harvestedVault[k];
-                const data = CROPS[k];
+            if (gameState.harvestedVault.length === 0) {
+                container.innerHTML = `<div class="col-span-2 text-center text-slate-400 font-fredoka py-8">Your Harvest Vault is empty! Plant and harvest crops.</div>`;
+                document.getElementById('total-vault-valuation').innerText = `Total Value: 0 Coins`;
+                return;
+            }
+
+            gameState.harvestedVault.forEach((item, index) => {
+                const data = CROPS[item.type];
                 if (!data) return;
-                const itemTotal = count * data.sellPrice;
-                totalValue += itemTotal;
+                const price = Math.round(data.sellPrice * item.mult);
+                totalValue += price;
+
+                const isHeld = gameState.heldItem && gameState.heldItem.id === item.id;
+                const tagDisplay = item.weatherTag ? ` [${item.weatherTag.toUpperCase()}]` : '';
 
                 const div = document.createElement('div');
-                div.className = 'roblox-panel p-3 rounded-2xl flex items-center justify-between border-slate-700';
+                div.className = `roblox-panel p-3 rounded-2xl flex items-center justify-between ${isHeld ? 'border-amber-400 bg-amber-950/20' : 'border-slate-700'}`;
                 div.innerHTML = `
                     <div class="flex items-center space-x-3">
                         <span class="text-3xl">${data.icon}</span>
                         <div>
-                            <div class="font-fredoka text-slate-100">${data.name}</div>
-                            <div class="text-xs text-amber-400 font-bold">Qty: ${count} (${data.sellPrice}G ea)</div>
+                            <div class="font-fredoka text-slate-100">${item.label} ${data.name}${tagDisplay}</div>
+                            <div class="text-xs text-amber-400 font-bold">⚖️ ${item.weight} KG | 🪙 ${price}G</div>
                         </div>
                     </div>
-                    <button class="roblox-btn roblox-btn-green px-3 py-1.5 rounded-xl text-xs font-fredoka" ${count <= 0 ? 'disabled style="opacity:0.5"' : ''}>
-                        Sell (${itemTotal}G)
-                    </button>
+                    <div class="flex space-x-2">
+                        <button class="roblox-btn ${isHeld ? 'roblox-btn-amber' : 'roblox-btn-purple'} px-3 py-1.5 rounded-xl text-xs font-fredoka">
+                            ${isHeld ? 'Flexing' : 'Hold ✋'}
+                        </button>
+                        <button class="roblox-btn roblox-btn-green px-3 py-1.5 rounded-xl text-xs font-fredoka">
+                            Sell (${price}G)
+                        </button>
+                    </div>
                 `;
-                div.querySelector('button').onclick = () => {
-                    if (count > 0) {
-                        addCoins(itemTotal);
-                        gameState.harvestedVault[k] = 0;
-                        audio.playCoin();
-                        renderBarnVault();
-                        updateUI();
-                        saveGame();
+
+                div.querySelectorAll('button')[0].onclick = () => {
+                    if (isHeld) {
+                        gameState.heldItem = null;
+                    } else {
+                        gameState.heldItem = item;
                     }
+                    updatePlayerHandItem();
+                    renderBarnVault();
+                    updateUI();
+                    saveGame();
                 };
+
+                div.querySelectorAll('button')[1].onclick = () => {
+                    addCoins(price);
+                    if (gameState.heldItem && gameState.heldItem.id === item.id) {
+                        gameState.heldItem = null;
+                        updatePlayerHandItem();
+                    }
+                    gameState.harvestedVault.splice(index, 1);
+                    audio.playCoin();
+                    renderBarnVault();
+                    updateUI();
+                    saveGame();
+                };
+
                 container.appendChild(div);
             });
 
@@ -1830,72 +1897,8 @@
                     container.appendChild(div);
                 });
             } else if (tab === 'sell') {
-                // Dedicated Sell Tab inside Shop Modal
-                let totalValue = 0;
-                Object.keys(gameState.harvestedVault).forEach(k => {
-                    const count = gameState.harvestedVault[k];
-                    const data = CROPS[k];
-                    if (!data) return;
-                    const itemTotal = count * data.sellPrice;
-                    totalValue += itemTotal;
-
-                    const div = document.createElement('div');
-                    div.className = 'roblox-panel p-3 rounded-2xl flex items-center justify-between border-slate-700';
-                    div.innerHTML = `
-                        <div class="flex items-center space-x-3">
-                            <span class="text-3xl">${data.icon}</span>
-                            <div>
-                                <div class="font-fredoka text-slate-100">${data.name}</div>
-                                <div class="text-xs text-amber-400 font-bold">Vault Qty: ${count} (${data.sellPrice}G ea)</div>
-                            </div>
-                        </div>
-                        <button class="roblox-btn roblox-btn-green px-3 py-1.5 rounded-xl text-xs font-fredoka" ${count <= 0 ? 'disabled style="opacity:0.5"' : ''}>
-                            Sell (${itemTotal}G)
-                        </button>
-                    `;
-                    div.querySelector('button').onclick = () => {
-                        if (count > 0) {
-                            addCoins(itemTotal);
-                            gameState.harvestedVault[k] = 0;
-                            audio.playCoin();
-                            renderShopItems('sell');
-                            updateUI();
-                            saveGame();
-                        }
-                    };
-                    container.appendChild(div);
-                });
-
-                if (gameState.heldCrop) {
-                    const data = CROPS[gameState.heldCrop.type];
-                    const val = Math.round(data.sellPrice * (gameState.heldCrop.mult || 1.0));
-                    const sellHeldDiv = document.createElement('div');
-                    sellHeldDiv.className = 'roblox-panel p-4 rounded-2xl flex items-center justify-between border-amber-400 bg-amber-950/20 col-span-2 mb-2';
-                    sellHeldDiv.innerHTML = `
-                        <div class="flex items-center space-x-3">
-                            <span class="text-3xl">${data.icon}</span>
-                            <div>
-                                <div class="font-fredoka text-amber-400">Held ${gameState.heldCrop.label || ''} ${data.name}</div>
-                                <div class="text-xs text-slate-300">Valued at ${val} Coins</div>
-                            </div>
-                        </div>
-                        <button class="roblox-btn roblox-btn-amber px-4 py-2 rounded-xl text-xs font-fredoka">
-                            Sell Held Crop (${val}G)
-                        </button>
-                    `;
-                    sellHeldDiv.querySelector('button').onclick = () => {
-                        addCoins(val);
-                        gameState.heldCrop = null;
-                        updatePlayerHandItem();
-                        audio.playCoin();
-                        renderShopItems('sell');
-                        updateUI();
-                        saveGame();
-                    };
-                    container.prepend(sellHeldDiv);
-                }
+                renderBarnVault();
             } else if (tab === 'upgrades') {
-                // Weapons Upgrades
                 Object.keys(WEAPONS).forEach(wKey => {
                     if (wKey === 'fist') return;
                     const w = WEAPONS[wKey];
@@ -2020,14 +2023,12 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        // --- MAIN ANIMATION LOOP WITH HUMANOID LIMB SWING ---
         function animate() {
             requestAnimationFrame(animate);
 
             const delta = clock.getDelta();
             const elapsed = clock.getElapsedTime();
 
-            // Landing Screen Orbiting Camera
             if (!gameState.gameStarted) {
                 const orbitAngle = elapsed * 0.15;
                 camera.position.x = Math.sin(orbitAngle) * 22;
@@ -2038,12 +2039,13 @@
                 return;
             }
 
-            // Day / Night Cycle
             const sunAngle = elapsed * 0.03;
             sunLight.position.x = Math.cos(sunAngle) * 45;
             sunLight.position.y = Math.sin(sunAngle) * 45;
 
-            // Wind Swaying Trees Animation
+            updateWeather(delta);
+            updateWeatherParticles(delta, elapsed);
+
             animatedTrees.forEach(t => {
                 t.group.rotation.z = Math.sin(elapsed * 2 + t.phaseOffset) * 0.04;
                 t.group.rotation.x = Math.cos(elapsed * 1.5 + t.phaseOffset) * 0.03;
@@ -2053,7 +2055,6 @@
             const dayTimeText = document.getElementById('day-time-text');
 
             if (sunLight.position.y > 0) {
-                // Daytime: Clear remaining night ghosts and reset night spawn count
                 if (isNightTime) {
                     isNightTime = false;
                     ghostsSpawnedTonight = 0;
@@ -2065,7 +2066,6 @@
                 if (dayIcon) dayIcon.innerText = '☀️';
                 if (dayTimeText) dayTimeText.innerText = 'Daytime';
             } else {
-                // Nighttime: Cap maximum 2 ghosts per night
                 isNightTime = true;
                 ambientLight.intensity = 0.25;
                 if (dayIcon) dayIcon.innerText = '🌙';
@@ -2078,7 +2078,6 @@
                 }
             }
 
-            // Player Physics & Movement
             let moveDir = new THREE.Vector3();
             if (keys.w) moveDir.z -= 1;
             if (keys.s) moveDir.z += 1;
@@ -2099,7 +2098,6 @@
                 const nextX = playerGroup.position.x + rotatedDir.x * moveSpeed * delta;
                 const nextZ = playerGroup.position.z + rotatedDir.z * moveSpeed * delta;
 
-                // Bounding sphere collision test against solid object colliders
                 const playerRadius = 0.55;
                 let canMoveX = true;
                 let canMoveZ = true;
@@ -2123,7 +2121,6 @@
 
                 playerGroup.rotation.y = Math.atan2(rotatedDir.x, rotatedDir.z);
 
-                // Humanoid Limb Walking Animation Rotations
                 const walkCycle = Math.sin(elapsed * 14);
                 humanoidLimbs.leftArm.rotation.x = walkCycle * 0.65;
                 if (humanoidLimbs.rightArm.rotation.x === 0) {
@@ -2138,7 +2135,6 @@
                 if (humanoidLimbs.rightLeg) humanoidLimbs.rightLeg.rotation.x = 0;
             }
 
-            // Gravity & Jump Physics
             if (keys.space && isGrounded) { playerVelY = 7.5; isGrounded = false; }
             if (!isGrounded) {
                 playerGroup.position.y += playerVelY * delta;
@@ -2150,7 +2146,6 @@
                 }
             }
 
-            // Camera follow
             const targetCamPos = playerGroup.position.clone().add(cameraOffset.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraAngleY));
             camera.position.lerp(targetCamPos, 0.1);
             camera.lookAt(playerGroup.position.clone().add(new THREE.Vector3(0, 1.5, 0)));
