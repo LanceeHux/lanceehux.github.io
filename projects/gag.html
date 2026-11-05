@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Farm Studio - Grow & Harvest</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap');
         
+        * { box-sizing: border-box; }
         body, html {
             margin: 0;
             padding: 0;
@@ -18,6 +18,8 @@
             font-family: 'Quicksand', sans-serif;
             user-select: none;
             -webkit-user-select: none;
+            background-color: #020617;
+            color: #ffffff;
         }
 
         .font-fredoka {
@@ -28,6 +30,7 @@
         .roblox-panel {
             background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
             border: 2px solid rgba(255, 255, 255, 0.15);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
         }
@@ -44,6 +47,7 @@
             left: 30px;
             touch-action: none;
             backdrop-filter: blur(6px);
+            z-index: 20;
         }
 
         .touch-joystick-stick {
@@ -70,6 +74,7 @@
             font-size: 24px;
             user-select: none;
             touch-action: manipulation;
+            cursor: pointer;
         }
 
         /* Roblox Curved Buttons */
@@ -78,6 +83,15 @@
             border: 2px solid #60a5fa;
             box-shadow: 0 4px 0 #1e40af, inset 0 2px 0 rgba(255, 255, 255, 0.4);
             transition: transform 0.1s ease, filter 0.1s ease;
+            color: #ffffff;
+            cursor: pointer;
+            border-radius: 16px;
+            padding: 12px 20px;
+            font-family: 'Fredoka One', cursive;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
         .roblox-btn:hover {
             transform: translateY(-2px);
@@ -121,7 +135,14 @@
             height: 58px;
             background: rgba(15, 23, 42, 0.85);
             border: 3px solid rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
             transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
         }
         .hotbar-slot.active {
             border-color: #facc15;
@@ -137,6 +158,7 @@
             text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
             pointer-events: none;
             animation: floatUp 1.2s ease-out forwards;
+            z-index: 50;
         }
 
         @keyframes floatUp {
@@ -145,184 +167,223 @@
             100% { opacity: 0; transform: translateY(-80px) scale(0.8); }
         }
 
+        /* Static Layout & Utility classes */
+        #canvas-container { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; }
+        
+        #landing-screen {
+            position: absolute; inset: 0; z-index: 40;
+            background: rgba(2, 6, 23, 0.65);
+            backdrop-filter: blur(12px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px;
+            text-align: center; transition: opacity 0.5s ease;
+        }
+
+        #ui-layer {
+            position: relative; z-index: 10; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: space-between; padding: 24px;
+            pointer-events: none; opacity: 0; transition: opacity 0.5s ease;
+        }
+
+        .pointer-auto { pointer-events: auto; }
+        .flex-row { display: flex; flex-direction: row; }
+        .flex-col { display: flex; flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .space-x-3 > * + * { margin-left: 12px; }
+        .space-y-3 > * + * { margin-top: 12px; }
+        .hidden { display: none !important; }
+        .block { display: block !important; }
+
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
     </style>
 </head>
-<body class="bg-slate-950 text-white flex flex-col justify-between">
+<body>
 
     <!-- 3D Canvas -->
-    <div id="canvas-container" class="absolute inset-0 z-0"></div>
+    <div id="canvas-container"></div>
 
     <!-- LANDING SCREEN OVERLAY -->
-    <div id="landing-screen" class="absolute inset-0 z-40 bg-slate-950/40 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center transition-all duration-500">
-        <div class="roblox-panel p-8 md:p-12 rounded-3xl max-w-lg w-full flex flex-col items-center space-y-6 border-amber-400/40 shadow-2xl">
-            <div class="text-6xl animate-bounce">🌾</div>
+    <div id="landing-screen">
+        <div class="roblox-panel" style="padding: 40px; border-radius: 28px; max-width: 480px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 20px; border-color: rgba(250, 204, 21, 0.4);">
+            <div style="font-size: 64px;">🌾</div>
             <div>
-                <h1 class="font-fredoka text-4xl md:text-5xl text-amber-400 drop-shadow-md">Grow a Farm</h1>
-                <p class="text-slate-300 font-bold text-sm mt-2">Build, Harvest & Protect Your Garden</p>
+                <h1 class="font-fredoka" style="font-size: 42px; color: #fbbf24; margin: 0;">Grow a Farm</h1>
+                <p style="color: #cbd5e1; font-weight: 700; font-size: 14px; margin-top: 8px;">Build, Harvest & Protect Your Garden</p>
             </div>
 
-            <div class="w-full space-y-3">
-                <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Select Game Mode</div>
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
+                <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; text-align: left;">Select Game Mode</div>
                 
-                <button id="btn-start-peaceful" class="roblox-btn roblox-btn-green w-full py-4 rounded-2xl font-fredoka text-xl flex items-center justify-center space-x-3">
+                <button id="btn-start-peaceful" class="roblox-btn roblox-btn-green" style="width: 100%; font-size: 20px; padding: 18px;">
                     <span>🕊️ Peaceful Mode</span>
                 </button>
-                <div class="text-[11px] text-slate-400">Relaxed farming without monsters at night.</div>
+                <div style="font-size: 11px; color: #94a3b8; text-align: left;">Relaxed farming without monsters at night.</div>
 
-                <button id="btn-start-monster" class="roblox-btn roblox-btn-red w-full py-4 rounded-2xl font-fredoka text-xl flex items-center justify-center space-x-3 mt-2">
+                <button id="btn-start-monster" class="roblox-btn roblox-btn-red" style="width: 100%; font-size: 20px; padding: 18px; margin-top: 8px;">
                     <span>👹 Monster Mode</span>
                 </button>
-                <div class="text-[11px] text-red-300 font-semibold">Night ghosts invade via the entrance path to eat crops! Fight back with weapons!</div>
+                <div style="font-size: 11px; color: #fca5a5; font-weight: 600; text-align: left;">Night ghosts invade via the entrance path to eat crops! Fight back with weapons!</div>
             </div>
         </div>
     </div>
 
     <!-- UI Overlay Layer -->
-    <div id="ui-layer" class="relative z-10 inset-0 h-full w-full pointer-events-none flex flex-col justify-between p-4 md:p-6 opacity-0 transition-opacity duration-500">
+    <div id="ui-layer">
         
         <!-- Top HUD Header -->
-        <div class="flex justify-between items-start w-full">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
             <!-- Left Info Panel: Player Stats -->
-            <div class="flex flex-col space-y-2 pointer-events-auto">
+            <div class="pointer-auto" style="display: flex; flex-direction: column; gap: 10px;">
                 <!-- Currency Card -->
-                <div class="roblox-panel px-4 py-2 rounded-2xl flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-full bg-amber-400 border-2 border-amber-200 flex items-center justify-center font-fredoka text-xl text-amber-950 shadow-md">
+                <div class="roblox-panel" style="padding: 10px 16px; border-radius: 18px; display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #facc15; border: 2px solid #fef08a; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka One', cursive; font-size: 20px; color: #451a03;">
                         🪙
                     </div>
                     <div>
-                        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Coins</div>
-                        <div id="coin-count" class="font-fredoka text-2xl text-amber-400">120</div>
+                        <div style="font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase;">Coins</div>
+                        <div id="coin-count" class="font-fredoka" style="font-size: 24px; color: #facc15;">120</div>
                     </div>
                 </div>
 
                 <!-- XP & Level Card -->
-                <div class="roblox-panel px-4 py-2 rounded-2xl flex items-center space-x-3 min-w-[200px]">
-                    <div class="w-10 h-10 rounded-full bg-blue-500 border-2 border-blue-200 flex items-center justify-center font-fredoka text-sm text-white shadow-md" id="player-level-badge">
+                <div class="roblox-panel" style="padding: 10px 16px; border-radius: 18px; display: flex; align-items: center; gap: 12px; min-width: 200px;">
+                    <div id="player-level-badge" style="width: 36px; height: 36px; border-radius: 50%; background: #3b82f6; border: 2px solid #93c5fd; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka One', cursive; font-size: 13px; color: #ffffff;">
                         L1
                     </div>
-                    <div class="flex-1">
-                        <div class="flex justify-between text-xs font-bold text-slate-300">
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: #cbd5e1;">
                             <span>Level <span id="level-num">1</span></span>
                             <span id="xp-text">0/100 XP</span>
                         </div>
-                        <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden mt-1 border border-slate-700">
-                            <div id="xp-bar" class="bg-gradient-to-r from-blue-500 to-indigo-500 h-full transition-all duration-300 w-0"></div>
+                        <div style="width: 100%; background: #1e293b; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 4px; border: 1px solid #334155;">
+                            <div id="xp-bar" style="background: linear-gradient(90deg, #3b82f6, #6366f1); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Center Clock / Day Cycle & Weather & Difficulty Mode Indicator -->
-            <div class="flex flex-col items-center space-y-1 pointer-events-auto">
-                <div class="roblox-panel px-4 py-2 rounded-2xl flex items-center space-x-2">
-                    <span id="day-icon" class="text-xl">☀️</span>
-                    <span id="day-time-text" class="font-fredoka text-slate-200 text-sm">Daytime</span>
+            <div class="pointer-auto" style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                <div class="roblox-panel" style="padding: 8px 16px; border-radius: 16px; display: flex; align-items: center; gap: 8px;">
+                    <span id="day-icon" style="font-size: 18px;">☀️</span>
+                    <span id="day-time-text" class="font-fredoka" style="color: #e2e8f0; font-size: 13px;">Daytime</span>
                 </div>
-                <div class="flex items-center space-x-2">
-                    <div id="difficulty-badge" class="px-3 py-0.5 rounded-full text-[10px] font-fredoka uppercase tracking-wider bg-green-600 text-white">
+                <div style="display: flex; gap: 8px;">
+                    <div id="difficulty-badge" style="padding: 4px 12px; border-radius: 9999px; font-size: 10px; font-family: 'Fredoka One', cursive; text-transform: uppercase; background: #16a34a; color: #ffffff;">
                         Peaceful
                     </div>
-                    <div id="weather-badge" class="px-3 py-0.5 rounded-full text-[10px] font-fredoka uppercase tracking-wider bg-blue-600 text-white">
+                    <div id="weather-badge" style="padding: 4px 12px; border-radius: 9999px; font-size: 10px; font-family: 'Fredoka One', cursive; text-transform: uppercase; background: #2563eb; color: #ffffff;">
                         ☀️ Sunny & Clear
                     </div>
                 </div>
             </div>
 
             <!-- Right Menu Buttons -->
-            <div class="flex space-x-2 md:space-x-3 pointer-events-auto flex-wrap justify-end gap-y-2">
-                <button id="btn-fullscreen" class="roblox-btn p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
+            <div class="pointer-auto" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
+                <button id="btn-fullscreen" class="roblox-btn" style="padding: 10px 14px;">
                     <span id="fullscreen-icon">⛶</span>
                 </button>
-                <button id="btn-barn" class="roblox-btn roblox-btn-amber p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
+                <button id="btn-barn" class="roblox-btn roblox-btn-amber" style="padding: 10px 14px;">
                     <span>🧺</span> <span>Vault</span>
                 </button>
-                <button id="btn-seeds" class="roblox-btn roblox-btn-purple p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
+                <button id="btn-seeds" class="roblox-btn roblox-btn-purple" style="padding: 10px 14px;">
                     <span>🌱</span> <span>Seeds</span>
                 </button>
-                <button id="btn-quests" class="roblox-btn p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
-                    <span>📜</span> <span class="hidden md:inline">Quests</span>
+                <button id="btn-quests" class="roblox-btn" style="padding: 10px 14px;">
+                    <span>📜</span> <span style="display: inline;">Quests</span>
                 </button>
-                <button id="btn-settings" class="roblox-btn p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
-                    <span>⚙️</span> <span class="hidden md:inline">Settings</span>
+                <button id="btn-settings" class="roblox-btn" style="padding: 10px 14px;">
+                    <span>⚙️</span> <span style="display: inline;">Settings</span>
                 </button>
             </div>
         </div>
 
         <!-- Center Prompt Overlay -->
-        <div id="action-prompt" class="self-center mb-12 opacity-0 transition-all duration-200 transform translate-y-4 pointer-events-none">
-            <div class="roblox-panel px-6 py-3 rounded-full flex items-center space-x-3 border-amber-400/50">
-                <kbd class="px-3 py-1 bg-amber-400 text-slate-950 font-fredoka rounded-lg text-lg shadow-md" id="prompt-key">E</kbd>
-                <span id="prompt-text" class="font-fredoka text-lg text-slate-100">Till Dirt Plot</span>
+        <div id="action-prompt" style="align-self: center; margin-bottom: 50px; opacity: 0; transition: all 0.2s ease; transform: translateY(16px); pointer-events: none;">
+            <div class="roblox-panel" style="padding: 12px 24px; border-radius: 9999px; display: flex; align-items: center; gap: 12px; border-color: rgba(250, 204, 21, 0.5);">
+                <kbd id="prompt-key" style="padding: 4px 10px; background: #facc15; color: #020617; font-family: 'Fredoka One', cursive; border-radius: 8px; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">E</kbd>
+                <span id="prompt-text" class="font-fredoka" style="font-size: 16px; color: #f8fafc;">Till Dirt Plot</span>
             </div>
         </div>
 
-        <!-- Touch Controls for Mobile/Tablet Devices -->
-        <div id="mobile-controls" class="pointer-events-auto block md:hidden">
+        <!-- Touch / Virtual On-Screen Controls (Visible on PC & Mobile when toggled) -->
+        <div id="mobile-controls" class="pointer-auto" style="display: block;">
             <div id="joystick-base" class="touch-joystick-base">
                 <div id="joystick-stick" class="touch-joystick-stick"></div>
             </div>
 
-            <div class="absolute bottom-6 right-6 flex flex-col items-end space-y-3">
-                <div class="flex space-x-3 items-end">
-                    <button id="btn-touch-attack" class="touch-action-btn roblox-btn-red text-xl font-fredoka shadow-lg">👊</button>
-                    <button id="btn-touch-interact" class="touch-action-btn roblox-btn text-xl font-fredoka shadow-lg">✋</button>
+            <div style="position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; z-index: 20;">
+                <div style="display: flex; gap: 12px; align-items: flex-end;">
+                    <button id="btn-touch-attack" class="touch-action-btn roblox-btn-red" style="box-shadow: 0 4px 12px rgba(0,0,0,0.5);">👊</button>
+                    <button id="btn-touch-interact" class="touch-action-btn roblox-btn" style="box-shadow: 0 4px 12px rgba(0,0,0,0.5);">✋</button>
                 </div>
-                <button id="btn-touch-jump" class="touch-action-btn roblox-btn-amber text-lg font-fredoka shadow-lg mr-6">⬆️</button>
+                <button id="btn-touch-jump" class="touch-action-btn roblox-btn-amber" style="box-shadow: 0 4px 12px rgba(0,0,0,0.5); margin-right: 24px;">⬆️</button>
             </div>
         </div>
 
         <!-- Bottom Hotbar & Tools Selection -->
-        <div class="self-center pointer-events-auto flex flex-col items-center space-y-2 mb-2">
-            <div id="active-item-name" class="font-fredoka text-sm text-slate-300 bg-slate-900/80 px-3 py-1 rounded-full backdrop-blur-md">
+        <div style="align-self: center; pointer-events: auto; display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 10px;">
+            <div id="active-item-name" class="font-fredoka" style="font-size: 13px; color: #cbd5e1; background: rgba(15, 23, 42, 0.85); padding: 4px 14px; border-radius: 9999px; backdrop-filter: blur(8px);">
                 Wooden Hoe (1)
             </div>
-            <div class="roblox-panel p-2 rounded-2xl flex space-x-2 border-slate-700/60" id="hotbar"></div>
+            <div id="hotbar" class="roblox-panel" style="padding: 8px; border-radius: 18px; display: flex; gap: 8px; border-color: rgba(51, 65, 85, 0.6);"></div>
         </div>
     </div>
 
-    <!-- MODAL: SETTINGS & DIFFICULTY -->
-    <div id="settings-modal" class="hidden absolute inset-0 z-30 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="roblox-panel w-full max-w-md rounded-3xl p-6 flex flex-col max-h-[85vh] border-blue-500/30">
-            <div class="flex justify-between items-center pb-4 border-b border-slate-700">
-                <div class="flex items-center space-x-3">
-                    <span class="text-3xl">⚙️</span>
-                    <h2 class="font-fredoka text-2xl text-slate-100">Settings</h2>
+    <!-- MODAL: SETTINGS & BACKUP -->
+    <div id="settings-modal" class="hidden" style="position: absolute; inset: 0; z-index: 30; background: rgba(2, 6, 23, 0.75); backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center; padding: 20px;">
+        <div class="roblox-panel" style="width: 100%; max-width: 500px; border-radius: 28px; padding: 24px; display: flex; flex-direction: column; max-height: 85vh; border-color: rgba(59, 130, 246, 0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #334155;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 28px;">⚙️</span>
+                    <h2 class="font-fredoka" style="font-size: 22px; color: #f8fafc; margin: 0;">Save Backup & Settings</h2>
                 </div>
-                <button class="btn-close-modal text-slate-400 hover:text-white font-fredoka text-2xl">✕</button>
+                <button class="btn-close-modal" style="background: none; border: none; color: #94a3b8; font-family: 'Fredoka One', cursive; font-size: 22px; cursor: pointer;">✕</button>
             </div>
 
-            <div class="space-y-4 my-4 flex-1 overflow-y-auto pr-1">
-                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-700">
-                    <h3 class="font-fredoka text-lg text-amber-400 mb-2">🎮 Difficulty Mode</h3>
-                    <div class="grid grid-cols-2 gap-3">
-                        <button id="setting-mode-peaceful" class="roblox-btn roblox-btn-green py-3 rounded-xl font-fredoka text-sm">
+            <div style="overflow-y: auto; padding-right: 6px; margin: 16px 0; display: flex; flex-direction: column; gap: 16px; flex: 1;">
+                <!-- Virtual Controls Toggle Setting -->
+                <div style="background: rgba(15, 23, 42, 0.6); padding: 16px; border-radius: 18px; border: 1px solid #334155; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <h3 class="font-fredoka" style="font-size: 16px; color: #c084fc; margin: 0 0 4px 0;">📱 On-Screen Controls</h3>
+                        <p style="font-size: 11px; color: #cbd5e1; margin: 0;">Show virtual joystick and action buttons on PC & Mobile</p>
+                    </div>
+                    <button id="btn-toggle-mobile-ctrl" class="roblox-btn roblox-btn-green" style="font-size: 12px; padding: 10px 16px;">
+                        Enabled
+                    </button>
+                </div>
+
+                <div style="background: rgba(15, 23, 42, 0.6); padding: 16px; border-radius: 18px; border: 1px solid #334155;">
+                    <h3 class="font-fredoka" style="font-size: 16px; color: #fbbf24; margin: 0 0 10px 0;">🎮 Difficulty Mode</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <button id="setting-mode-peaceful" class="roblox-btn roblox-btn-green" style="font-size: 13px; padding: 12px;">
                             🕊️ Peaceful
                         </button>
-                        <button id="setting-mode-monster" class="roblox-btn roblox-btn-red py-3 rounded-xl font-fredoka text-sm">
+                        <button id="setting-mode-monster" class="roblox-btn roblox-btn-red" style="font-size: 13px; padding: 12px;">
                             👹 Monster
                         </button>
                     </div>
                 </div>
 
                 <!-- Export Save String -->
-                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-700">
-                    <h3 class="font-fredoka text-lg text-emerald-400 mb-1">📤 Export Save String</h3>
-                    <p class="text-xs text-slate-300 mb-2">Copy your raw save data string:</p>
-                    <textarea id="export-textarea" readonly class="w-full h-20 bg-slate-950 text-emerald-400 font-mono text-xs p-2 rounded-xl border border-slate-800 resize-none select-all focus:outline-none"></textarea>
-                    <button id="btn-copy-save" class="roblox-btn roblox-btn-green w-full py-2 rounded-xl font-fredoka text-xs mt-2">
+                <div style="background: rgba(15, 23, 42, 0.6); padding: 16px; border-radius: 18px; border: 1px solid #334155;">
+                    <h3 class="font-fredoka" style="font-size: 16px; color: #34d399; margin: 0 0 4px 0;">📤 Export Save String</h3>
+                    <p style="font-size: 11px; color: #cbd5e1; margin: 0 0 8px 0;">Copy your raw save data string:</p>
+                    <textarea id="export-textarea" readonly style="width: 100%; height: 75px; background: #020617; color: #34d399; font-family: monospace; font-size: 11px; padding: 8px; border-radius: 12px; border: 1px solid #1e293b; resize: none;"></textarea>
+                    <button id="btn-copy-save" class="roblox-btn roblox-btn-green" style="width: 100%; font-size: 12px; padding: 10px; margin-top: 8px;">
                         📋 Copy Save String
                     </button>
                 </div>
 
                 <!-- Import Save String -->
-                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-700">
-                    <h3 class="font-fredoka text-lg text-blue-400 mb-1">📥 Import Save String</h3>
-                    <p class="text-xs text-slate-300 mb-2">Paste a backup save string to restore:</p>
-                    <textarea id="import-textarea" placeholder="Paste save string here..." class="w-full h-20 bg-slate-950 text-white font-mono text-xs p-2 rounded-xl border border-slate-800 resize-none focus:outline-none"></textarea>
-                    <button id="btn-import-save" class="roblox-btn w-full py-2 rounded-xl font-fredoka text-xs mt-2">
+                <div style="background: rgba(15, 23, 42, 0.6); padding: 16px; border-radius: 18px; border: 1px solid #334155;">
+                    <h3 class="font-fredoka" style="font-size: 16px; color: #60a5fa; margin: 0 0 4px 0;">📥 Import Save String</h3>
+                    <p style="font-size: 11px; color: #cbd5e1; margin: 0 0 8px 0;">Paste a backup save string to restore:</p>
+                    <textarea id="import-textarea" placeholder="Paste save string here..." style="width: 100%; height: 75px; background: #020617; color: #ffffff; font-family: monospace; font-size: 11px; padding: 8px; border-radius: 12px; border: 1px solid #1e293b; resize: none;"></textarea>
+                    <button id="btn-import-save" class="roblox-btn" style="width: 100%; font-size: 12px; padding: 10px; margin-top: 8px;">
                         💾 Restore Save
                     </button>
                 </div>
@@ -331,78 +392,77 @@
     </div>
 
     <!-- MODAL: HARVESTED CROPS VAULT / BARN -->
-    <div id="barn-modal" class="hidden absolute inset-0 z-30 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="roblox-panel w-full max-w-2xl rounded-3xl p-6 flex flex-col max-h-[85vh] border-amber-500/30">
-            <div class="flex justify-between items-center pb-4 border-b border-slate-700">
-                <div class="flex items-center space-x-3">
-                    <span class="text-3xl">🧺</span>
+    <div id="barn-modal" class="hidden" style="position: absolute; inset: 0; z-index: 30; background: rgba(2, 6, 23, 0.75); backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center; padding: 20px;">
+        <div class="roblox-panel" style="width: 100%; max-width: 600px; border-radius: 28px; padding: 24px; display: flex; flex-direction: column; max-height: 85vh; border-color: rgba(245, 158, 11, 0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #334155;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 28px;">🧺</span>
                     <div>
-                        <h2 class="font-fredoka text-2xl text-slate-100">Harvest Vault</h2>
-                        <div class="text-xs text-amber-400 font-bold" id="total-vault-valuation">Total Value: 0 Coins</div>
+                        <h2 class="font-fredoka" style="font-size: 22px; color: #f8fafc; margin: 0;">Harvest Vault</h2>
+                        <div id="total-vault-valuation" style="font-size: 12px; color: #fbbf24; font-weight: bold;">Total Value: 0 Coins</div>
                     </div>
                 </div>
-                <button class="btn-close-modal text-slate-400 hover:text-white font-fredoka text-2xl">✕</button>
+                <button class="btn-close-modal" style="background: none; border: none; color: #94a3b8; font-family: 'Fredoka One', cursive; font-size: 22px; cursor: pointer;">✕</button>
             </div>
             
-            <div class="flex justify-between items-center my-3 px-2">
-                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Stored Produce (Individual Inventory)</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0 6px 0; padding: 0 4px;">
+                <span style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: bold; letter-spacing: 1px;">Stored Produce (Individual Inventory)</span>
             </div>
 
-            <div id="vault-items-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto pr-2 flex-1 my-2"></div>
+            <div id="vault-items-container" style="display: grid; grid-template-columns: 1fr; gap: 10px; overflow-y: auto; padding-right: 6px; flex: 1; margin: 8px 0;"></div>
         </div>
     </div>
 
     <!-- MODAL: SEEDS INVENTORY -->
-    <div id="seeds-modal" class="hidden absolute inset-0 z-30 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="roblox-panel w-full max-w-2xl rounded-3xl p-6 flex flex-col max-h-[85vh] border-purple-500/30">
-            <div class="flex justify-between items-center pb-4 border-b border-slate-700">
-                <div class="flex items-center space-x-3">
-                    <span class="text-3xl">🌱</span>
-                    <h2 class="font-fredoka text-2xl text-slate-100">Seed Pouch & Equip</h2>
+    <div id="seeds-modal" class="hidden" style="position: absolute; inset: 0; z-index: 30; background: rgba(2, 6, 23, 0.75); backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center; padding: 20px;">
+        <div class="roblox-panel" style="width: 100%; max-width: 600px; border-radius: 28px; padding: 24px; display: flex; flex-direction: column; max-height: 85vh; border-color: rgba(168, 85, 247, 0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #334155;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 28px;">🌱</span>
+                    <h2 class="font-fredoka" style="font-size: 22px; color: #f8fafc; margin: 0;">Seed Pouch & Equip</h2>
                 </div>
-                <button class="btn-close-modal text-slate-400 hover:text-white font-fredoka text-2xl">✕</button>
+                <button class="btn-close-modal" style="background: none; border: none; color: #94a3b8; font-family: 'Fredoka One', cursive; font-size: 22px; cursor: pointer;">✕</button>
             </div>
-            <div id="seeds-items-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto pr-2 flex-1 my-4"></div>
+            <div id="seeds-items-container" style="display: grid; grid-template-columns: 1fr; gap: 10px; overflow-y: auto; padding-right: 6px; flex: 1; margin: 16px 0;"></div>
         </div>
     </div>
 
     <!-- MODAL: GARDEN SHOP -->
-    <div id="shop-modal" class="hidden absolute inset-0 z-30 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="roblox-panel w-full max-w-2xl rounded-3xl p-6 flex flex-col max-h-[85vh] border-blue-500/30">
-            <div class="flex justify-between items-center pb-4 border-b border-slate-700">
-                <div class="flex items-center space-x-3">
-                    <span class="text-3xl">🏬</span>
-                    <h2 class="font-fredoka text-2xl text-slate-100">Village Market Kiosk</h2>
+    <div id="shop-modal" class="hidden" style="position: absolute; inset: 0; z-index: 30; background: rgba(2, 6, 23, 0.75); backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center; padding: 20px;">
+        <div class="roblox-panel" style="width: 100%; max-width: 600px; border-radius: 28px; padding: 24px; display: flex; flex-direction: column; max-height: 85vh; border-color: rgba(59, 130, 246, 0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #334155;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 28px;">🏬</span>
+                    <h2 class="font-fredoka" style="font-size: 22px; color: #f8fafc; margin: 0;">Village Market Kiosk</h2>
                 </div>
-                <button class="btn-close-modal text-slate-400 hover:text-white font-fredoka text-2xl">✕</button>
+                <button class="btn-close-modal" style="background: none; border: none; color: #94a3b8; font-family: 'Fredoka One', cursive; font-size: 22px; cursor: pointer;">✕</button>
             </div>
-            <div class="flex space-x-2 my-4">
-                <button class="shop-tab active px-4 py-2 rounded-xl font-fredoka text-sm bg-blue-600 text-white" data-tab="seeds">Seeds</button>
-                <button class="shop-tab px-4 py-2 rounded-xl font-fredoka text-sm bg-slate-800 text-slate-400 hover:bg-slate-700" data-tab="upgrades">Tools & Weapons</button>
-                <button class="shop-tab px-4 py-2 rounded-xl font-fredoka text-sm bg-slate-800 text-slate-400 hover:bg-slate-700" data-tab="expansions">Land Plots</button>
-                <button class="shop-tab px-4 py-2 rounded-xl font-fredoka text-sm bg-green-600 text-white" data-tab="sell">💰 Sell Crops</button>
+            <div style="display: flex; gap: 8px; margin: 16px 0; flex-wrap: wrap;">
+                <button class="shop-tab roblox-btn" data-tab="seeds" style="font-size: 13px; padding: 8px 14px;">Seeds</button>
+                <button class="shop-tab roblox-btn" data-tab="upgrades" style="font-size: 13px; padding: 8px 14px; background: #1e293b; border-color: #334155; box-shadow: 0 4px 0 #0f172a;">Tools & Weapons</button>
+                <button class="shop-tab roblox-btn" data-tab="expansions" style="font-size: 13px; padding: 8px 14px; background: #1e293b; border-color: #334155; box-shadow: 0 4px 0 #0f172a;">Land Plots</button>
+                <button class="shop-tab roblox-btn roblox-btn-green" data-tab="sell" style="font-size: 13px; padding: 8px 14px;">💰 Sell Crops</button>
             </div>
-            <div id="shop-items-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-2 flex-1 my-2"></div>
+            <div id="shop-items-container" style="display: grid; grid-template-columns: 1fr; gap: 12px; overflow-y: auto; padding-right: 6px; flex: 1; margin: 8px 0;"></div>
         </div>
     </div>
 
     <!-- MODAL: QUESTS -->
-    <div id="quests-modal" class="hidden absolute inset-0 z-30 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="roblox-panel w-full max-w-md rounded-3xl p-6 flex flex-col max-h-[80vh] border-amber-500/30">
-            <div class="flex justify-between items-center pb-4 border-b border-slate-700">
-                <div class="flex items-center space-x-3">
-                    <span class="text-3xl">📜</span>
-                    <h2 class="font-fredoka text-2xl text-slate-100">Farm Quests</h2>
+    <div id="quests-modal" class="hidden" style="position: absolute; inset: 0; z-index: 30; background: rgba(2, 6, 23, 0.75); backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center; padding: 20px;">
+        <div class="roblox-panel" style="width: 100%; max-width: 450px; border-radius: 28px; padding: 24px; display: flex; flex-direction: column; max-height: 80vh; border-color: rgba(245, 158, 11, 0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #334155;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 28px;">📜</span>
+                    <h2 class="font-fredoka" style="font-size: 22px; color: #f8fafc; margin: 0;">Farm Quests</h2>
                 </div>
-                <button class="btn-close-modal text-slate-400 hover:text-white font-fredoka text-2xl">✕</button>
+                <button class="btn-close-modal" style="background: none; border: none; color: #94a3b8; font-family: 'Fredoka One', cursive; font-size: 22px; cursor: pointer;">✕</button>
             </div>
-            <div id="quests-list" class="space-y-3 my-4 overflow-y-auto pr-2 flex-1"></div>
+            <div id="quests-list" style="display: flex; flex-direction: column; gap: 12px; margin: 16px 0; overflow-y: auto; padding-right: 6px; flex: 1;"></div>
         </div>
     </div>
 
     <!-- THREE.JS ENGINE & GAME LOGIC -->
     <script>
-        // --- GLOBAL GAME DATA DECLARATIONS ---
         const WEAPONS = {
             fist: { id: 'fist', name: 'Bare Fists', icon: '👊', damage: 25, price: 0 },
             wood_sword: { id: 'wood_sword', name: 'Wooden Sword', icon: '🗡️', damage: 50, price: 150 },
@@ -428,6 +488,7 @@
             unlockedPlots: 4,
             waterCanCapacity: 10,
             waterCanLevel: 1,
+            showMobileControls: true,
             equippedWeapon: 'fist',
             unlockedWeapons: ['fist'],
             equippedSeed: 'carrot_seed',
@@ -470,7 +531,6 @@
 
         const audio = new SoundEngine();
 
-        // --- CROP TIER PROBABILITIES & MASSIVE GIANT SCALES (Up to 50x) ---
         function generateCropTier() {
             const rand = Math.random();
             if (rand < 0.60) {
@@ -505,14 +565,14 @@
                 } : null
             }));
             try {
-                localStorage.setItem('grow_garden_save_v5', JSON.stringify(gameState));
+                localStorage.setItem('grow_garden_save_v7', JSON.stringify(gameState));
             } catch (e) {
                 console.error("Failed to save to localStorage:", e);
             }
         }
 
         function loadGame() {
-            const saved = localStorage.getItem('grow_garden_save_v5');
+            const saved = localStorage.getItem('grow_garden_save_v7');
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
@@ -565,19 +625,6 @@
             }
             const texture = new THREE.CanvasTexture(canvas);
             texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping;
-            return texture;
-        }
-
-        function createWoodTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256; canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#8b5a2b'; ctx.fillRect(0,0,256,256);
-            ctx.strokeStyle = '#5c3a1b'; ctx.lineWidth = 4;
-            for(let y=0; y<256; y+=32){
-                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(256, y + (Math.random()*8-4)); ctx.stroke();
-            }
-            const texture = new THREE.CanvasTexture(canvas);
             return texture;
         }
 
@@ -757,6 +804,7 @@
             buildFarmGrid();
             setupMobileControls();
             setupInputListeners();
+            updateMobileControlsVisibility();
 
             if (gameState.heldItem) {
                 updatePlayerHandItem();
@@ -906,7 +954,6 @@
             colliders.push(new THREE.Box3(new THREE.Vector3(4, 0, 24), new THREE.Vector3(26, 5, 26)));
         }
 
-        // --- MONSTER INVASION ENGINE ---
         function spawnNightMonster() {
             const group = new THREE.Group();
             const ghostMat = new THREE.MeshStandardMaterial({ color: 0x99f6e4, emissive: 0x0d9488, emissiveIntensity: 0.6, transparent: true, opacity: 0.85 });
@@ -1203,11 +1250,9 @@
             const wBadge = document.getElementById('weather-badge');
             if (wBadge) wBadge.innerText = selected.label;
 
-            // Clear previous weather atmosphere particles
             weatherParticles.forEach(p => scene.remove(p.mesh));
             weatherParticles = [];
 
-            // Spawn atmospheric particles based on weather type
             if (selected.type === 'Rainy' || selected.type === 'Thunderstorm') {
                 for (let i = 0; i < 150; i++) {
                     const drop = new THREE.Mesh(
@@ -1243,7 +1288,6 @@
             }
         }
 
-        // --- UPDATE WEATHER PARTICLES ---
         function updateWeatherParticles(delta, elapsed) {
             weatherParticles.forEach(p => {
                 if (p.type === 'rain') {
@@ -1255,17 +1299,6 @@
                     if (p.mesh.position.y < 0) p.mesh.position.y = 35;
                 }
             });
-        }
-
-        function createPet(type) {
-            if (petMesh) scene.remove(petMesh);
-            petMesh = new THREE.Group();
-            let bodyColor = type === 'dog' ? 0x8b4513 : 0xffcc00;
-            const body = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.8), new THREE.MeshStandardMaterial({ color: bodyColor }));
-            body.position.y = 0.3;
-            petMesh.add(body);
-            petMesh.position.copy(playerGroup.position).add(new THREE.Vector3(-1.5, 0, -1.5));
-            scene.add(petMesh);
         }
 
         function spawnWaterParticles(pos) {
@@ -1341,35 +1374,30 @@
             const joystickStick = document.getElementById('joystick-stick');
             let joystickTouchId = null;
 
-            joystickBase.addEventListener('touchstart', (e) => {
+            joystickBase.addEventListener('pointerdown', (e) => {
                 audio.init();
-                const touch = e.changedTouches[0];
-                joystickTouchId = touch.identifier;
-                updateJoystick(touch);
-            }, { passive: false });
+                joystickTouchId = e.pointerId;
+                updateJoystick(e);
+                joystickBase.setPointerCapture(e.pointerId);
+            });
 
-            window.addEventListener('touchmove', (e) => {
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    const touch = e.changedTouches[i];
-                    if (touch.identifier === joystickTouchId) updateJoystick(touch);
-                }
-            }, { passive: false });
+            joystickBase.addEventListener('pointermove', (e) => {
+                if (e.pointerId === joystickTouchId) updateJoystick(e);
+            });
 
-            window.addEventListener('touchend', (e) => {
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    if (e.changedTouches[i].identifier === joystickTouchId) {
-                        joystickTouchId = null;
-                        joystickVector = { x: 0, y: 0 };
-                        joystickStick.style.top = '35px';
-                        joystickStick.style.left = '35px';
-                    }
+            joystickBase.addEventListener('pointerup', (e) => {
+                if (e.pointerId === joystickTouchId) {
+                    joystickTouchId = null;
+                    joystickVector = { x: 0, y: 0 };
+                    joystickStick.style.top = '35px';
+                    joystickStick.style.left = '35px';
                 }
             });
 
-            function updateJoystick(touch) {
+            function updateJoystick(e) {
                 const rect = joystickBase.getBoundingClientRect();
-                let dx = touch.clientX - (rect.left + rect.width / 2);
-                let dy = touch.clientY - (rect.top + rect.height / 2);
+                let dx = e.clientX - (rect.left + rect.width / 2);
+                let dy = e.clientY - (rect.top + rect.height / 2);
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist > 45) { dx = (dx / dist) * 45; dy = (dy / dist) * 45; }
                 joystickStick.style.left = `${35 + dx}px`;
@@ -1528,7 +1556,6 @@
         function updatePlayerHandItem() {
             if (currentHandMesh) { playerHandAnchor.remove(currentHandMesh); currentHandMesh = null; }
             if (gameState.heldItem) {
-                // Ensure the held mesh reads the full exact scale factor so Huge/Colossal crops appear properly massive when flexed
                 const flexScale = Math.min(gameState.heldItem.scale * 0.55, 6.0);
                 currentHandMesh = createCropMesh(gameState.heldItem.type, 2, flexScale, gameState.heldItem.weatherTag);
                 currentHandMesh.position.set(0.1, 0.2, 0.2);
@@ -1593,7 +1620,8 @@
             const y = (-(screenPos.y * 0.5) + 0.5) * window.innerHeight;
 
             const el = document.createElement('div');
-            el.className = 'floating-text text-xl md:text-2xl';
+            el.className = 'floating-text';
+            el.style.fontSize = '20px';
             el.innerText = text;
             el.style.left = `${x}px`;
             el.style.top = `${y}px`;
@@ -1632,11 +1660,11 @@
             items.forEach((item, idx) => {
                 const isActive = idx === gameState.selectedSlot;
                 const slot = document.createElement('div');
-                slot.className = `hotbar-slot rounded-xl flex flex-col items-center justify-center relative cursor-pointer ${isActive ? 'active' : ''}`;
+                slot.className = `hotbar-slot ${isActive ? 'active' : ''}`;
                 slot.innerHTML = `
-                    <span class="text-2xl">${item.icon}</span>
-                    ${item.count !== '' ? `<span class="absolute bottom-1 right-1 text-[10px] font-fredoka bg-slate-900/90 px-1 rounded text-amber-300">${item.count}</span>` : ''}
-                    <span class="absolute top-0.5 left-1 text-[9px] font-bold text-slate-400">${idx + 1}</span>
+                    <span style="font-size: 26px;">${item.icon}</span>
+                    ${item.count !== '' ? `<span style="position: absolute; bottom: 4px; right: 4px; font-size: 10px; font-family: 'Fredoka One', cursive; background: rgba(2,6,23,0.9); padding: 1px 4px; border-radius: 6px; color: #fde047;">${item.count}</span>` : ''}
+                    <span style="position: absolute; top: 2px; left: 4px; font-size: 9px; font-weight: bold; color: #94a3b8;">${idx + 1}</span>
                 `;
                 slot.onclick = () => selectHotbarSlot(idx);
                 hotbarEl.appendChild(slot);
@@ -1676,10 +1704,34 @@
             }
         }
 
+        function updateMobileControlsVisibility() {
+            const mobileCtrlEl = document.getElementById('mobile-controls');
+            const toggleBtn = document.getElementById('btn-toggle-mobile-ctrl');
+            if (gameState.showMobileControls) {
+                mobileCtrlEl.classList.remove('hidden');
+                mobileCtrlEl.classList.add('block');
+                if (toggleBtn) {
+                    toggleBtn.innerText = 'Enabled';
+                    toggleBtn.className = 'roblox-btn roblox-btn-green';
+                }
+            } else {
+                mobileCtrlEl.classList.remove('block');
+                mobileCtrlEl.classList.add('hidden');
+                if (toggleBtn) {
+                    toggleBtn.innerText = 'Disabled';
+                    toggleBtn.className = 'roblox-btn roblox-btn-red';
+                }
+            }
+        }
+
         function setupModals() {
-            const btnShop = document.getElementById('btn-shop');
-            if (btnShop) {
-                btnShop.onclick = () => { renderShopItems('seeds'); document.getElementById('shop-modal').classList.remove('hidden'); };
+            const mobileToggleBtn = document.getElementById('btn-toggle-mobile-ctrl');
+            if (mobileToggleBtn) {
+                mobileToggleBtn.onclick = () => {
+                    gameState.showMobileControls = !gameState.showMobileControls;
+                    updateMobileControlsVisibility();
+                    saveGame();
+                };
             }
 
             document.getElementById('btn-start-peaceful').onclick = () => startGame('Peaceful');
@@ -1687,7 +1739,7 @@
 
             document.getElementById('btn-settings').onclick = () => {
                 saveGame();
-                document.getElementById('export-textarea').value = localStorage.getItem('grow_garden_save_v5') || '';
+                document.getElementById('export-textarea').value = localStorage.getItem('grow_garden_save_v7') || '';
                 document.getElementById('settings-modal').classList.remove('hidden');
             };
 
@@ -1707,12 +1759,13 @@
                 if (text) {
                     try {
                         JSON.parse(text);
-                        localStorage.setItem('grow_garden_save_v5', text);
+                        localStorage.setItem('grow_garden_save_v7', text);
                         loadGame();
                         buildFarmGrid();
                         updateEquippedWeaponMesh();
                         updatePlayerHandItem();
                         updateUI();
+                        updateMobileControlsVisibility();
                         document.getElementById('settings-modal').classList.add('hidden');
                         showFloatingText("Save Restored Successfully!", playerGroup.position);
                     } catch(e) {
@@ -1736,8 +1789,13 @@
             };
 
             document.getElementById('btn-fullscreen').onclick = () => {
-                if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-                else if (document.exitFullscreen) document.exitFullscreen();
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                    document.getElementById('fullscreen-icon').innerText = '🗗';
+                } else if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                    document.getElementById('fullscreen-icon').innerText = '⛶';
+                }
             };
 
             const shopModal = document.getElementById('shop-modal');
@@ -1761,8 +1819,14 @@
 
             document.querySelectorAll('.shop-tab').forEach(tab => {
                 tab.onclick = (e) => {
-                    document.querySelectorAll('.shop-tab').forEach(t => t.classList.replace('bg-blue-600', 'bg-slate-800'));
-                    e.target.classList.replace('bg-slate-800', 'bg-blue-600');
+                    document.querySelectorAll('.shop-tab').forEach(t => {
+                        t.style.background = '#1e293b';
+                        t.style.borderColor = '#334155';
+                        t.style.boxShadow = '0 4px 0 #0f172a';
+                    });
+                    e.target.style.background = 'linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%)';
+                    e.target.style.borderColor = '#60a5fa';
+                    e.target.style.boxShadow = '0 4px 0 #1e40af, inset 0 2px 0 rgba(255, 255, 255, 0.4)';
                     renderShopItems(e.target.dataset.tab);
                 };
             });
@@ -1772,8 +1836,8 @@
             gameState.difficulty = mode;
             gameState.gameStarted = true;
             document.getElementById('landing-screen').classList.add('opacity-0', 'pointer-events-none');
-            document.getElementById('ui-layer').classList.remove('opacity-0');
-            document.getElementById('ui-layer').classList.add('opacity-100');
+            document.getElementById('landing-screen').style.display = 'none';
+            document.getElementById('ui-layer').style.opacity = '1';
             updateUI();
             saveGame();
         }
@@ -1784,7 +1848,7 @@
             let totalValue = 0;
 
             if (gameState.harvestedVault.length === 0) {
-                container.innerHTML = `<div class="col-span-2 text-center text-slate-400 font-fredoka py-8">Your Harvest Vault is empty! Plant and harvest crops.</div>`;
+                container.innerHTML = `<div style="text-align: center; color: #94a3b8; font-family: 'Fredoka One', cursive; padding: 32px;">Your Harvest Vault is empty! Plant and harvest crops.</div>`;
                 document.getElementById('total-vault-valuation').innerText = `Total Value: 0 Coins`;
                 return;
             }
@@ -1799,20 +1863,21 @@
                 const tagDisplay = item.weatherTag ? ` [${item.weatherTag.toUpperCase()}]` : '';
 
                 const div = document.createElement('div');
-                div.className = `roblox-panel p-3 rounded-2xl flex items-center justify-between ${isHeld ? 'border-amber-400 bg-amber-950/20' : 'border-slate-700'}`;
+                div.className = 'roblox-panel';
+                div.style.cssText = `padding: 12px 16px; border-radius: 18px; display: flex; align-items: center; justify-content: space-between; border-color: ${isHeld ? '#facc15' : '#334155'}; background: ${isHeld ? 'rgba(120, 53, 15, 0.25)' : 'rgba(15, 23, 42, 0.85)'};`;
                 div.innerHTML = `
-                    <div class="flex items-center space-x-3">
-                        <span class="text-3xl">${data.icon}</span>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 32px;">${data.icon}</span>
                         <div>
-                            <div class="font-fredoka text-slate-100">${item.label} ${data.name}${tagDisplay}</div>
-                            <div class="text-xs text-amber-400 font-bold">⚖️ ${item.weight} KG | 🪙 ${price}G</div>
+                            <div class="font-fredoka" style="color: #f8fafc; font-size: 15px;">${item.label} ${data.name}${tagDisplay}</div>
+                            <div style="font-size: 11px; color: #fbbf24; font-weight: bold;">⚖️ ${item.weight} KG | 🪙 ${price}G</div>
                         </div>
                     </div>
-                    <div class="flex space-x-2">
-                        <button class="roblox-btn ${isHeld ? 'roblox-btn-amber' : 'roblox-btn-purple'} px-3 py-1.5 rounded-xl text-xs font-fredoka">
+                    <div style="display: flex; gap: 8px;">
+                        <button class="roblox-btn ${isHeld ? 'roblox-btn-amber' : 'roblox-btn-purple'}" style="font-size: 11px; padding: 8px 12px;">
                             ${isHeld ? 'Flexing' : 'Hold ✋'}
                         </button>
-                        <button class="roblox-btn roblox-btn-green px-3 py-1.5 rounded-xl text-xs font-fredoka">
+                        <button class="roblox-btn roblox-btn-green" style="font-size: 11px; padding: 8px 12px;">
                             Sell (${price}G)
                         </button>
                     </div>
@@ -1859,16 +1924,17 @@
                 const isEquipped = gameState.equippedSeed === seedKey;
 
                 const div = document.createElement('div');
-                div.className = `roblox-panel p-3 rounded-2xl flex items-center justify-between ${isEquipped ? 'border-amber-400 bg-amber-950/20' : 'border-slate-700'}`;
+                div.className = 'roblox-panel';
+                div.style.cssText = `padding: 12px 16px; border-radius: 18px; display: flex; align-items: center; justify-content: space-between; border-color: ${isEquipped ? '#facc15' : '#334155'}; background: ${isEquipped ? 'rgba(120, 53, 15, 0.25)' : 'rgba(15, 23, 42, 0.85)'};`;
                 div.innerHTML = `
-                    <div class="flex items-center space-x-3">
-                        <span class="text-3xl">${crop.icon}</span>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 32px;">${crop.icon}</span>
                         <div>
-                            <div class="font-fredoka text-slate-100">${crop.name} Seeds</div>
-                            <div class="text-xs text-slate-400">Pouch Qty: <span class="text-amber-400 font-bold">${count}</span></div>
+                            <div class="font-fredoka" style="color: #f8fafc; font-size: 15px;">${crop.name} Seeds</div>
+                            <div style="font-size: 11px; color: #94a3b8;">Pouch Qty: <span style="color: #fbbf24; font-weight: bold;">${count}</span></div>
                         </div>
                     </div>
-                    <button class="roblox-btn ${isEquipped ? 'roblox-btn-amber' : 'roblox-btn-purple'} px-3 py-1.5 rounded-xl text-xs font-fredoka">
+                    <button class="roblox-btn ${isEquipped ? 'roblox-btn-amber' : 'roblox-btn-purple'}" style="font-size: 11px; padding: 8px 14px;">
                         ${isEquipped ? 'Equipped' : 'Equip Hotbar'}
                     </button>
                 `;
@@ -1890,16 +1956,17 @@
                 Object.values(CROPS).forEach(crop => {
                     const seedKey = `${crop.id}_seed`;
                     const div = document.createElement('div');
-                    div.className = 'roblox-panel p-3 rounded-2xl flex items-center justify-between border-slate-700';
+                    div.className = 'roblox-panel';
+                    div.style.cssText = 'padding: 12px 16px; border-radius: 18px; display: flex; align-items: center; justify-content: space-between; border-color: #334155;';
                     div.innerHTML = `
-                        <div class="flex items-center space-x-3">
-                            <span class="text-3xl">${crop.icon}</span>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 32px;">${crop.icon}</span>
                             <div>
-                                <div class="font-fredoka text-slate-100">${crop.name} Seeds</div>
-                                <div class="text-xs text-amber-400 font-bold">Price: ${crop.seedPrice}G | Base Yield: ${crop.sellPrice}G</div>
+                                <div class="font-fredoka" style="color: #f8fafc; font-size: 15px;">${crop.name} Seeds</div>
+                                <div style="font-size: 11px; color: #fbbf24; font-weight: bold;">Price: ${crop.seedPrice}G | Base Yield: ${crop.sellPrice}G</div>
                             </div>
                         </div>
-                        <button class="roblox-btn roblox-btn-green px-3 py-1.5 rounded-xl text-xs font-fredoka">Buy (${crop.seedPrice}G)</button>
+                        <button class="roblox-btn roblox-btn-green" style="font-size: 11px; padding: 8px 14px;">Buy (${crop.seedPrice}G)</button>
                     `;
                     div.querySelector('button').onclick = () => {
                         if (gameState.coins >= crop.seedPrice) {
@@ -1922,16 +1989,17 @@
                     const isEquipped = gameState.equippedWeapon === wKey;
 
                     const div = document.createElement('div');
-                    div.className = 'roblox-panel p-3 rounded-2xl flex items-center justify-between border-slate-700';
+                    div.className = 'roblox-panel';
+                    div.style.cssText = 'padding: 12px 16px; border-radius: 18px; display: flex; align-items: center; justify-content: space-between; border-color: #334155;';
                     div.innerHTML = `
-                        <div class="flex items-center space-x-3">
-                            <span class="text-3xl">${w.icon}</span>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 32px;">${w.icon}</span>
                             <div>
-                                <div class="font-fredoka text-slate-100">${w.name}</div>
-                                <div class="text-xs text-red-400 font-bold">Dmg: ${w.damage}</div>
+                                <div class="font-fredoka" style="color: #f8fafc; font-size: 15px;">${w.name}</div>
+                                <div style="font-size: 11px; color: #f87171; font-weight: bold;">Dmg: ${w.damage}</div>
                             </div>
                         </div>
-                        <button class="roblox-btn ${isEquipped ? 'roblox-btn-amber' : 'roblox-btn-green'} px-3 py-1.5 rounded-xl text-xs font-fredoka">
+                        <button class="roblox-btn ${isEquipped ? 'roblox-btn-amber' : 'roblox-btn-green'}" style="font-size: 11px; padding: 8px 14px;">
                             ${isEquipped ? 'Equipped' : (isUnlocked ? 'Equip' : `Buy (${w.price}G)`)}
                         </button>
                     `;
@@ -1958,16 +2026,17 @@
 
                 const waterCost = gameState.waterCanLevel * 150;
                 const div1 = document.createElement('div');
-                div1.className = 'roblox-panel p-3 rounded-2xl flex items-center justify-between border-slate-700';
+                div1.className = 'roblox-panel';
+                div1.style.cssText = 'padding: 12px 16px; border-radius: 18px; display: flex; align-items: center; justify-content: space-between; border-color: #334155;';
                 div1.innerHTML = `
-                    <div class="flex items-center space-x-3">
-                        <span class="text-3xl">💧</span>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 32px;">💧</span>
                         <div>
-                            <div class="font-fredoka text-slate-100">Water Can Upgrade</div>
-                            <div class="text-xs text-slate-400">Cap: ${gameState.waterCanCapacity} -> ${gameState.waterCanCapacity + 5}</div>
+                            <div class="font-fredoka" style="color: #f8fafc; font-size: 15px;">Water Can Upgrade</div>
+                            <div style="font-size: 11px; color: #94a3b8;">Cap: ${gameState.waterCanCapacity} -> ${gameState.waterCanCapacity + 5}</div>
                         </div>
                     </div>
-                    <button class="roblox-btn px-3 py-1.5 rounded-xl text-xs font-fredoka">Upgrade (${waterCost}G)</button>
+                    <button class="roblox-btn" style="font-size: 11px; padding: 8px 14px;">Upgrade (${waterCost}G)</button>
                 `;
                 div1.querySelector('button').onclick = () => {
                     if (gameState.coins >= waterCost) {
@@ -1986,16 +2055,17 @@
                 const cost = gameState.unlockedPlots * 200;
                 const canExpand = gameState.unlockedPlots < farmPlots.length;
                 const div = document.createElement('div');
-                div.className = 'roblox-panel p-4 rounded-2xl flex items-center justify-between border-slate-700 col-span-2';
+                div.className = 'roblox-panel';
+                div.style.cssText = 'padding: 16px; border-radius: 18px; display: flex; align-items: center; justify-content: space-between; border-color: #334155; grid-column: span 2;';
                 div.innerHTML = `
-                    <div class="flex items-center space-x-3">
-                        <span class="text-3xl">🌱</span>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 32px;">🌱</span>
                         <div>
-                            <div class="font-fredoka text-slate-100">Unlock Farm Plot (${gameState.unlockedPlots}/${farmPlots.length})</div>
-                            <div class="text-xs text-slate-400">Expand garden plot layout</div>
+                            <div class="font-fredoka" style="color: #f8fafc; font-size: 15px;">Unlock Farm Plot (${gameState.unlockedPlots}/${farmPlots.length})</div>
+                            <div style="font-size: 11px; color: #94a3b8;">Expand garden plot layout</div>
                         </div>
                     </div>
-                    <button class="roblox-btn roblox-btn-green px-4 py-2 rounded-xl text-xs font-fredoka" ${!canExpand ? 'disabled' : ''}>
+                    <button class="roblox-btn roblox-btn-green" style="font-size: 11px; padding: 10px 16px;" ${!canExpand ? 'disabled' : ''}>
                         ${canExpand ? `Expand (${cost}G)` : 'Maxed Out!'}
                     </button>
                 `;
@@ -2019,13 +2089,14 @@
             container.innerHTML = '';
             gameState.quests.forEach(q => {
                 const div = document.createElement('div');
-                div.className = `roblox-panel p-3 rounded-2xl flex justify-between items-center ${q.completed ? 'border-green-500/50 bg-green-950/20' : 'border-slate-700'}`;
+                div.className = 'roblox-panel';
+                div.style.cssText = `padding: 12px 16px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; border-color: ${q.completed ? 'rgba(34, 197, 94, 0.5)' : '#334155'}; background: ${q.completed ? 'rgba(20, 83, 45, 0.25)' : 'rgba(15, 23, 42, 0.85)'};`;
                 div.innerHTML = `
                     <div>
-                        <div class="font-fredoka ${q.completed ? 'line-through text-slate-400' : 'text-slate-100'}">${q.text}</div>
-                        <div class="text-xs text-amber-400 font-bold">Reward: ${q.reward}G + ${q.rewardXp} XP</div>
+                        <div class="font-fredoka" style="color: ${q.completed ? '#94a3b8' : '#f8fafc'}; text-decoration: ${q.completed ? 'line-through' : 'none'}; font-size: 14px;">${q.text}</div>
+                        <div style="font-size: 11px; color: #fbbf24; font-weight: bold;">Reward: ${q.reward}G + ${q.rewardXp} XP</div>
                     </div>
-                    <div class="font-fredoka text-xs px-3 py-1 rounded-lg ${q.completed ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-300'}">
+                    <div class="font-fredoka" style="font-size: 11px; padding: 6px 12px; border-radius: 8px; background: ${q.completed ? '#16a34a' : '#1e293b'}; color: #ffffff;">
                         ${q.completed ? 'DONE' : `${q.progress}/${q.target}`}
                     </div>
                 `;
@@ -2179,6 +2250,7 @@
             init3D();
             setupModals();
             updateUI();
+            updateMobileControlsVisibility();
             animate();
         };
     </script>
