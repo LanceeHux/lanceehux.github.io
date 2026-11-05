@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Farm - Grow a Garden</title>
+    <title>3D Farm Studio - Grow & Harvest</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
@@ -17,6 +17,7 @@
             overflow: hidden;
             font-family: 'Quicksand', sans-serif;
             user-select: none;
+            -webkit-user-select: none;
         }
 
         .font-fredoka {
@@ -25,24 +26,24 @@
 
         /* Glassmorphism Roblox Style HUD */
         .roblox-panel {
-            background: rgba(18, 24, 38, 0.75);
-            backdrop-filter: blur(12px);
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(14px);
             border: 2px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
         }
 
-        /* Virtual Mobile Joystick & Action Buttons */
+        /* Touch Joystick & Buttons */
         .touch-joystick-base {
             width: 120px;
             height: 120px;
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.18);
             border: 3px solid rgba(255, 255, 255, 0.4);
             border-radius: 50%;
             position: absolute;
             bottom: 30px;
             left: 30px;
             touch-action: none;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(6px);
         }
 
         .touch-joystick-stick {
@@ -71,11 +72,12 @@
             touch-action: manipulation;
         }
 
+        /* Roblox Curved Buttons */
         .roblox-btn {
             background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
             border: 2px solid #60a5fa;
             box-shadow: 0 4px 0 #1e40af, inset 0 2px 0 rgba(255, 255, 255, 0.4);
-            transition: all 0.1s ease;
+            transition: transform 0.1s ease, filter 0.1s ease;
         }
         .roblox-btn:hover {
             transform: translateY(-2px);
@@ -101,27 +103,33 @@
             box-shadow: 0 4px 0 #78350f, inset 0 2px 0 rgba(255, 255, 255, 0.4);
         }
 
+        .roblox-btn-purple {
+            background: linear-gradient(180deg, #a855f7 0%, #6b21a8 100%);
+            border: 2px solid #c084fc;
+            box-shadow: 0 4px 0 #581c87, inset 0 2px 0 rgba(255, 255, 255, 0.4);
+        }
+
         .roblox-btn-red {
-            background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%);
-            border: 2px solid #f87171;
-            box-shadow: 0 4px 0 #991b1b, inset 0 2px 0 rgba(255, 255, 255, 0.4);
+            background: linear-gradient(180deg, #ef4444 0%, #991b1b 100%);
+            border: 2px solid #fca5a5;
+            box-shadow: 0 4px 0 #7f1d1d, inset 0 2px 0 rgba(255, 255, 255, 0.4);
         }
 
         /* Inventory Hotbar Slot */
         .hotbar-slot {
             width: 58px;
             height: 58px;
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(15, 23, 42, 0.85);
             border: 3px solid rgba(255, 255, 255, 0.2);
             transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .hotbar-slot.active {
             border-color: #facc15;
             transform: scale(1.12);
-            box-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
+            box-shadow: 0 0 15px rgba(250, 204, 21, 0.6);
         }
 
-        /* Floating +Coins Notification */
+        /* Floating Notifications */
         .floating-text {
             position: absolute;
             font-family: 'Fredoka One', cursive;
@@ -137,26 +145,43 @@
             100% { opacity: 0; transform: translateY(-80px) scale(0.8); }
         }
 
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #3b82f6;
-            border-radius: 4px;
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
     </style>
 </head>
 <body class="bg-slate-950 text-white flex flex-col justify-between">
 
-    <!-- 3D Canvas Container -->
+    <!-- 3D Canvas -->
     <div id="canvas-container" class="absolute inset-0 z-0"></div>
 
+    <!-- LANDING SCREEN OVERLAY -->
+    <div id="landing-screen" class="absolute inset-0 z-40 bg-slate-950/40 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center transition-all duration-500">
+        <div class="roblox-panel p-8 md:p-12 rounded-3xl max-w-lg w-full flex flex-col items-center space-y-6 border-amber-400/40 shadow-2xl">
+            <div class="text-6xl animate-bounce">🌾</div>
+            <div>
+                <h1 class="font-fredoka text-4xl md:text-5xl text-amber-400 drop-shadow-md">Grow a Farm</h1>
+                <p class="text-slate-300 font-bold text-sm mt-2">Build, Harvest & Protect Your Garden</p>
+            </div>
+
+            <div class="w-full space-y-3">
+                <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Select Game Mode</div>
+                
+                <button id="btn-start-peaceful" class="roblox-btn roblox-btn-green w-full py-4 rounded-2xl font-fredoka text-xl flex items-center justify-center space-x-3">
+                    <span>🕊️ Peaceful Mode</span>
+                </button>
+                <div class="text-[11px] text-slate-400">Relaxed farming without monsters at night.</div>
+
+                <button id="btn-start-monster" class="roblox-btn roblox-btn-red w-full py-4 rounded-2xl font-fredoka text-xl flex items-center justify-center space-x-3 mt-2">
+                    <span>👹 Monster Mode</span>
+                </button>
+                <div class="text-[11px] text-red-300 font-semibold">Night ghosts invade via the entrance path to eat crops! Fight back with weapons!</div>
+            </div>
+        </div>
+    </div>
+
     <!-- UI Overlay Layer -->
-    <div id="ui-layer" class="relative z-10 inset-0 h-full w-full pointer-events-none flex flex-col justify-between p-4 md:p-6">
+    <div id="ui-layer" class="relative z-10 inset-0 h-full w-full pointer-events-none flex flex-col justify-between p-4 md:p-6 opacity-0 transition-opacity duration-500">
         
         <!-- Top HUD Header -->
         <div class="flex justify-between items-start w-full">
@@ -169,7 +194,7 @@
                     </div>
                     <div>
                         <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Coins</div>
-                        <div id="coin-count" class="font-fredoka text-2xl text-amber-400">100</div>
+                        <div id="coin-count" class="font-fredoka text-2xl text-amber-400">120</div>
                     </div>
                 </div>
 
@@ -190,28 +215,33 @@
                 </div>
             </div>
 
-            <!-- Center Clock / Day Cycle -->
-            <div class="roblox-panel px-4 py-2 rounded-2xl flex items-center space-x-2 pointer-events-auto">
-                <span id="day-icon" class="text-xl">☀️</span>
-                <span id="day-time-text" class="font-fredoka text-slate-200 text-sm">Daytime</span>
+            <!-- Center Clock / Day Cycle & Difficulty Mode Indicator -->
+            <div class="flex flex-col items-center space-y-1 pointer-events-auto">
+                <div class="roblox-panel px-4 py-2 rounded-2xl flex items-center space-x-2">
+                    <span id="day-icon" class="text-xl">☀️</span>
+                    <span id="day-time-text" class="font-fredoka text-slate-200 text-sm">Daytime</span>
+                </div>
+                <div id="difficulty-badge" class="px-3 py-0.5 rounded-full text-[10px] font-fredoka uppercase tracking-wider bg-green-600 text-white">
+                    Mode: Peaceful
+                </div>
             </div>
 
             <!-- Right Menu Buttons -->
-            <div class="flex space-x-3 pointer-events-auto">
+            <div class="flex space-x-2 md:space-x-3 pointer-events-auto flex-wrap justify-end gap-y-2">
                 <button id="btn-fullscreen" class="roblox-btn p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
                     <span id="fullscreen-icon">⛶</span>
                 </button>
-                <button id="btn-inventory" class="roblox-btn p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
-                    <span>🎒</span> <span class="hidden md:inline">Vault</span>
+                <button id="btn-barn" class="roblox-btn roblox-btn-amber p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
+                    <span>🧺</span> <span>Vault</span>
                 </button>
-                <button id="btn-quests" class="roblox-btn p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
-                    <span>📜</span> <span class="hidden md:inline">Quests</span>
+                <button id="btn-seeds" class="roblox-btn roblox-btn-purple p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
+                    <span>🌱</span> <span>Seeds</span>
                 </button>
                 <button id="btn-shop" class="roblox-btn roblox-btn-green p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
                     <span>🛒</span> <span>Shop</span>
                 </button>
-                <button id="btn-pets" class="roblox-btn roblox-btn-amber p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
-                    <span>🐾</span> <span class="hidden md:inline">Pets</span>
+                <button id="btn-quests" class="roblox-btn p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
+                    <span>📜</span> <span class="hidden md:inline">Quests</span>
                 </button>
                 <button id="btn-settings" class="roblox-btn p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
                     <span>⚙️</span> <span class="hidden md:inline">Settings</span>
@@ -228,23 +258,18 @@
         </div>
 
         <!-- Touch Controls for Mobile/Tablet Devices -->
-        <div id="mobile-controls" class="pointer-events-auto block">
+        <div id="mobile-controls" class="pointer-events-auto block md:hidden">
             <div id="joystick-base" class="touch-joystick-base">
                 <div id="joystick-stick" class="touch-joystick-stick"></div>
             </div>
 
             <div class="absolute bottom-6 right-6 flex flex-col items-end space-y-3">
                 <div class="flex space-x-3 items-end">
-                    <button id="btn-touch-sell" class="touch-action-btn roblox-btn-green text-lg font-fredoka shadow-lg hidden">
-                        💰
-                    </button>
-                    <button id="btn-touch-interact" class="touch-action-btn roblox-btn text-xl font-fredoka shadow-lg">
-                        ✋
-                    </button>
+                    <button id="btn-touch-attack" class="touch-action-btn roblox-btn-red text-xl font-fredoka shadow-lg">👊</button>
+                    <button id="btn-touch-sell" class="touch-action-btn roblox-btn-green text-lg font-fredoka shadow-lg hidden">💰</button>
+                    <button id="btn-touch-interact" class="touch-action-btn roblox-btn text-xl font-fredoka shadow-lg">✋</button>
                 </div>
-                <button id="btn-touch-jump" class="touch-action-btn roblox-btn-amber text-lg font-fredoka shadow-lg mr-6">
-                    ⬆️
-                </button>
+                <button id="btn-touch-jump" class="touch-action-btn roblox-btn-amber text-lg font-fredoka shadow-lg mr-6">⬆️</button>
             </div>
         </div>
 
@@ -253,67 +278,97 @@
             <div id="active-item-name" class="font-fredoka text-sm text-slate-300 bg-slate-900/80 px-3 py-1 rounded-full backdrop-blur-md">
                 Wooden Hoe (1)
             </div>
-
             <div class="roblox-panel p-2 rounded-2xl flex space-x-2 border-slate-700/60" id="hotbar"></div>
         </div>
     </div>
 
-    <!-- MODAL: SETTINGS & BACKUP (EXPORT / IMPORT SAVE) -->
+    <!-- MODAL: SETTINGS & DIFFICULTY -->
     <div id="settings-modal" class="hidden absolute inset-0 z-30 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="roblox-panel w-full max-w-lg rounded-3xl p-6 flex flex-col max-h-[85vh] border-blue-500/30">
+        <div class="roblox-panel w-full max-w-md rounded-3xl p-6 flex flex-col max-h-[85vh] border-blue-500/30">
             <div class="flex justify-between items-center pb-4 border-b border-slate-700">
                 <div class="flex items-center space-x-3">
                     <span class="text-3xl">⚙️</span>
-                    <h2 class="font-fredoka text-2xl text-slate-100">Save Backup & Settings</h2>
+                    <h2 class="font-fredoka text-2xl text-slate-100">Settings</h2>
                 </div>
                 <button class="btn-close-modal text-slate-400 hover:text-white font-fredoka text-2xl">✕</button>
             </div>
 
-            <div class="space-y-4 my-4 overflow-y-auto pr-2 flex-1">
-                <!-- Export Section -->
+            <div class="space-y-4 my-4 flex-1 overflow-y-auto pr-1">
                 <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-700">
-                    <h3 class="font-fredoka text-lg text-amber-400 mb-1">📤 Export Save Data</h3>
-                    <p class="text-xs text-slate-300 mb-3">Copy this save string before updating your APK so you can transfer your progress!</p>
-                    <textarea id="export-textarea" readonly class="w-full h-24 bg-slate-950 text-emerald-400 font-mono text-xs p-3 rounded-xl border border-slate-800 resize-none select-all focus:outline-none"></textarea>
-                    <button id="btn-copy-save" class="roblox-btn roblox-btn-green w-full py-2.5 rounded-xl font-fredoka text-sm mt-3">
-                        📋 Copy Save String to Clipboard
+                    <h3 class="font-fredoka text-lg text-amber-400 mb-2">🎮 Difficulty Mode</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="setting-mode-peaceful" class="roblox-btn roblox-btn-green py-3 rounded-xl font-fredoka text-sm">
+                            🕊️ Peaceful
+                        </button>
+                        <button id="setting-mode-monster" class="roblox-btn roblox-btn-red py-3 rounded-xl font-fredoka text-sm">
+                            👹 Monster
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Export Save String -->
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-700">
+                    <h3 class="font-fredoka text-lg text-emerald-400 mb-1">📤 Export Save String</h3>
+                    <p class="text-xs text-slate-300 mb-2">Copy your raw save data string:</p>
+                    <textarea id="export-textarea" readonly class="w-full h-20 bg-slate-950 text-emerald-400 font-mono text-xs p-2 rounded-xl border border-slate-800 resize-none select-all focus:outline-none"></textarea>
+                    <button id="btn-copy-save" class="roblox-btn roblox-btn-green w-full py-2 rounded-xl font-fredoka text-xs mt-2">
+                        📋 Copy Save String
                     </button>
                 </div>
 
-                <!-- Import Section -->
+                <!-- Import Save String -->
                 <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-700">
-                    <h3 class="font-fredoka text-lg text-blue-400 mb-1">📥 Import Save Data</h3>
-                    <p class="text-xs text-slate-300 mb-3">Paste your backup string here in your new APK version to restore your farm:</p>
-                    <textarea id="import-textarea" placeholder="Paste export string here..." class="w-full h-24 bg-slate-950 text-white font-mono text-xs p-3 rounded-xl border border-slate-800 resize-none focus:outline-none"></textarea>
-                    <button id="btn-import-save" class="roblox-btn w-full py-2.5 rounded-xl font-fredoka text-sm mt-3">
-                        💾 Restore / Import Game Save
+                    <h3 class="font-fredoka text-lg text-blue-400 mb-1">📥 Import Save String</h3>
+                    <p class="text-xs text-slate-300 mb-2">Paste a backup save string to restore:</p>
+                    <textarea id="import-textarea" placeholder="Paste save string here..." class="w-full h-20 bg-slate-950 text-white font-mono text-xs p-2 rounded-xl border border-slate-800 resize-none focus:outline-none"></textarea>
+                    <button id="btn-import-save" class="roblox-btn w-full py-2 rounded-xl font-fredoka text-xs mt-2">
+                        💾 Restore Save
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL: INVENTORY & VAULT -->
-    <div id="inventory-modal" class="hidden absolute inset-0 z-30 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="roblox-panel w-full max-w-2xl rounded-3xl p-6 flex flex-col max-h-[85vh] border-blue-500/30">
+    <!-- MODAL: HARVESTED CROPS VAULT / BARN -->
+    <div id="barn-modal" class="hidden absolute inset-0 z-30 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="roblox-panel w-full max-w-2xl rounded-3xl p-6 flex flex-col max-h-[85vh] border-amber-500/30">
             <div class="flex justify-between items-center pb-4 border-b border-slate-700">
                 <div class="flex items-center space-x-3">
-                    <span class="text-3xl">🎒</span>
-                    <h2 class="font-fredoka text-2xl text-slate-100">Storage & Inventory Vault</h2>
+                    <span class="text-3xl">🧺</span>
+                    <div>
+                        <h2 class="font-fredoka text-2xl text-slate-100">Harvest Vault</h2>
+                        <div class="text-xs text-amber-400 font-bold" id="total-vault-valuation">Total Value: 0 Coins</div>
+                    </div>
                 </div>
                 <button class="btn-close-modal text-slate-400 hover:text-white font-fredoka text-2xl">✕</button>
             </div>
-
-            <div class="flex space-x-2 my-4">
-                <button class="inv-tab active px-4 py-2 rounded-xl font-fredoka text-sm bg-blue-600 text-white" data-tab="seeds">Seed Pouches</button>
-                <button class="inv-tab px-4 py-2 rounded-xl font-fredoka text-sm bg-slate-800 text-slate-400 hover:bg-slate-700" data-tab="harvested">Harvested Crops</button>
+            
+            <div class="flex justify-between items-center my-3 px-2">
+                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Stored Produce</span>
+                <button id="btn-sell-all-vault" class="roblox-btn roblox-btn-green px-4 py-2 rounded-xl font-fredoka text-xs">
+                    Sell All Produce 💰
+                </button>
             </div>
 
-            <div id="inventory-items-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-2 flex-1 my-2"></div>
+            <div id="vault-items-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto pr-2 flex-1 my-2"></div>
         </div>
     </div>
 
-    <!-- MODAL: SEED & TOOL SHOP -->
+    <!-- MODAL: SEEDS INVENTORY -->
+    <div id="seeds-modal" class="hidden absolute inset-0 z-30 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="roblox-panel w-full max-w-2xl rounded-3xl p-6 flex flex-col max-h-[85vh] border-purple-500/30">
+            <div class="flex justify-between items-center pb-4 border-b border-slate-700">
+                <div class="flex items-center space-x-3">
+                    <span class="text-3xl">🌱</span>
+                    <h2 class="font-fredoka text-2xl text-slate-100">Seed Pouch & Equip</h2>
+                </div>
+                <button class="btn-close-modal text-slate-400 hover:text-white font-fredoka text-2xl">✕</button>
+            </div>
+            <div id="seeds-items-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto pr-2 flex-1 my-4"></div>
+        </div>
+    </div>
+
+    <!-- MODAL: GARDEN SHOP -->
     <div id="shop-modal" class="hidden absolute inset-0 z-30 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
         <div class="roblox-panel w-full max-w-2xl rounded-3xl p-6 flex flex-col max-h-[85vh] border-blue-500/30">
             <div class="flex justify-between items-center pb-4 border-b border-slate-700">
@@ -323,13 +378,11 @@
                 </div>
                 <button class="btn-close-modal text-slate-400 hover:text-white font-fredoka text-2xl">✕</button>
             </div>
-
             <div class="flex space-x-2 my-4">
                 <button class="shop-tab active px-4 py-2 rounded-xl font-fredoka text-sm bg-blue-600 text-white" data-tab="seeds">Seeds</button>
                 <button class="shop-tab px-4 py-2 rounded-xl font-fredoka text-sm bg-slate-800 text-slate-400 hover:bg-slate-700" data-tab="upgrades">Tools & Upgrades</button>
                 <button class="shop-tab px-4 py-2 rounded-xl font-fredoka text-sm bg-slate-800 text-slate-400 hover:bg-slate-700" data-tab="expansions">Land Plots</button>
             </div>
-
             <div id="shop-items-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-2 flex-1 my-2"></div>
         </div>
     </div>
@@ -348,22 +401,9 @@
         </div>
     </div>
 
-    <!-- MODAL: PETS -->
-    <div id="pets-modal" class="hidden absolute inset-0 z-30 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="roblox-panel w-full max-w-lg rounded-3xl p-6 flex flex-col max-h-[80vh] border-purple-500/30">
-            <div class="flex justify-between items-center pb-4 border-b border-slate-700">
-                <div class="flex items-center space-x-3">
-                    <span class="text-3xl">🐾</span>
-                    <h2 class="font-fredoka text-2xl text-slate-100">Pet Companions</h2>
-                </div>
-                <button class="btn-close-modal text-slate-400 hover:text-white font-fredoka text-2xl">✕</button>
-            </div>
-            <div id="pets-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3 my-4 overflow-y-auto pr-2 flex-1"></div>
-        </div>
-    </div>
-
-    <!-- THREE.JS ENGINE & GAME SCRIPT -->
+    <!-- THREE.JS ENGINE & GAME LOGIC -->
     <script>
+        // --- SYNTHESIZED AUDIO ENGINE ---
         class SoundEngine {
             constructor() { this.ctx = null; }
             init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
@@ -381,57 +421,98 @@
                 osc.stop(this.ctx.currentTime + duration);
             }
             playPlant() { this.playTone(300, 'sine', 0.1, 0.3); setTimeout(() => this.playTone(450, 'sine', 0.15, 0.2), 60); }
-            playWater() { if (!this.ctx) return; for (let i = 0; i < 3; i++) setTimeout(() => this.playTone(600 + Math.random() * 300, 'triangle', 0.08, 0.15), i * 50); }
-            playHarvest() { const notes = [523.25, 659.25, 783.99, 1046.50]; notes.forEach((freq, idx) => setTimeout(() => this.playTone(freq, 'sine', 0.2, 0.25), idx * 70)); }
+            playWater() {
+                if (!this.ctx) return;
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => this.playTone(600 + Math.random() * 300, 'triangle', 0.08, 0.15), i * 50);
+                }
+            }
+            playHarvest() {
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                    setTimeout(() => this.playTone(freq, 'sine', 0.2, 0.25), idx * 70);
+                });
+            }
             playCoin() { this.playTone(987.77, 'sine', 0.08, 0.2); setTimeout(() => this.playTone(1318.51, 'sine', 0.25, 0.3), 80); }
-            playLevelUp() { [400, 500, 600, 800, 1000, 1200].forEach((f, i) => setTimeout(() => this.playTone(f, 'triangle', 0.25, 0.25), i * 80)); }
+            playLevelUp() {
+                [400, 500, 600, 800, 1000, 1200].forEach((f, i) => {
+                    setTimeout(() => this.playTone(f, 'triangle', 0.25, 0.25), i * 80);
+                });
+            }
         }
-
         const audio = new SoundEngine();
 
+        // --- 10 EXTENDED CROP DEFINITIONS ---
         const CROPS = {
-            carrot: { id: 'carrot', name: 'Carrot', icon: '🥕', seedPrice: 10, sellPrice: 22, growthTime: 8, color: 0xff7700, stemColor: 0x22aa33, xp: 12 },
-            tomato: { id: 'tomato', name: 'Tomato', icon: '🍅', seedPrice: 25, sellPrice: 55, growthTime: 14, color: 0xee2222, stemColor: 0x22aa33, xp: 25 },
-            corn: { id: 'corn', name: 'Corn', icon: '🌽', seedPrice: 60, sellPrice: 135, growthTime: 22, color: 0xffdd00, stemColor: 0x33b522, xp: 55 },
-            pumpkin: { id: 'pumpkin', name: 'Pumpkin', icon: '🎃', seedPrice: 140, sellPrice: 320, growthTime: 35, color: 0xff5500, stemColor: 0x118822, xp: 120 },
-            golden_berry: { id: 'golden_berry', name: 'Golden Berry', icon: '🫐', seedPrice: 350, sellPrice: 900, growthTime: 50, color: 0xffd700, stemColor: 0x8800cc, xp: 300 }
+            carrot: { id: 'carrot', name: 'Carrot', icon: '🥕', seedPrice: 10, sellPrice: 22, growthTime: 6, color: 0xff7700, stemColor: 0x22aa33, xp: 12 },
+            tomato: { id: 'tomato', name: 'Tomato', icon: '🍅', seedPrice: 25, sellPrice: 55, growthTime: 10, color: 0xee2222, stemColor: 0x22aa33, xp: 25 },
+            corn: { id: 'corn', name: 'Corn', icon: '🌽', seedPrice: 60, sellPrice: 135, growthTime: 16, color: 0xffdd00, stemColor: 0x33b522, xp: 55 },
+            pumpkin: { id: 'pumpkin', name: 'Pumpkin', icon: '🎃', seedPrice: 120, sellPrice: 280, growthTime: 24, color: 0xff5500, stemColor: 0x118822, xp: 110 },
+            golden_berry: { id: 'golden_berry', name: 'Golden Berry', icon: '🫐', seedPrice: 300, sellPrice: 750, growthTime: 36, color: 0xffd700, stemColor: 0x8800cc, xp: 240 },
+            eggplant: { id: 'eggplant', name: 'Eggplant', icon: '🍆', seedPrice: 45, sellPrice: 105, growthTime: 14, color: 0x6b21a8, stemColor: 0x15803d, xp: 45 },
+            strawberry: { id: 'strawberry', name: 'Strawberry', icon: '🍓', seedPrice: 85, sellPrice: 190, growthTime: 18, color: 0xef4444, stemColor: 0x22c55e, xp: 75 },
+            watermelon: { id: 'watermelon', name: 'Watermelon', icon: '🍉', seedPrice: 180, sellPrice: 420, growthTime: 30, color: 0x15803d, stemColor: 0x4ade80, xp: 160 },
+            sunflower: { id: 'sunflower', name: 'Sunflower', icon: '🌻', seedPrice: 220, sellPrice: 520, growthTime: 32, color: 0xfacc15, stemColor: 0x166534, xp: 200 },
+            dragon_fruit: { id: 'dragon_fruit', name: 'Dragon Fruit', icon: '🐉', seedPrice: 500, sellPrice: 1400, growthTime: 45, color: 0xf43f5e, stemColor: 0x10b981, xp: 400 }
         };
 
+        const WEAPONS = {
+            fist: { name: 'Bare Fists', icon: '👊', damage: 25, price: 0 },
+            wood_sword: { name: 'Wooden Sword', icon: '🗡️', damage: 55, price: 150 },
+            iron_sword: { name: 'Iron Sword', icon: '⚔️', damage: 100, price: 400 },
+            magic_wand: { name: 'Magic Wand', icon: '🪄', damage: 180, price: 900 }
+        };
+
+        // --- GAME STATE & LOCALSTORAGE ---
         let gameState = {
-            coins: 100,
+            difficulty: 'Monster',
+            gameStarted: false,
+            coins: 120,
             xp: 0,
             level: 1,
             selectedSlot: 0,
             unlockedPlots: 4,
             waterCanCapacity: 10,
             waterCanLevel: 1,
-            hoeLevel: 1,
+            equippedWeapon: 'fist',
+            unlockedWeapons: ['fist'],
             heldCrop: null,
-            harvestedCrops: { carrot: 0, tomato: 0, corn: 0, pumpkin: 0, golden_berry: 0 },
-            inventory: { hoe: 1, waterCan: 10, fertilizer: 3, carrot_seed: 5, tomato_seed: 2, corn_seed: 0, pumpkin_seed: 0, golden_berry_seed: 0 },
             plots: [],
-            activePet: null,
-            unlockedPets: [],
+            harvestedVault: {
+                carrot: 0, tomato: 0, corn: 0, pumpkin: 0, golden_berry: 0,
+                eggplant: 0, strawberry: 0, watermelon: 0, sunflower: 0, dragon_fruit: 0
+            },
+            seedsInventory: {
+                carrot_seed: 5, tomato_seed: 2, corn_seed: 0, pumpkin_seed: 0, golden_berry_seed: 0,
+                eggplant_seed: 0, strawberry_seed: 0, watermelon_seed: 0, sunflower_seed: 0, dragon_fruit_seed: 0
+            },
+            inventory: { hoe: 1, waterCan: 10, fertilizer: 3 },
+            equippedSeed: 'carrot_seed',
             quests: [
                 { id: 'harvest_carrots', text: 'Harvest 3 Carrots', target: 3, progress: 0, reward: 50, rewardXp: 40, cropId: 'carrot', completed: false },
                 { id: 'water_crops', text: 'Water Crops 10 Times', target: 10, progress: 0, reward: 80, rewardXp: 60, completed: false },
-                { id: 'earn_coins', text: 'Reach 300 Coins', target: 300, progress: 100, reward: 150, rewardXp: 100, completed: false }
+                { id: 'earn_coins', text: 'Reach 500 Coins', target: 500, progress: 120, reward: 200, rewardXp: 120, completed: false }
             ]
         };
 
-        function saveGame() {
+        function saveGame() { 
+            // Serialize current plot state before saving to localStorage
             gameState.plots = farmPlots.map(p => ({
                 id: p.id,
                 isUnlocked: p.isUnlocked,
                 isTilled: p.isTilled,
                 isWatered: p.isWatered,
-                crop: p.crop ? { type: p.crop.type, stage: p.crop.stage, growthProgress: p.crop.growthProgress, isGiant: p.crop.isGiant } : null
+                crop: p.crop ? {
+                    type: p.crop.type,
+                    stage: p.crop.stage,
+                    growthProgress: p.crop.growthProgress,
+                    isGiant: p.crop.isGiant
+                } : null
             }));
-            localStorage.setItem('grow_garden_save', JSON.stringify(gameState));
+            localStorage.setItem('grow_garden_save_v3', JSON.stringify(gameState)); 
         }
 
         function loadGame() {
-            const saved = localStorage.getItem('grow_garden_save');
+            const saved = localStorage.getItem('grow_garden_save_v3');
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
@@ -440,31 +521,208 @@
             }
         }
 
+        // --- THREE.JS SYSTEM VARIABLES ---
         let scene, camera, renderer, clock;
-        let playerGroup, playerBody, leftArm, rightArm, leftLeg, rightLeg, petMesh, playerHandAnchor, currentHandMesh = null;
+        let playerGroup, humanoidLimbs = {}, playerHandAnchor, currentHandMesh = null;
+        let weaponHandAnchor, currentWeaponMesh = null;
         let sunLight, ambientLight;
         let farmPlots = [];
         let particles = [];
+        let monsters = [];
+        let animatedTrees = [];
+        let colliders = []; // Array of bounding boxes for solid objects
+        let ghostsSpawnedTonight = 0;
+        let isNightTime = false;
 
         let joystickVector = { x: 0, y: 0 };
-        let isTouchDraggingCamera = false;
-        let touchCamLastPos = { x: 0, y: 0 };
-
         const keys = { w: false, a: false, s: false, d: false, space: false };
         let playerVelY = 0;
         let isGrounded = true;
-        let playerPos = new THREE.Vector3(0, 0, 5);
-
         let cameraOffset = new THREE.Vector3(0, 8, 12);
         let cameraAngleY = 0;
+
+        // Procedural Texture Generators
+        function createCobbleTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#64748b'; ctx.fillRect(0,0,256,256);
+            for(let i=0; i<120; i++){
+                ctx.fillStyle = i%2===0 ? '#475569' : '#334155';
+                const x = Math.random()*240, y = Math.random()*240;
+                ctx.beginPath(); ctx.ellipse(x, y, 12+Math.random()*8, 8+Math.random()*6, Math.random()*Math.PI, 0, Math.PI*2);
+                ctx.fill();
+            }
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping;
+            return texture;
+        }
+
+        function createWoodTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#8b5a2b'; ctx.fillRect(0,0,256,256);
+            ctx.strokeStyle = '#5c3a1b'; ctx.lineWidth = 4;
+            for(let y=0; y<256; y+=32){
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(256, y + (Math.random()*8-4)); ctx.stroke();
+            }
+            const texture = new THREE.CanvasTexture(canvas);
+            return texture;
+        }
+
+        function buildEnvironment() {
+            // Main Grass Floor
+            const grassGeo = new THREE.PlaneGeometry(120, 120);
+            const grassMat = new THREE.MeshStandardMaterial({ color: 0x48bb78, roughness: 0.85 });
+            const grass = new THREE.Mesh(grassGeo, grassMat);
+            grass.rotation.x = -Math.PI / 2;
+            grass.receiveShadow = true;
+            scene.add(grass);
+
+            // Sidewalk / Cobble Pathways surrounding farm grid
+            const cobbleTex = createCobbleTexture();
+            cobbleTex.repeat.set(4, 12);
+            const pathMat = new THREE.MeshStandardMaterial({ map: cobbleTex, roughness: 0.7 });
+            
+            const path1 = new THREE.Mesh(new THREE.PlaneGeometry(4, 28), pathMat);
+            path1.rotation.x = -Math.PI / 2; path1.position.set(-8, 0.01, 0);
+            path1.receiveShadow = true; scene.add(path1);
+
+            const path2 = new THREE.Mesh(new THREE.PlaneGeometry(4, 28), pathMat);
+            path2.rotation.x = -Math.PI / 2; path2.position.set(8, 0.01, 0);
+            path2.receiveShadow = true; scene.add(path2);
+
+            // Farmhouse Structure
+            createFarmhouse(new THREE.Vector3(0, 0, -18));
+
+            // Wooden Fence Surroundings (Perimeter with Entrance Gate)
+            createWoodenFences();
+
+            // Street Lampposts with Warm Light
+            createLamppost(new THREE.Vector3(-7, 0, 10));
+            createLamppost(new THREE.Vector3(7, 0, 10));
+            createLamppost(new THREE.Vector3(-7, 0, -10));
+            createLamppost(new THREE.Vector3(7, 0, -10));
+
+            // Well & Market Kiosk
+            createWell(new THREE.Vector3(14, 0, 4));
+            createMarketKiosk(new THREE.Vector3(-14, 0, 4));
+
+            // Animated Wind Swaying Trees
+            for (let i = -45; i <= 45; i += 16) {
+                if (Math.abs(i) > 8) {
+                    createTree(new THREE.Vector3(i, 0, -40));
+                    createTree(new THREE.Vector3(i, 0, 40));
+                    createTree(new THREE.Vector3(-40, 0, i));
+                    createTree(new THREE.Vector3(40, 0, i));
+                }
+            }
+        }
+
+        function createTree(pos) {
+            const treeGroup = new THREE.Group();
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.6, 3, 6), new THREE.MeshStandardMaterial({ color: 0x774422, roughness: 0.9 }));
+            trunk.position.y = 1.5; trunk.castShadow = true; treeGroup.add(trunk);
+
+            const foliageGroup = new THREE.Group();
+            const leaves1 = new THREE.Mesh(new THREE.ConeGeometry(2.4, 3.5, 6), new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.7 }));
+            leaves1.position.y = 3.5; leaves1.castShadow = true; foliageGroup.add(leaves1);
+
+            const leaves2 = new THREE.Mesh(new THREE.ConeGeometry(1.8, 3.0, 6), new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.7 }));
+            leaves2.position.y = 4.8; leaves2.castShadow = true; foliageGroup.add(leaves2);
+
+            treeGroup.add(foliageGroup);
+            treeGroup.position.copy(pos);
+            scene.add(treeGroup);
+
+            animatedTrees.push({ group: foliageGroup, phaseOffset: Math.random() * Math.PI * 2 });
+        }
+
+        function createHumanoidPlayer() {
+            playerGroup = new THREE.Group();
+
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xffcc99, roughness: 0.5 });
+            const shirtMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.5 });
+            const pantsMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6 });
+
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.0, 0.4), shirtMat);
+            body.position.y = 1.3; body.castShadow = true; playerGroup.add(body);
+
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.6), skinMat);
+            head.position.y = 2.0; head.castShadow = true; playerGroup.add(head);
+
+            const hatRim = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 0.08, 8), new THREE.MeshStandardMaterial({ color: 0xeab308 }));
+            hatRim.position.y = 2.32; playerGroup.add(hatRim);
+
+            const hatTop = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.55, 0.4, 8), new THREE.MeshStandardMaterial({ color: 0xeab308 }));
+            hatTop.position.y = 2.55; playerGroup.add(hatTop);
+
+            const armGeo = new THREE.BoxGeometry(0.25, 0.9, 0.25);
+            humanoidLimbs.leftArm = new THREE.Mesh(armGeo, shirtMat);
+            humanoidLimbs.leftArm.position.set(-0.55, 1.3, 0); humanoidLimbs.leftArm.castShadow = true; playerGroup.add(humanoidLimbs.leftArm);
+
+            humanoidLimbs.rightArm = new THREE.Mesh(armGeo, shirtMat);
+            humanoidLimbs.rightArm.position.set(0.55, 1.3, 0); humanoidLimbs.rightArm.castShadow = true; playerGroup.add(humanoidLimbs.rightArm);
+
+            const legGeo = new THREE.BoxGeometry(0.32, 0.9, 0.32);
+            humanoidLimbs.leftLeg = new THREE.Mesh(legGeo, pantsMat);
+            humanoidLimbs.leftLeg.position.set(-0.2, 0.45, 0); humanoidLimbs.leftLeg.castShadow = true; playerGroup.add(humanoidLimbs.leftLeg);
+
+            humanoidLimbs.rightLeg = new THREE.Mesh(legGeo, pantsMat);
+            humanoidLimbs.rightLeg.position.set(0.2, 0.45, 0); humanoidLimbs.rightLeg.castShadow = true; playerGroup.add(humanoidLimbs.rightLeg);
+
+            playerHandAnchor = new THREE.Group();
+            playerHandAnchor.position.set(0, -0.4, 0.2);
+            humanoidLimbs.rightArm.add(playerHandAnchor);
+
+            weaponHandAnchor = new THREE.Group();
+            weaponHandAnchor.position.set(0, -0.45, 0.2);
+            humanoidLimbs.rightArm.add(weaponHandAnchor);
+
+            playerGroup.position.set(0, 0, 5);
+            scene.add(playerGroup);
+        }
+
+        function createWeaponMesh(wKey) {
+            const group = new THREE.Group();
+            if (wKey === 'wood_sword') {
+                const blade = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.9, 0.05), new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.7 }));
+                blade.position.y = 0.45; group.add(blade);
+                const hilt = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.08, 0.08), new THREE.MeshStandardMaterial({ color: 0x451a03 }));
+                hilt.position.y = 0.04; group.add(hilt);
+            } else if (wKey === 'iron_sword') {
+                const blade = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.1, 0.05), new THREE.MeshStandardMaterial({ color: 0xc0c0c0, metalness: 0.8, roughness: 0.2 }));
+                blade.position.y = 0.55; group.add(blade);
+                const hilt = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.08, 0.08), new THREE.MeshStandardMaterial({ color: 0xf59e0b }));
+                hilt.position.y = 0.04; group.add(hilt);
+            } else if (wKey === 'magic_wand') {
+                const staff = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.2, 8), new THREE.MeshStandardMaterial({ color: 0x581c87 }));
+                staff.position.y = 0.6; group.add(staff);
+                const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.18), new THREE.MeshStandardMaterial({ color: 0xc084fc, emissive: 0xa855f7, emissiveIntensity: 0.8 }));
+                gem.position.y = 1.2; group.add(gem);
+            }
+            return group;
+        }
+
+        function updateEquippedWeaponMesh() {
+            if (currentWeaponMesh) {
+                weaponHandAnchor.remove(currentWeaponMesh);
+                currentWeaponMesh = null;
+            }
+            if (gameState.equippedWeapon && gameState.equippedWeapon !== 'fist') {
+                currentWeaponMesh = createWeaponMesh(gameState.equippedWeapon);
+                weaponHandAnchor.add(currentWeaponMesh);
+            }
+        }
 
         function init3D() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x87ceeb);
-            scene.fog = new THREE.FogExp2(0x87ceeb, 0.015);
+            scene.fog = new THREE.FogExp2(0x87ceeb, 0.012);
 
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            
+
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -484,7 +742,7 @@
             sunLight.shadow.mapSize.height = 2048;
             sunLight.shadow.camera.near = 0.5;
             sunLight.shadow.camera.far = 150;
-            const d = 30;
+            const d = 35;
             sunLight.shadow.camera.left = -d;
             sunLight.shadow.camera.right = d;
             sunLight.shadow.camera.top = d;
@@ -493,65 +751,30 @@
 
             buildEnvironment();
             createHumanoidPlayer();
+            updateEquippedWeaponMesh();
             buildFarmGrid();
             setupMobileControls();
+            setupInputListeners();
 
             if (gameState.heldCrop) {
                 updatePlayerHandItem();
             }
 
             window.addEventListener('resize', onWindowResize);
-            setupInputListeners();
         }
 
-        function buildEnvironment() {
-            const grassGeo = new THREE.PlaneGeometry(100, 100);
-            const grassMat = new THREE.MeshStandardMaterial({ color: 0x55aa33, roughness: 0.8 });
-            const grass = new THREE.Mesh(grassGeo, grassMat);
-            grass.rotation.x = -Math.PI / 2;
-            grass.receiveShadow = true;
-            scene.add(grass);
-
-            createWell(new THREE.Vector3(12, 0, 4));
-            createMarketKiosk(new THREE.Vector3(-12, 0, 4));
-
-            for (let i = -40; i <= 40; i += 16) {
-                if (Math.abs(i) > 8) {
-                    createTree(new THREE.Vector3(i, 0, -35));
-                    createTree(new THREE.Vector3(i, 0, 35));
-                    createTree(new THREE.Vector3(-35, 0, i));
-                    createTree(new THREE.Vector3(35, 0, i));
-                }
-            }
-        }
-
-        function createTree(pos) {
-            const treeGroup = new THREE.Group();
-            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.6, 3, 6), new THREE.MeshStandardMaterial({ color: 0x774422, roughness: 0.9 }));
-            trunk.position.y = 1.5;
-            trunk.castShadow = true;
-            treeGroup.add(trunk);
-
-            const leaves = new THREE.Mesh(new THREE.ConeGeometry(2.2, 4, 6), new THREE.MeshStandardMaterial({ color: 0x228833, roughness: 0.7 }));
-            leaves.position.y = 4.2;
-            leaves.castShadow = true;
-            treeGroup.add(leaves);
-
-            treeGroup.position.copy(pos);
-            scene.add(treeGroup);
-        }
-
-        function createWell(pos) {
+        function createLamppost(pos) {
             const group = new THREE.Group();
-            const rim = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.6, 1.2, 8), new THREE.MeshStandardMaterial({ color: 0x778899, roughness: 0.6 }));
-            rim.position.y = 0.6;
-            rim.castShadow = true;
-            group.add(rim);
+            const metalMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.2 });
 
-            const water = new THREE.Mesh(new THREE.CircleGeometry(1.2, 8), new THREE.MeshStandardMaterial({ color: 0x0099ff, roughness: 0.1 }));
-            water.rotation.x = -Math.PI / 2;
-            water.position.y = 1.0;
-            group.add(water);
+            const post = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 4.5, 8), metalMat);
+            post.position.y = 2.25; post.castShadow = true; group.add(post);
+
+            const glass = new THREE.Mesh(new THREE.DodecahedronGeometry(0.35), new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xfbbf24, emissiveIntensity: 1.0 }));
+            glass.position.y = 4.5; group.add(glass);
+
+            const light = new THREE.PointLight(0xfbbf24, 1.5, 12);
+            light.position.y = 4.5; group.add(light);
 
             group.position.copy(pos);
             scene.add(group);
@@ -559,205 +782,266 @@
 
         function createMarketKiosk(pos) {
             const group = new THREE.Group();
-            const table = new THREE.Mesh(new THREE.BoxGeometry(4, 1.2, 2), new THREE.MeshStandardMaterial({ color: 0xaa6633, roughness: 0.6 }));
-            table.position.y = 0.6;
-            table.castShadow = true;
-            group.add(table);
+            
+            // Stone Base / Foundation
+            const baseMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.8 });
+            const base = new THREE.Mesh(new THREE.BoxGeometry(6, 0.4, 4), baseMat);
+            base.position.y = 0.2; base.castShadow = true; base.receiveShadow = true;
+            group.add(base);
 
-            const bin = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.4, 1.4), new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.5 }));
-            bin.position.set(0, 1.3, 0);
-            bin.castShadow = true;
-            group.add(bin);
+            // Wooden Counter & Walls
+            const woodMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.7 });
+            const counter = new THREE.Mesh(new THREE.BoxGeometry(5.2, 1.4, 1.2), woodMat);
+            counter.position.set(0, 0.9, 1.1); counter.castShadow = true; group.add(counter);
 
-            const sign = new THREE.Mesh(new THREE.BoxGeometry(3, 1, 0.2), new THREE.MeshStandardMaterial({ color: 0xffcc00 }));
-            sign.position.set(0, 3, 0);
-            group.add(sign);
+            const backWall = new THREE.Mesh(new THREE.BoxGeometry(5.2, 4.0, 0.3), woodMat);
+            backWall.position.set(0, 2.2, -1.5); backWall.castShadow = true; group.add(backWall);
+
+            const sideWallL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 4.0, 3.0), woodMat);
+            sideWallL.position.set(-2.45, 2.2, -0.15); sideWallL.castShadow = true; group.add(sideWallL);
+            const sideWallR = sideWallL.clone(); sideWallR.position.x = 2.45; group.add(sideWallR);
+
+            // Awning Roof (Striped Canvas Canopy)
+            const canvasMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.5 });
+            const stripeMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
+            for(let i = -2.5; i < 2.5; i += 0.8) {
+                const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.2, 4.2), ((i * 10) % 2 === 0) ? canvasMat : stripeMat);
+                stripe.position.set(i + 0.4, 4.2, 0.3);
+                stripe.rotation.x = 0.15;
+                stripe.castShadow = true;
+                group.add(stripe);
+            }
+
+            // Pillars
+            const pillarMat = new THREE.MeshStandardMaterial({ color: 0x5c3a1b });
+            const p1 = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 3.2, 8), pillarMat);
+            p1.position.set(-2.3, 2.5, 1.5); p1.castShadow = true; group.add(p1);
+            const p2 = p1.clone(); p2.position.x = 2.3; group.add(p2);
+
+            // Wooden Storefront Sign
+            const signBoard = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.0, 0.2), new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.6 }));
+            signBoard.position.set(0, 4.6, 2.2); signBoard.castShadow = true; group.add(signBoard);
+
+            const signTextMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xf59e0b, emissiveIntensity: 0.4 });
+            const signBorder = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.6, 0.25), signTextMat);
+            signBorder.position.set(0, 4.6, 2.2); group.add(signBorder);
+
+            // Display Items on Counter (Produce Jars & Baskets)
+            const jarMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.7 });
+            const jar1 = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.5, 8), jarMat);
+            jar1.position.set(-1.4, 1.85, 1.1); group.add(jar1);
+
+            const basketMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.9 });
+            const basket = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.3, 0.3, 8), basketMat);
+            basket.position.set(1.4, 1.75, 1.1); group.add(basket);
 
             group.position.copy(pos);
             scene.add(group);
+
+            // Add solid collision box for the Shop Kiosk
+            colliders.push(new THREE.Box3().setFromObject(group));
         }
 
-        function createHumanoidPlayer() {
-            playerGroup = new THREE.Group();
+        function createFarmhouse(pos) {
+            const houseGroup = new THREE.Group();
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.8 });
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.5 });
 
-            const skinMat = new THREE.MeshStandardMaterial({ color: 0xffcc99, roughness: 0.5 });
-            const shirtMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.5 });
-            const pantsMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6 });
+            const body = new THREE.Mesh(new THREE.BoxGeometry(8, 5, 6), wallMat);
+            body.position.y = 2.5; body.castShadow = true; body.receiveShadow = true;
+            houseGroup.add(body);
 
-            playerBody = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.0, 0.4), shirtMat);
-            playerBody.position.y = 1.3;
-            playerBody.castShadow = true;
-            playerGroup.add(playerBody);
+            const roof = new THREE.Mesh(new THREE.ConeGeometry(6.5, 3.5, 4), roofMat);
+            roof.position.y = 6.25; roof.rotation.y = Math.PI / 4; roof.castShadow = true;
+            houseGroup.add(roof);
 
-            const head = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.6), skinMat);
-            head.position.y = 2.0;
-            head.castShadow = true;
-            playerGroup.add(head);
+            houseGroup.position.copy(pos);
+            scene.add(houseGroup);
 
-            const hatRim = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 0.08, 8), new THREE.MeshStandardMaterial({ color: 0xeab308 }));
-            hatRim.position.y = 2.32;
-            playerGroup.add(hatRim);
-            const hatTop = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.55, 0.4, 8), new THREE.MeshStandardMaterial({ color: 0xeab308 }));
-            hatTop.position.y = 2.55;
-            playerGroup.add(hatTop);
-
-            const armGeo = new THREE.BoxGeometry(0.25, 0.9, 0.25);
-            leftArm = new THREE.Mesh(armGeo, shirtMat);
-            leftArm.position.set(-0.55, 1.3, 0);
-            leftArm.castShadow = true;
-            playerGroup.add(leftArm);
-
-            rightArm = new THREE.Mesh(armGeo, shirtMat);
-            rightArm.position.set(0.55, 1.3, 0);
-            rightArm.castShadow = true;
-            playerGroup.add(rightArm);
-
-            const legGeo = new THREE.BoxGeometry(0.32, 0.9, 0.32);
-            leftLeg = new THREE.Mesh(legGeo, pantsMat);
-            leftLeg.position.set(-0.2, 0.45, 0);
-            leftLeg.castShadow = true;
-            playerGroup.add(leftLeg);
-
-            rightLeg = new THREE.Mesh(legGeo, pantsMat);
-            rightLeg.position.set(0.2, 0.45, 0);
-            rightLeg.castShadow = true;
-            playerGroup.add(rightLeg);
-
-            playerHandAnchor = new THREE.Group();
-            playerHandAnchor.position.set(0.55, 0.85, 0.35);
-            playerGroup.add(playerHandAnchor);
-
-            playerGroup.position.copy(playerPos);
-            scene.add(playerGroup);
+            // Add solid collision box for Farmhouse
+            colliders.push(new THREE.Box3().setFromObject(houseGroup));
         }
 
-        function updatePlayerHandItem() {
-            if (currentHandMesh) {
-                playerHandAnchor.remove(currentHandMesh);
-                currentHandMesh = null;
+        function createWell(pos) {
+            const group = new THREE.Group();
+            const rim = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.7, 1.2, 8), new THREE.MeshStandardMaterial({ color: 0x64748b }));
+            rim.position.y = 0.6;
+            rim.castShadow = true;
+            group.add(rim);
+
+            const water = new THREE.Mesh(new THREE.CircleGeometry(1.3, 8), new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.1 }));
+            water.rotation.x = -Math.PI / 2;
+            water.position.y = 1.0;
+            group.add(water);
+
+            group.position.copy(pos);
+            scene.add(group);
+
+            // Add solid collision box for Water Well
+            colliders.push(new THREE.Box3().setFromObject(group));
+        }
+
+        function createWoodenFences() {
+            const fenceGroup = new THREE.Group();
+            const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8 });
+
+            function addFenceSegment(x, z, rotY) {
+                const seg = new THREE.Group();
+                const p1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.4, 0.2), woodMat);
+                p1.position.set(-1, 0.7, 0); p1.castShadow = true; seg.add(p1);
+                const p2 = p1.clone(); p2.position.x = 1; seg.add(p2);
+                const r1 = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.15, 0.08), woodMat);
+                r1.position.set(0, 1.0, 0); r1.castShadow = true; seg.add(r1);
+                const r2 = r1.clone(); r2.position.y = 0.4; seg.add(r2);
+                seg.position.set(x, 0, z); seg.rotation.y = rotY;
+                fenceGroup.add(seg);
             }
 
-            if (gameState.heldCrop) {
-                currentHandMesh = createCropMesh(gameState.heldCrop.type, 2, gameState.heldCrop.isGiant);
-                currentHandMesh.scale.set(0.9, 0.9, 0.9);
-                playerHandAnchor.add(currentHandMesh);
+            // Outer Perimeter Bounds (-25 to 25) with Front Entrance Gate Gap
+            for(let i = -24; i <= 24; i += 2.2) {
+                addFenceSegment(i, -25, 0);
+                if (Math.abs(i) > 4) addFenceSegment(i, 25, 0); // Entrance Gate
+                addFenceSegment(-25, i, Math.PI / 2);
+                addFenceSegment(25, i, Math.PI / 2);
             }
+
+            scene.add(fenceGroup);
+
+            // Add collision bounds for perimeter walls
+            colliders.push(new THREE.Box3(new THREE.Vector3(-26, 0, -26), new THREE.Vector3(26, 5, -24))); // Back fence
+            colliders.push(new THREE.Box3(new THREE.Vector3(-26, 0, -26), new THREE.Vector3(-24, 5, 26))); // Left fence
+            colliders.push(new THREE.Box3(new THREE.Vector3(24, 0, -26), new THREE.Vector3(26, 5, 26)));  // Right fence
+            colliders.push(new THREE.Box3(new THREE.Vector3(-26, 0, 24), new THREE.Vector3(-4, 5, 26)));  // Front left fence
+            colliders.push(new THREE.Box3(new THREE.Vector3(4, 0, 24), new THREE.Vector3(26, 5, 26)));   // Front right fence
         }
 
-        function setupMobileControls() {
-            const joystickBase = document.getElementById('joystick-base');
-            const joystickStick = document.getElementById('joystick-stick');
-            const touchInteractBtn = document.getElementById('btn-touch-interact');
-            const touchJumpBtn = document.getElementById('btn-touch-jump');
-            const touchSellBtn = document.getElementById('btn-touch-sell');
+        // --- MONSTER INVASION ENGINE ---
+        function spawnNightMonster() {
+            const group = new THREE.Group();
+            const ghostMat = new THREE.MeshStandardMaterial({ color: 0x99f6e4, emissive: 0x0d9488, emissiveIntensity: 0.6, transparent: true, opacity: 0.85 });
 
-            let joystickTouchId = null;
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.2, 1.4, 8), ghostMat);
+            body.position.y = 0.8;
+            group.add(body);
 
-            joystickBase.addEventListener('touchstart', (e) => {
-                audio.init();
-                const touch = e.changedTouches[0];
-                joystickTouchId = touch.identifier;
-                updateJoystick(touch);
-            }, { passive: false });
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 8), ghostMat);
+            head.position.y = 1.6;
+            group.add(head);
 
-            window.addEventListener('touchmove', (e) => {
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    const touch = e.changedTouches[i];
-                    if (touch.identifier === joystickTouchId) {
-                        updateJoystick(touch);
-                    } else if (isTouchDraggingCamera) {
-                        const deltaX = touch.clientX - touchCamLastPos.x;
-                        cameraAngleY -= deltaX * 0.006;
-                        touchCamLastPos = { x: touch.clientX, y: touch.clientY };
+            // Glowing Red Eyes
+            const eyeMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000 });
+            const eye1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.1), eyeMat);
+            eye1.position.set(-0.15, 1.65, 0.35);
+            const eye2 = eye1.clone();
+            eye2.position.x = 0.15;
+            group.add(eye1); group.add(eye2);
+
+            // Spawn at entrance gate path (0, 0, 26)
+            group.position.set((Math.random() - 0.5) * 3, 0, 26);
+            scene.add(group);
+
+            monsters.push({
+                mesh: group,
+                hp: 100,
+                maxHp: 100,
+                speed: 2.2 + Math.random() * 0.8,
+                targetPlot: null
+            });
+        }
+
+        function updateMonsters(delta) {
+            if (gameState.difficulty !== 'Monster') return;
+
+            for (let i = monsters.length - 1; i >= 0; i--) {
+                const m = monsters[i];
+
+                // Find closest plot with a crop to attack
+                if (!m.targetPlot || !m.targetPlot.crop) {
+                    let plotsWithCrops = farmPlots.filter(p => p.crop);
+                    if (plotsWithCrops.length > 0) {
+                        m.targetPlot = plotsWithCrops[Math.floor(Math.random() * plotsWithCrops.length)];
                     }
                 }
-            }, { passive: false });
 
-            window.addEventListener('touchend', (e) => {
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    if (e.changedTouches[i].identifier === joystickTouchId) {
-                        joystickTouchId = null;
-                        joystickVector = { x: 0, y: 0 };
-                        joystickStick.style.top = '35px';
-                        joystickStick.style.left = '35px';
-                    }
-                }
-                isTouchDraggingCamera = false;
-            });
+                let targetPos = m.targetPlot ? m.targetPlot.mesh.position.clone() : new THREE.Vector3(0, 0, 0);
 
-            function updateJoystick(touch) {
-                const rect = joystickBase.getBoundingClientRect();
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
-
-                let dx = touch.clientX - centerX;
-                let dy = touch.clientY - centerY;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                const maxRadius = 45;
-
-                if (distance > maxRadius) {
-                    dx = (dx / distance) * maxRadius;
-                    dy = (dy / distance) * maxRadius;
+                // Entrance Pathway Routing: First walk inside gate (Z: 10), then head to target plot
+                if (m.mesh.position.z > 12) {
+                    targetPos = new THREE.Vector3(0, 0, 10);
                 }
 
-                joystickStick.style.left = `${35 + dx}px`;
-                joystickStick.style.top = `${35 + dy}px`;
-
-                joystickVector.x = dx / maxRadius;
-                joystickVector.y = dy / maxRadius;
+                const dir = targetPos.clone().sub(m.mesh.position);
+                dir.y = 0;
+                if (dir.length() > 0.4) {
+                    dir.normalize();
+                    m.mesh.position.addScaledVector(dir, m.speed * delta);
+                    m.mesh.lookAt(targetPos);
+                    m.mesh.position.y = Math.sin(clock.getElapsedTime() * 4) * 0.15; // Floating ghost motion
+                } else if (m.targetPlot && m.targetPlot.crop) {
+                    // Devour crop!
+                    m.targetPlot.mesh.remove(m.targetPlot.cropMesh);
+                    m.targetPlot.crop = null;
+                    m.targetPlot.cropMesh = null;
+                    showFloatingText("👹 Crop Destroyed!", m.targetPlot.mesh.position);
+                    spawnSparkleParticles(m.targetPlot.mesh.position, 0xef4444);
+                    m.targetPlot = null;
+                }
             }
-
-            window.addEventListener('touchstart', (e) => {
-                audio.init();
-                const touch = e.changedTouches[0];
-                if (touch.clientX > window.innerWidth / 2 && !e.target.closest('button, .hotbar-slot')) {
-                    isTouchDraggingCamera = true;
-                    touchCamLastPos = { x: touch.clientX, y: touch.clientY };
-                }
-            });
-
-            touchInteractBtn.addEventListener('click', () => performInteraction());
-            touchJumpBtn.addEventListener('click', () => {
-                if (isGrounded) {
-                    playerVelY = 7.5;
-                    isGrounded = false;
-                }
-            });
-            touchSellBtn.addEventListener('click', () => performSellAction());
         }
 
-        function performSellAction() {
-            if (playerGroup.position.distanceTo(new THREE.Vector3(-12, 0, 4)) < 4.5) {
-                let totalEarnings = 0;
+        function playerAttack() {
+            const wData = WEAPONS[gameState.equippedWeapon] || WEAPONS.fist;
+            const attackRange = 3.5;
 
-                if (gameState.heldCrop) {
-                    const data = CROPS[gameState.heldCrop.type];
-                    const mult = gameState.heldCrop.isGiant ? 4 : 1;
-                    totalEarnings += Math.round(data.sellPrice * mult);
-                    gameState.heldCrop = null;
-                    updatePlayerHandItem();
-                }
+            // Attack animation swing: rotate arm & weapon forward quickly
+            humanoidLimbs.rightArm.rotation.x = -1.6;
+            humanoidLimbs.rightArm.rotation.y = -0.4;
+            setTimeout(() => {
+                humanoidLimbs.rightArm.rotation.x = 0;
+                humanoidLimbs.rightArm.rotation.y = 0;
+            }, 180);
 
-                Object.keys(gameState.harvestedCrops).forEach(cropKey => {
-                    const count = gameState.harvestedCrops[cropKey];
-                    if (count > 0) {
-                        const data = CROPS[cropKey];
-                        totalEarnings += count * data.sellPrice;
-                        gameState.harvestedCrops[cropKey] = 0;
+            let hitAny = false;
+            for (let i = monsters.length - 1; i >= 0; i--) {
+                const m = monsters[i];
+                if (playerGroup.position.distanceTo(m.mesh.position) < attackRange) {
+                    m.hp -= wData.damage;
+                    hitAny = true;
+                    spawnSparkleParticles(m.mesh.position, 0xef4444);
+                    audio.playHarvest();
+
+                    if (m.hp <= 0) {
+                        scene.remove(m.mesh);
+                        monsters.splice(i, 1);
+                        addCoins(40);
+                        addXP(30);
+                        showFloatingText("+40 Coins (Ghost Defeated!)", playerGroup.position);
+                    } else {
+                        showFloatingText(`-${wData.damage} HP`, m.mesh.position);
                     }
-                });
-
-                if (totalEarnings > 0) {
-                    addCoins(totalEarnings);
-                    audio.playCoin();
-                    spawnSparkleParticles(new THREE.Vector3(-12, 1.5, 4), 0xfacc15);
-                    showFloatingText(`+${totalEarnings} Coins Sold!`, new THREE.Vector3(-12, 2.5, 4));
-                    updateUI();
-                    saveGame();
-                } else {
-                    showFloatingText("No Crops to Sell!", new THREE.Vector3(-12, 2.0, 4));
                 }
             }
+
+            if (!hitAny) {
+                showFloatingText("Swing!", playerGroup.position);
+            }
+        }
+
+        function createFarmhouse(pos) {
+            const houseGroup = new THREE.Group();
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.8 });
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.5 });
+
+            const body = new THREE.Mesh(new THREE.BoxGeometry(8, 5, 6), wallMat);
+            body.position.y = 2.5; body.castShadow = true; body.receiveShadow = true;
+            houseGroup.add(body);
+
+            const roof = new THREE.Mesh(new THREE.ConeGeometry(6.5, 3.5, 4), roofMat);
+            roof.position.y = 6.25; roof.rotation.y = Math.PI / 4; roof.castShadow = true;
+            houseGroup.add(roof);
+
+            houseGroup.position.copy(pos);
+            scene.add(houseGroup);
         }
 
         function buildFarmGrid() {
@@ -776,13 +1060,12 @@
                 const x = startX + col * plotSpacing;
                 const z = startZ + row * plotSpacing;
 
-                const savedPlotData = gameState.plots ? gameState.plots.find(p => p.id === i) : null;
-                const isUnlocked = savedPlotData ? savedPlotData.isUnlocked : (i < gameState.unlockedPlots);
-                const isTilled = savedPlotData ? savedPlotData.isTilled : false;
-                const isWatered = savedPlotData ? savedPlotData.isWatered : false;
+                const savedPlot = gameState.plots ? gameState.plots.find(p => p.id === i) : null;
+                const isUnlocked = savedPlot ? savedPlot.isUnlocked : (i < gameState.unlockedPlots);
+                const isTilled = savedPlot ? savedPlot.isTilled : false;
+                const isWatered = savedPlot ? savedPlot.isWatered : false;
 
                 const plotMesh = new THREE.Group();
-                
                 const frameGeo = new THREE.BoxGeometry(2.8, 0.2, 2.8);
                 const frameMat = new THREE.MeshStandardMaterial({ color: isUnlocked ? 0x8b5a2b : 0x555555 });
                 const frame = new THREE.Mesh(frameGeo, frameMat);
@@ -790,13 +1073,13 @@
                 frame.receiveShadow = true;
                 plotMesh.add(frame);
 
-                let soilColor = 0x4a2e16;
-                if (!isUnlocked) soilColor = 0x333333;
-                else if (isWatered) soilColor = 0x1c1007;
-                else if (isTilled) soilColor = 0x361f0d;
+                let soilHex = 0x4a2e16;
+                if (!isUnlocked) soilHex = 0x333333;
+                else if (isWatered) soilHex = 0x1c1007;
+                else if (isTilled) soilHex = 0x361f0d;
 
                 const soilGeo = new THREE.BoxGeometry(2.5, 0.22, 2.5);
-                const soilMat = new THREE.MeshStandardMaterial({ color: soilColor, roughness: 0.9 });
+                const soilMat = new THREE.MeshStandardMaterial({ color: soilHex, roughness: 0.9 });
                 const soil = new THREE.Mesh(soilGeo, soilMat);
                 soil.position.y = 0.12;
                 soil.receiveShadow = true;
@@ -805,12 +1088,12 @@
                 plotMesh.position.set(x, 0, z);
                 scene.add(plotMesh);
 
-                let cropObj = null;
+                let cropData = null;
                 let cropMeshObj = null;
 
-                if (savedPlotData && savedPlotData.crop) {
-                    cropObj = savedPlotData.crop;
-                    cropMeshObj = createCropMesh(cropObj.type, cropObj.stage, cropObj.isGiant);
+                if (savedPlot && savedPlot.crop) {
+                    cropData = { ...savedPlot.crop };
+                    cropMeshObj = createCropMesh(cropData.type, cropData.stage, cropData.isGiant);
                     cropMeshObj.position.y = 0.2;
                     plotMesh.add(cropMeshObj);
                 }
@@ -822,32 +1105,32 @@
                     isUnlocked: isUnlocked,
                     isTilled: isTilled,
                     isWatered: isWatered,
-                    crop: cropObj,
+                    crop: cropData,
                     cropMesh: cropMeshObj
                 });
             }
         }
 
+        // --- CROP MESH CREATOR (10 DISTINCT GEOMETRIES) ---
         function createCropMesh(cropType, stage, isGiant = false) {
             const group = new THREE.Group();
-            const data = CROPS[cropType];
-            const scaleFactor = isGiant ? 1.8 : 1.0;
+            const data = CROPS[cropType] || CROPS.carrot;
+            const scaleFactor = isGiant ? 1.85 : 1.0;
 
             if (stage === 0) {
+                // Sprout
                 const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.35, 5), new THREE.MeshStandardMaterial({ color: 0x4ade80 }));
                 stem.position.y = 0.18;
                 group.add(stem);
-
-                const leafMat = new THREE.MeshStandardMaterial({ color: 0x22c55e });
-                const leaf1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.02, 0.08), leafMat);
+                const leaf1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.02, 0.08), new THREE.MeshStandardMaterial({ color: 0x22c55e }));
                 leaf1.position.set(0.08, 0.3, 0);
                 leaf1.rotation.z = -Math.PI / 6;
                 group.add(leaf1);
             } else if (stage === 1) {
-                const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.6, 6), new THREE.MeshStandardMaterial({ color: data.stemColor }));
-                stem.position.y = 0.3;
+                // Bush/Stalk stage
+                const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.65, 6), new THREE.MeshStandardMaterial({ color: data.stemColor }));
+                stem.position.y = 0.32;
                 group.add(stem);
-
                 for (let i = 0; i < 3; i++) {
                     const leaf = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.03, 0.15), new THREE.MeshStandardMaterial({ color: data.stemColor }));
                     leaf.position.y = 0.25 + i * 0.12;
@@ -855,8 +1138,8 @@
                     group.add(leaf);
                 }
             } else if (stage >= 2) {
-                const cropColor = isGiant ? 0xffd700 : data.color;
-                const fruitMat = new THREE.MeshStandardMaterial({ color: cropColor, roughness: 0.4, metalness: isGiant ? 0.6 : 0.1 });
+                // Fully Harvestable Crops
+                const fruitMat = new THREE.MeshStandardMaterial({ color: isGiant ? 0xffd700 : data.color, roughness: 0.4, metalness: isGiant ? 0.6 : 0.1 });
                 const stemMat = new THREE.MeshStandardMaterial({ color: data.stemColor, roughness: 0.7 });
 
                 if (cropType === 'carrot') {
@@ -864,23 +1147,11 @@
                     root.rotation.x = Math.PI;
                     root.position.y = 0.45;
                     group.add(root);
-                } else if (cropType === 'pumpkin') {
-                    const pumpkinGroup = new THREE.Group();
                     for (let i = 0; i < 4; i++) {
-                        const lobe = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.55, 8), fruitMat);
-                        lobe.scale.set(1.2, 1.0, 0.7);
-                        lobe.rotation.y = (i * Math.PI) / 4;
-                        pumpkinGroup.add(lobe);
+                        const topLeaf = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.5, 4), stemMat);
+                        topLeaf.position.set(Math.cos(i * Math.PI / 2) * 0.1, 0.95, Math.sin(i * Math.PI / 2) * 0.1);
+                        group.add(topLeaf);
                     }
-                    pumpkinGroup.position.y = 0.38;
-                    group.add(pumpkinGroup);
-                } else if (cropType === 'corn') {
-                    const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 1.4, 6), stemMat);
-                    stalk.position.y = 0.7;
-                    group.add(stalk);
-                    const cob = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.14, 0.75, 8), fruitMat);
-                    cob.position.set(0.15, 0.75, 0);
-                    group.add(cob);
                 } else if (cropType === 'tomato') {
                     const bStem = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.8, 6), stemMat);
                     bStem.position.y = 0.4;
@@ -888,12 +1159,71 @@
                     const foliage = new THREE.Mesh(new THREE.DodecahedronGeometry(0.45), stemMat);
                     foliage.position.y = 0.7;
                     group.add(foliage);
-                    const tMesh = new THREE.Mesh(new THREE.DodecahedronGeometry(0.22, 1), fruitMat);
-                    tMesh.position.set(0.2, 0.55, 0.15);
-                    group.add(tMesh);
+                    [{ x: 0.25, y: 0.55, z: 0.15 }, { x: -0.22, y: 0.65, z: -0.1 }, { x: 0.05, y: 0.45, z: -0.25 }].forEach(p => {
+                        const t = new THREE.Mesh(new THREE.DodecahedronGeometry(0.22, 1), fruitMat);
+                        t.position.set(p.x, p.y, p.z);
+                        group.add(t);
+                    });
+                } else if (cropType === 'corn') {
+                    const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 1.4, 6), stemMat);
+                    stalk.position.y = 0.7;
+                    group.add(stalk);
+                    const cob = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.14, 0.75, 8), fruitMat);
+                    cob.position.set(0.15, 0.75, 0);
+                    cob.rotation.z = -0.3;
+                    group.add(cob);
+                } else if (cropType === 'pumpkin') {
+                    for (let i = 0; i < 4; i++) {
+                        const lobe = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.55, 8), fruitMat);
+                        lobe.scale.set(1.2, 1.0, 0.7);
+                        lobe.rotation.y = (i * Math.PI) / 4;
+                        lobe.position.y = 0.38;
+                        group.add(lobe);
+                    }
+                    const pStem = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.08, 0.3, 6), stemMat);
+                    pStem.position.set(0, 0.7, 0);
+                    group.add(pStem);
+                } else if (cropType === 'eggplant') {
+                    const egg = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.8, 8), fruitMat);
+                    egg.position.y = 0.45;
+                    group.add(egg);
+                    const cap = new THREE.Mesh(new THREE.DodecahedronGeometry(0.2), stemMat);
+                    cap.position.y = 0.85;
+                    group.add(cap);
+                } else if (cropType === 'strawberry') {
+                    const berry = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.5, 6), fruitMat);
+                    berry.rotation.x = Math.PI;
+                    berry.position.y = 0.35;
+                    group.add(berry);
+                    const cap = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.03, 0.4), stemMat);
+                    cap.position.y = 0.6;
+                    group.add(cap);
+                } else if (cropType === 'watermelon') {
+                    const melon = new THREE.Mesh(new THREE.SphereGeometry(0.48, 8, 6), fruitMat);
+                    melon.scale.set(1.3, 0.9, 1.0);
+                    melon.position.y = 0.4;
+                    group.add(melon);
+                } else if (cropType === 'sunflower') {
+                    const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 1.6, 6), stemMat);
+                    stalk.position.y = 0.8;
+                    group.add(stalk);
+                    const flower = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.08, 10), fruitMat);
+                    flower.position.set(0, 1.6, 0.1);
+                    flower.rotation.x = 0.4;
+                    group.add(flower);
+                } else if (cropType === 'dragon_fruit') {
+                    const fruit = new THREE.Mesh(new THREE.DodecahedronGeometry(0.4), fruitMat);
+                    fruit.position.y = 0.5;
+                    group.add(fruit);
+                    for(let i=0; i<6; i++) {
+                        const petal = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.25, 4), stemMat);
+                        petal.position.set(Math.sin(i)*0.3, 0.5, Math.cos(i)*0.3);
+                        group.add(petal);
+                    }
                 } else {
+                    // Golden Berry
                     const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.45, 0), fruitMat);
-                    crystal.position.y = 0.85;
+                    crystal.position.y = 0.65;
                     group.add(crystal);
                 }
             }
@@ -902,32 +1232,22 @@
             return group;
         }
 
-        function createPet(type) {
-            if (petMesh) scene.remove(petMesh);
-            petMesh = new THREE.Group();
-            let bodyColor = type === 'dog' ? 0x8b4513 : 0xffcc00;
-            const body = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.8), new THREE.MeshStandardMaterial({ color: bodyColor }));
-            body.position.y = 0.3;
-            petMesh.add(body);
-            petMesh.position.copy(playerGroup.position).add(new THREE.Vector3(-1.5, 0, -1.5));
-            scene.add(petMesh);
-        }
-
+        // --- PARTICLES ENGINE ---
         function spawnWaterParticles(pos) {
-            for (let i = 0; i < 12; i++) {
+            for (let i = 0; i < 10; i++) {
                 const p = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.08), new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.8 }));
                 p.position.copy(pos).add(new THREE.Vector3((Math.random()-0.5)*1.2, 0.5, (Math.random()-0.5)*1.2));
                 scene.add(p);
-                particles.push({ mesh: p, vel: new THREE.Vector3((Math.random()-0.5)*2, Math.random()*2 + 1, (Math.random()-0.5)*2), life: 0.6 });
+                particles.push({ mesh: p, vel: new THREE.Vector3((Math.random()-0.5)*2, Math.random()*2 + 1, (Math.random()-0.5)*2), life: 0.5 });
             }
         }
 
         function spawnSparkleParticles(pos, color = 0xfacc15) {
-            for (let i = 0; i < 15; i++) {
+            for (let i = 0; i < 12; i++) {
                 const p = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.1), new THREE.MeshBasicMaterial({ color: color }));
                 p.position.copy(pos).add(new THREE.Vector3((Math.random()-0.5)*0.8, 0.4, (Math.random()-0.5)*0.8));
                 scene.add(p);
-                particles.push({ mesh: p, vel: new THREE.Vector3((Math.random()-0.5)*3, Math.random()*3 + 1, (Math.random()-0.5)*3), life: 0.8 });
+                particles.push({ mesh: p, vel: new THREE.Vector3((Math.random()-0.5)*3, Math.random()*3 + 1, (Math.random()-0.5)*3), life: 0.7 });
             }
         }
 
@@ -937,38 +1257,97 @@
                 p.life -= delta;
                 p.mesh.position.addScaledVector(p.vel, delta);
                 p.vel.y -= 9.8 * delta;
-                p.mesh.scale.multiplyScalar(0.96);
-                if (p.life <= 0) { scene.remove(p.mesh); particles.splice(i, 1); }
+                p.mesh.scale.multiplyScalar(0.95);
+                if (p.life <= 0) {
+                    scene.remove(p.mesh);
+                    particles.splice(i, 1);
+                }
             }
         }
 
+        // --- INPUT & CONTROLS ---
         function setupInputListeners() {
             window.addEventListener('keydown', (e) => {
                 audio.init();
                 const key = e.key.toLowerCase();
-                if (key === 'w' || key === 'arrowup') keys.w = true;
-                if (key === 'a' || key === 'arrowleft') keys.a = true;
-                if (key === 's' || key === 'arrowdown') keys.s = true;
-                if (key === 'd' || key === 'arrowright') keys.d = true;
+                if (['w', 'arrowup'].includes(key)) keys.w = true;
+                if (['a', 'arrowleft'].includes(key)) keys.a = true;
+                if (['s', 'arrowdown'].includes(key)) keys.s = true;
+                if (['d', 'arrowright'].includes(key)) keys.d = true;
                 if (e.code === 'Space') keys.space = true;
                 if (key === 'e') performInteraction();
-                if (['1','2','3','4','5','6'].includes(key)) selectHotbarSlot(parseInt(key) - 1);
+                if (key === 'f') playerAttack();
+                if (['1','2','3','4'].includes(key)) selectHotbarSlot(parseInt(key) - 1);
             });
 
             window.addEventListener('keyup', (e) => {
                 const key = e.key.toLowerCase();
-                if (key === 'w' || key === 'arrowup') keys.w = false;
-                if (key === 'a' || key === 'arrowleft') keys.a = false;
-                if (key === 's' || key === 'arrowdown') keys.s = false;
-                if (key === 'd' || key === 'arrowright') keys.d = false;
+                if (['w', 'arrowup'].includes(key)) keys.w = false;
+                if (['a', 'arrowleft'].includes(key)) keys.a = false;
+                if (['s', 'arrowdown'].includes(key)) keys.s = false;
+                if (['d', 'arrowright'].includes(key)) keys.d = false;
                 if (e.code === 'Space') keys.space = false;
             });
 
-            let isDragging = false;
-            let previousMouseX = 0;
-            window.addEventListener('mousedown', (e) => { if (e.target.tagName === 'CANVAS') { isDragging = true; previousMouseX = e.clientX; } });
-            window.addEventListener('mousemove', (e) => { if (isDragging) { cameraAngleY -= (e.clientX - previousMouseX) * 0.005; previousMouseX = e.clientX; } });
+            let isDragging = false, previousMouseX = 0;
+            window.addEventListener('mousedown', (e) => {
+                if (e.target.tagName === 'CANVAS') { isDragging = true; previousMouseX = e.clientX; }
+            });
+            window.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    cameraAngleY -= (e.clientX - previousMouseX) * 0.005;
+                    previousMouseX = e.clientX;
+                }
+            });
             window.addEventListener('mouseup', () => isDragging = false);
+        }
+
+        function setupMobileControls() {
+            const joystickBase = document.getElementById('joystick-base');
+            const joystickStick = document.getElementById('joystick-stick');
+            let joystickTouchId = null;
+
+            joystickBase.addEventListener('touchstart', (e) => {
+                audio.init();
+                const touch = e.changedTouches[0];
+                joystickTouchId = touch.identifier;
+                updateJoystick(touch);
+            }, { passive: false });
+
+            window.addEventListener('touchmove', (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const touch = e.changedTouches[i];
+                    if (touch.identifier === joystickTouchId) updateJoystick(touch);
+                }
+            }, { passive: false });
+
+            window.addEventListener('touchend', (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === joystickTouchId) {
+                        joystickTouchId = null;
+                        joystickVector = { x: 0, y: 0 };
+                        joystickStick.style.top = '35px';
+                        joystickStick.style.left = '35px';
+                    }
+                }
+            });
+
+            function updateJoystick(touch) {
+                const rect = joystickBase.getBoundingClientRect();
+                let dx = touch.clientX - (rect.left + rect.width / 2);
+                let dy = touch.clientY - (rect.top + rect.height / 2);
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 45) { dx = (dx / dist) * 45; dy = (dy / dist) * 45; }
+                joystickStick.style.left = `${35 + dx}px`;
+                joystickStick.style.top = `${35 + dy}px`;
+                joystickVector.x = dx / 45;
+                joystickVector.y = dy / 45;
+            }
+
+            document.getElementById('btn-touch-interact').onclick = () => performInteraction();
+            document.getElementById('btn-touch-jump').onclick = () => { if (isGrounded) { playerVelY = 7.5; isGrounded = false; } };
+            document.getElementById('btn-touch-sell').onclick = () => performSellVaultAll();
+            document.getElementById('btn-touch-attack').onclick = () => playerAttack();
         }
 
         function getClosestPlot() {
@@ -981,23 +1360,36 @@
             return closest;
         }
 
-        function performInteraction() {
-            const plot = getClosestPlot();
-            const activeTool = getActiveItem();
+        function getActiveItem() {
+            const slots = ['hoe', 'waterCan', 'fertilizer', gameState.equippedSeed];
+            return slots[gameState.selectedSlot];
+        }
 
-            if (playerGroup.position.distanceTo(new THREE.Vector3(12, 0, 4)) < 4.0) {
+        function performInteraction() {
+            // Refill Water
+            if (playerGroup.position.distanceTo(new THREE.Vector3(14, 0, 4)) < 4.0) {
                 gameState.inventory.waterCan = gameState.waterCanCapacity;
                 audio.playWater();
-                spawnWaterParticles(new THREE.Vector3(12, 1, 4));
-                showFloatingText("+Water Refilled", new THREE.Vector3(12, 2, 4));
+                spawnWaterParticles(new THREE.Vector3(14, 1, 4));
+                showFloatingText("+Water Refilled", new THREE.Vector3(14, 2, 4));
                 updateUI();
                 saveGame();
                 return;
             }
 
+            // Market Sell
+            if (playerGroup.position.distanceTo(new THREE.Vector3(-14, 0, 4)) < 4.5) {
+                performSellVaultAll();
+                return;
+            }
+
+            const plot = getClosestPlot();
             if (!plot || !plot.isUnlocked) return;
 
-            if (activeTool === 'hoe' && !plot.isTilled) {
+            const tool = getActiveItem();
+
+            // Till
+            if (tool === 'hoe' && !plot.isTilled) {
                 plot.isTilled = true;
                 plot.soilMesh.material.color.setHex(0x361f0d);
                 audio.playPlant();
@@ -1007,27 +1399,31 @@
                 return;
             }
 
-            if (activeTool && activeTool.endsWith('_seed') && plot.isTilled && !plot.crop) {
-                const seedType = activeTool.replace('_seed', '');
-                if (gameState.inventory[activeTool] > 0) {
-                    gameState.inventory[activeTool]--;
+            // Plant Seed
+            if (tool && tool.endsWith('_seed') && plot.isTilled && !plot.crop) {
+                if (gameState.seedsInventory[tool] > 0) {
+                    gameState.seedsInventory[tool]--;
+                    const cropType = tool.replace('_seed', '');
                     const isGiant = Math.random() < 0.08;
 
-                    plot.crop = { type: seedType, stage: 0, growthProgress: 0, isGiant: isGiant };
-                    plot.cropMesh = createCropMesh(seedType, 0, isGiant);
+                    plot.crop = { type: cropType, stage: 0, growthProgress: 0, isGiant: isGiant };
+                    plot.cropMesh = createCropMesh(cropType, 0, isGiant);
                     plot.cropMesh.position.y = 0.2;
                     plot.mesh.add(plot.cropMesh);
 
                     audio.playPlant();
                     spawnSparkleParticles(plot.mesh.position, 0x4ade80);
-                    showFloatingText(`Planted ${CROPS[seedType].name}`, plot.mesh.position);
+                    showFloatingText(`Planted ${CROPS[cropType].name}`, plot.mesh.position);
                     updateUI();
                     saveGame();
+                } else {
+                    showFloatingText("No Seeds Left!", playerGroup.position);
                 }
                 return;
             }
 
-            if (activeTool === 'waterCan' && plot.crop && !plot.isWatered) {
+            // Water
+            if (tool === 'waterCan' && plot.crop && !plot.isWatered) {
                 if (gameState.inventory.waterCan > 0) {
                     gameState.inventory.waterCan--;
                     plot.isWatered = true;
@@ -1038,11 +1434,14 @@
                     trackQuestProgress('water_crops', 1);
                     updateUI();
                     saveGame();
+                } else {
+                    showFloatingText("Water Can Empty!", playerGroup.position);
                 }
                 return;
             }
 
-            if (activeTool === 'fertilizer' && plot.crop && plot.crop.stage < 2) {
+            // Fertilizer
+            if (tool === 'fertilizer' && plot.crop && plot.crop.stage < 2) {
                 if (gameState.inventory.fertilizer > 0) {
                     gameState.inventory.fertilizer--;
                     plot.crop.stage = 2;
@@ -1050,6 +1449,7 @@
                     plot.cropMesh = createCropMesh(plot.crop.type, 2, plot.crop.isGiant);
                     plot.mesh.add(plot.cropMesh);
                     audio.playHarvest();
+                    spawnSparkleParticles(plot.mesh.position, 0xec4899);
                     showFloatingText("Instant Grown!", plot.mesh.position);
                     updateUI();
                     saveGame();
@@ -1057,15 +1457,18 @@
                 return;
             }
 
+            // Harvest
             if (plot.crop && plot.crop.stage >= 2) {
                 const cropType = plot.crop.type;
                 const isGiant = plot.crop.isGiant;
 
                 gameState.heldCrop = { type: cropType, isGiant: isGiant };
-                gameState.harvestedCrops[cropType] = (gameState.harvestedCrops[cropType] || 0) + 1;
+                gameState.harvestedVault[cropType] = (gameState.harvestedVault[cropType] || 0) + (isGiant ? 2 : 1);
                 updatePlayerHandItem();
 
-                addXP(Math.round(CROPS[cropType].xp * (isGiant ? 3 : 1)));
+                const xpEarned = Math.round(CROPS[cropType].xp * (isGiant ? 3 : 1));
+                addXP(xpEarned);
+
                 audio.playHarvest();
                 spawnSparkleParticles(plot.mesh.position, 0xfacc15);
                 showFloatingText(`Harvested ${CROPS[cropType].name}!`, plot.mesh.position);
@@ -1082,11 +1485,50 @@
             }
         }
 
+        function updatePlayerHandItem() {
+            if (currentHandMesh) { playerHandAnchor.remove(currentHandMesh); currentHandMesh = null; }
+            if (gameState.heldCrop) {
+                currentHandMesh = createCropMesh(gameState.heldCrop.type, 2, gameState.heldCrop.isGiant);
+                currentHandMesh.scale.set(0.9, 0.9, 0.9);
+                playerHandAnchor.add(currentHandMesh);
+            }
+        }
+
+        function performSellVaultAll() {
+            let total = 0;
+            if (gameState.heldCrop) {
+                const data = CROPS[gameState.heldCrop.type];
+                total += Math.round(data.sellPrice * (gameState.heldCrop.isGiant ? 4 : 1));
+                gameState.heldCrop = null;
+                updatePlayerHandItem();
+            }
+
+            Object.keys(gameState.harvestedVault).forEach(k => {
+                const count = gameState.harvestedVault[k];
+                if (count > 0 && CROPS[k]) {
+                    total += count * CROPS[k].sellPrice;
+                    gameState.harvestedVault[k] = 0;
+                }
+            });
+
+            if (total > 0) {
+                addCoins(total);
+                audio.playCoin();
+                spawnSparkleParticles(new THREE.Vector3(-14, 1.5, 4), 0xfacc15);
+                showFloatingText(`+${total} Coins Sold!`, new THREE.Vector3(-14, 2.5, 4));
+                updateUI();
+                saveGame();
+            } else {
+                showFloatingText("No produce to sell!", playerGroup.position);
+            }
+        }
+
         function updateCropGrowth(delta) {
+            let stateChanged = false;
             farmPlots.forEach(plot => {
                 if (plot.crop && plot.crop.stage < 2) {
                     const data = CROPS[plot.crop.type];
-                    const growthSpeed = plot.isWatered ? 2.0 : 1.0;
+                    const growthSpeed = plot.isWatered ? 2.2 : 1.0;
                     plot.crop.growthProgress += delta * growthSpeed;
 
                     const targetStage = plot.crop.growthProgress >= data.growthTime ? 2 : (plot.crop.growthProgress >= data.growthTime / 2 ? 1 : 0);
@@ -1095,19 +1537,15 @@
                         plot.mesh.remove(plot.cropMesh);
                         plot.cropMesh = createCropMesh(plot.crop.type, targetStage, plot.crop.isGiant);
                         plot.mesh.add(plot.cropMesh);
-                        saveGame();
+                        spawnSparkleParticles(plot.mesh.position, 0x38bdf8);
+                        stateChanged = true;
                     }
                 }
             });
+            if (stateChanged) saveGame();
         }
 
-        function addCoins(amount) {
-            gameState.coins += amount;
-            trackQuestProgress('earn_coins', gameState.coins);
-            updateUI();
-            saveGame();
-        }
-
+        function addCoins(amount) { gameState.coins += amount; trackQuestProgress('earn_coins', gameState.coins); updateUI(); }
         function addXP(amount) {
             gameState.xp += amount;
             const xpNeeded = gameState.level * 100;
@@ -1118,23 +1556,22 @@
                 showFloatingText(`LEVEL UP! (Lvl ${gameState.level})`, playerGroup.position);
             }
             updateUI();
-            saveGame();
         }
 
         function trackQuestProgress(questId, amount, extraParam = null) {
             gameState.quests.forEach(q => {
                 if (q.id === questId && !q.completed) {
                     if (q.cropId && extraParam !== q.cropId) return;
-                    q.progress = (questId === 'earn_coins') ? amount : q.progress + amount;
+                    if (questId === 'earn_coins') q.progress = amount;
+                    else q.progress += amount;
                     if (q.progress >= q.target) {
                         q.completed = true;
                         addCoins(q.reward);
                         addXP(q.rewardXp);
-                        showFloatingText(`Quest Complete! +${q.reward}G`, playerGroup.position);
+                        showFloatingText(`Quest Done! +${q.reward}G`, playerGroup.position);
                     }
                 }
             });
-            saveGame();
         }
 
         function showFloatingText(text, worldPos) {
@@ -1151,16 +1588,6 @@
             setTimeout(() => el.remove(), 1200);
         }
 
-        const HOTBAR_ITEMS = [
-            { id: 'hoe', name: 'Hoe', icon: '🪓' },
-            { id: 'waterCan', name: 'Water Can', icon: '💧' },
-            { id: 'fertilizer', name: 'Fertilizer', icon: '🧪' },
-            { id: 'carrot_seed', name: 'Carrot Seeds', icon: '🥕' },
-            { id: 'tomato_seed', name: 'Tomato Seeds', icon: '🍅' },
-            { id: 'corn_seed', name: 'Corn Seeds', icon: '🌽' }
-        ];
-
-        function getActiveItem() { return HOTBAR_ITEMS[gameState.selectedSlot]?.id; }
         function selectHotbarSlot(index) { gameState.selectedSlot = index; updateUI(); }
 
         function updateUI() {
@@ -1168,30 +1595,41 @@
             document.getElementById('level-num').innerText = gameState.level;
             document.getElementById('player-level-badge').innerText = `L${gameState.level}`;
 
+            const badge = document.getElementById('difficulty-badge');
+            badge.innerText = `Mode: ${gameState.difficulty}`;
+            badge.className = `px-3 py-0.5 rounded-full text-[10px] font-fredoka uppercase tracking-wider ${gameState.difficulty === 'Monster' ? 'bg-red-600 text-white' : 'bg-green-600 text-white'}`;
+
             const xpNeeded = gameState.level * 100;
             document.getElementById('xp-text').innerText = `${gameState.xp}/${xpNeeded} XP`;
             document.getElementById('xp-bar').style.width = `${(gameState.xp / xpNeeded) * 100}%`;
 
+            // Hotbar Rendering
+            const eqSeed = CROPS[gameState.equippedSeed.replace('_seed', '')];
+            const eqWep = WEAPONS[gameState.equippedWeapon];
+            const items = [
+                { id: 'hoe', name: 'Hoe', icon: '🪓', count: '' },
+                { id: 'waterCan', name: 'Water Can', icon: '💧', count: gameState.inventory.waterCan },
+                { id: 'weapon', name: eqWep ? eqWep.name : 'Bare Fists', icon: eqWep ? eqWep.icon : '👊', count: '' },
+                { id: gameState.equippedSeed, name: `${eqSeed ? eqSeed.name : 'Seed'}`, icon: eqSeed ? eqSeed.icon : '🌱', count: gameState.seedsInventory[gameState.equippedSeed] || 0 }
+            ];
+
             const hotbarEl = document.getElementById('hotbar');
             hotbarEl.innerHTML = '';
-            HOTBAR_ITEMS.forEach((item, idx) => {
-                const count = gameState.inventory[item.id] !== undefined ? gameState.inventory[item.id] : '';
+            items.forEach((item, idx) => {
                 const isActive = idx === gameState.selectedSlot;
                 const slot = document.createElement('div');
                 slot.className = `hotbar-slot rounded-xl flex flex-col items-center justify-center relative cursor-pointer ${isActive ? 'active' : ''}`;
                 slot.innerHTML = `
                     <span class="text-2xl">${item.icon}</span>
-                    ${count !== '' ? `<span class="absolute bottom-1 right-1 text-[10px] font-fredoka bg-slate-900/90 px-1 rounded text-amber-300">${count}</span>` : ''}
+                    ${item.count !== '' ? `<span class="absolute bottom-1 right-1 text-[10px] font-fredoka bg-slate-900/90 px-1 rounded text-amber-300">${item.count}</span>` : ''}
                     <span class="absolute top-0.5 left-1 text-[9px] font-bold text-slate-400">${idx + 1}</span>
                 `;
                 slot.onclick = () => selectHotbarSlot(idx);
                 hotbarEl.appendChild(slot);
             });
 
-            const activeItem = HOTBAR_ITEMS[gameState.selectedSlot];
-            let itemLabelText = activeItem ? `${activeItem.name} (${gameState.selectedSlot + 1})` : '';
-            if (gameState.heldCrop) itemLabelText += ` | Holding: ${CROPS[gameState.heldCrop.type].name}`;
-            document.getElementById('active-item-name').innerText = itemLabelText;
+            const activeItem = items[gameState.selectedSlot];
+            document.getElementById('active-item-name').innerText = `${activeItem.name} (${gameState.selectedSlot + 1})${gameState.heldCrop ? ` | Holding: ${CROPS[gameState.heldCrop.type].name}` : ''}`;
             updateActionPrompt();
         }
 
@@ -1201,214 +1639,285 @@
             const touchSellBtn = document.getElementById('btn-touch-sell');
             const plot = getClosestPlot();
 
-            if (playerGroup.position.distanceTo(new THREE.Vector3(12, 0, 4)) < 4.0) {
+            if (playerGroup.position.distanceTo(new THREE.Vector3(14, 0, 4)) < 4.0) {
                 promptEl.style.opacity = '1';
                 promptText.innerText = 'Refill Water Can at Well';
                 if (touchSellBtn) touchSellBtn.classList.add('hidden');
                 return;
             }
 
-            if (playerGroup.position.distanceTo(new THREE.Vector3(-12, 0, 4)) < 4.5) {
+            if (playerGroup.position.distanceTo(new THREE.Vector3(-14, 0, 4)) < 4.5) {
                 promptEl.style.opacity = '1';
-                promptText.innerText = 'Press E / Tap 💰 to Sell Held Crops!';
+                promptText.innerText = 'Press E / Tap 💰 to Sell All Harvested Produce!';
                 if (touchSellBtn) touchSellBtn.classList.remove('hidden');
                 return;
-            } else {
-                if (touchSellBtn) touchSellBtn.classList.add('hidden');
-            }
+            } else if (touchSellBtn) touchSellBtn.classList.add('hidden');
 
             if (plot && plot.isUnlocked) {
                 promptEl.style.opacity = '1';
                 if (!plot.isTilled) promptText.innerText = 'Till Dirt Plot (Use Hoe)';
-                else if (!plot.crop) promptText.innerText = 'Plant Seed (Select Seeds)';
-                else if (plot.crop.stage >= 2) promptText.innerText = 'Harvest Crop to Hand!';
-                else if (!plot.isWatered) promptText.innerText = 'Water Crop (Use Water Can)';
+                else if (!plot.crop) promptText.innerText = 'Plant Seed';
+                else if (plot.crop.stage >= 2) promptText.innerText = 'Harvest Crop!';
+                else if (!plot.isWatered) promptText.innerText = 'Water Crop';
                 else promptText.innerText = 'Crop Growing...';
             } else {
                 promptEl.style.opacity = '0';
             }
         }
 
+        // --- MODAL RENDERING ---
         function setupModals() {
-            const fullscreenBtn = document.getElementById('btn-fullscreen');
-            if (fullscreenBtn) {
-                fullscreenBtn.onclick = () => {
-                    if (!document.fullscreenElement) {
-                        document.documentElement.requestFullscreen();
-                        document.getElementById('fullscreen-icon').innerText = '🗗';
-                    } else {
-                        document.exitFullscreen();
-                        document.getElementById('fullscreen-icon').innerText = '⛶';
-                    }
-                };
-            }
-
-            const settingsModal = document.getElementById('settings-modal');
-            const invModal = document.getElementById('inventory-modal');
-            const shopModal = document.getElementById('shop-modal');
-            const questsModal = document.getElementById('quests-modal');
-            const petsModal = document.getElementById('pets-modal');
+            // Landing Screen Mode Selection
+            document.getElementById('btn-start-peaceful').onclick = () => startGame('Peaceful');
+            document.getElementById('btn-start-monster').onclick = () => startGame('Monster');
 
             document.getElementById('btn-settings').onclick = () => {
                 saveGame();
-                document.getElementById('export-textarea').value = localStorage.getItem('grow_garden_save') || '';
-                settingsModal.classList.remove('hidden');
+                document.getElementById('export-textarea').value = localStorage.getItem('grow_garden_save_v3') || '';
+                document.getElementById('settings-modal').classList.remove('hidden');
             };
 
             document.getElementById('btn-copy-save').onclick = () => {
-                const exportBox = document.getElementById('export-textarea');
-                exportBox.select();
-                navigator.clipboard.writeText(exportBox.value).then(() => {
-                    showFloatingText("Save Copied to Clipboard!", playerGroup.position);
+                const box = document.getElementById('export-textarea');
+                box.select();
+                navigator.clipboard.writeText(box.value).then(() => {
+                    showFloatingText("Save String Copied!", playerGroup.position);
                 }).catch(() => {
-                    // Fallback for older WebView versions
                     document.execCommand('copy');
-                    showFloatingText("Save Copied!", playerGroup.position);
+                    showFloatingText("Save String Copied!", playerGroup.position);
                 });
             };
 
             document.getElementById('btn-import-save').onclick = () => {
-                const importText = document.getElementById('import-textarea').value.trim();
-                if (importText) {
+                const text = document.getElementById('import-textarea').value.trim();
+                if (text) {
                     try {
-                        JSON.parse(importText); // Validate JSON format
-                        localStorage.setItem('grow_garden_save', importText);
+                        JSON.parse(text);
+                        localStorage.setItem('grow_garden_save_v3', text);
                         loadGame();
                         buildFarmGrid();
-                        updatePlayerHandItem();
+                        updateEquippedWeaponMesh();
                         updateUI();
-                        if (gameState.activePet) createPet(gameState.activePet);
-                        settingsModal.classList.add('hidden');
+                        document.getElementById('settings-modal').classList.add('hidden');
                         showFloatingText("Save Restored Successfully!", playerGroup.position);
                     } catch(e) {
-                        alert("Invalid Save String! Please check your pasted text.");
+                        showFloatingText("Invalid Save Data String!", playerGroup.position);
                     }
-                } else {
-                    alert("Please paste your save string first.");
                 }
             };
 
-            document.getElementById('btn-inventory').onclick = () => { renderInventoryVault('seeds'); invModal.classList.remove('hidden'); };
+            document.getElementById('setting-mode-peaceful').onclick = () => {
+                gameState.difficulty = 'Peaceful';
+                monsters.forEach(m => scene.remove(m.mesh));
+                monsters = [];
+                updateUI();
+                saveGame();
+            };
+
+            document.getElementById('setting-mode-monster').onclick = () => {
+                gameState.difficulty = 'Monster';
+                updateUI();
+                saveGame();
+            };
+
+            document.getElementById('btn-fullscreen').onclick = () => {
+                if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+                else if (document.exitFullscreen) document.exitFullscreen();
+            };
+
+            const shopModal = document.getElementById('shop-modal');
+            const questsModal = document.getElementById('quests-modal');
+            const barnModal = document.getElementById('barn-modal');
+            const seedsModal = document.getElementById('seeds-modal');
+
             document.getElementById('btn-shop').onclick = () => { renderShopItems('seeds'); shopModal.classList.remove('hidden'); };
             document.getElementById('btn-quests').onclick = () => { renderQuests(); questsModal.classList.remove('hidden'); };
-            document.getElementById('btn-pets').onclick = () => { renderPets(); petsModal.classList.remove('hidden'); };
+            document.getElementById('btn-barn').onclick = () => { renderBarnVault(); barnModal.classList.remove('hidden'); };
+            document.getElementById('btn-seeds').onclick = () => { renderSeedsInventory(); seedsModal.classList.remove('hidden'); };
 
             document.querySelectorAll('.btn-close-modal').forEach(btn => {
-                btn.onclick = () => { settingsModal.classList.add('hidden'); invModal.classList.add('hidden'); shopModal.classList.add('hidden'); questsModal.classList.add('hidden'); petsModal.classList.add('hidden'); };
-            });
-
-            document.querySelectorAll('.inv-tab').forEach(tab => {
-                tab.onclick = (e) => {
-                    document.querySelectorAll('.inv-tab').forEach(t => { t.classList.remove('active', 'bg-blue-600', 'text-white'); t.classList.add('bg-slate-800', 'text-slate-400'); });
-                    e.target.classList.add('active', 'bg-blue-600', 'text-white');
-                    e.target.classList.remove('bg-slate-800', 'text-slate-400');
-                    renderInventoryVault(e.target.dataset.tab);
+                btn.onclick = () => {
+                    document.getElementById('settings-modal').classList.add('hidden');
+                    shopModal.classList.add('hidden');
+                    questsModal.classList.add('hidden');
+                    barnModal.classList.add('hidden');
+                    seedsModal.classList.add('hidden');
                 };
             });
 
             document.querySelectorAll('.shop-tab').forEach(tab => {
                 tab.onclick = (e) => {
-                    document.querySelectorAll('.shop-tab').forEach(t => { t.classList.remove('active', 'bg-blue-600', 'text-white'); t.classList.add('bg-slate-800', 'text-slate-400'); });
-                    e.target.classList.add('active', 'bg-blue-600', 'text-white');
-                    e.target.classList.remove('bg-slate-800', 'text-slate-400');
+                    document.querySelectorAll('.shop-tab').forEach(t => t.classList.replace('bg-blue-600', 'bg-slate-800'));
+                    e.target.classList.replace('bg-slate-800', 'bg-blue-600');
                     renderShopItems(e.target.dataset.tab);
                 };
             });
+
+            document.getElementById('btn-sell-all-vault').onclick = () => { performSellVaultAll(); renderBarnVault(); };
         }
 
-        function renderInventoryVault(tabCategory) {
-            const container = document.getElementById('inventory-items-container');
+        function startGame(mode) {
+            gameState.difficulty = mode;
+            gameState.gameStarted = true;
+            document.getElementById('landing-screen').classList.add('opacity-0', 'pointer-events-none');
+            document.getElementById('ui-layer').classList.remove('opacity-0');
+            document.getElementById('ui-layer').classList.add('opacity-100');
+            updateUI();
+            saveGame();
+        }
+
+        function renderBarnVault() {
+            const container = document.getElementById('vault-items-container');
+            container.innerHTML = '';
+            let totalValue = 0;
+
+            Object.keys(gameState.harvestedVault).forEach(k => {
+                const count = gameState.harvestedVault[k];
+                const data = CROPS[k];
+                if (!data) return;
+                const itemTotal = count * data.sellPrice;
+                totalValue += itemTotal;
+
+                const div = document.createElement('div');
+                div.className = 'roblox-panel p-3 rounded-2xl flex items-center justify-between border-slate-700';
+                div.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="text-3xl">${data.icon}</span>
+                        <div>
+                            <div class="font-fredoka text-slate-100">${data.name}</div>
+                            <div class="text-xs text-amber-400 font-bold">Qty: ${count} (${data.sellPrice}G ea)</div>
+                        </div>
+                    </div>
+                    <button class="roblox-btn roblox-btn-green px-3 py-1.5 rounded-xl text-xs font-fredoka" ${count <= 0 ? 'disabled style="opacity:0.5"' : ''}>
+                        Sell (${itemTotal}G)
+                    </button>
+                `;
+                div.querySelector('button').onclick = () => {
+                    if (count > 0) {
+                        addCoins(itemTotal);
+                        gameState.harvestedVault[k] = 0;
+                        audio.playCoin();
+                        renderBarnVault();
+                        updateUI();
+                        saveGame();
+                    }
+                };
+                container.appendChild(div);
+            });
+
+            document.getElementById('total-vault-valuation').innerText = `Total Valuation: ${totalValue} Coins`;
+        }
+
+        function renderSeedsInventory() {
+            const container = document.getElementById('seeds-items-container');
             container.innerHTML = '';
 
-            if (tabCategory === 'seeds') {
-                Object.values(CROPS).forEach(crop => {
-                    const seedKey = `${crop.id}_seed`;
-                    const count = gameState.inventory[seedKey] || 0;
-                    const div = document.createElement('div');
-                    div.className = 'roblox-panel p-4 rounded-2xl flex items-center justify-between border-slate-700';
-                    div.innerHTML = `
-                        <div class="flex items-center space-x-3">
-                            <span class="text-3xl">${crop.icon}</span>
-                            <div>
-                                <div class="font-fredoka text-slate-100">${crop.name} Seeds</div>
-                                <div class="text-xs text-amber-400 font-bold">In Pouch: ${count}</div>
-                            </div>
+            Object.values(CROPS).forEach(crop => {
+                const seedKey = `${crop.id}_seed`;
+                const count = gameState.seedsInventory[seedKey] || 0;
+                const isEquipped = gameState.equippedSeed === seedKey;
+
+                const div = document.createElement('div');
+                div.className = `roblox-panel p-3 rounded-2xl flex items-center justify-between ${isEquipped ? 'border-amber-400 bg-amber-950/20' : 'border-slate-700'}`;
+                div.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="text-3xl">${crop.icon}</span>
+                        <div>
+                            <div class="font-fredoka text-slate-100">${crop.name} Seeds</div>
+                            <div class="text-xs text-slate-400">Pouch Qty: <span class="text-amber-400 font-bold">${count}</span></div>
                         </div>
-                    `;
-                    container.appendChild(div);
-                });
-            } else if (tabCategory === 'harvested') {
-                Object.values(CROPS).forEach(crop => {
-                    const count = gameState.harvestedCrops[crop.id] || 0;
-                    const div = document.createElement('div');
-                    div.className = 'roblox-panel p-4 rounded-2xl flex items-center justify-between border-slate-700';
-                    div.innerHTML = `
-                        <div class="flex items-center space-x-3">
-                            <span class="text-3xl">${crop.icon}</span>
-                            <div>
-                                <div class="font-fredoka text-slate-100">${crop.name}</div>
-                                <div class="text-xs text-green-400 font-bold">Stored Vault: ${count}</div>
-                            </div>
-                        </div>
-                        <button class="roblox-btn roblox-btn-green px-4 py-2 rounded-xl text-sm font-fredoka" ${count <= 0 ? 'disabled' : ''}>
-                            Sell All (${count * crop.sellPrice}G)
-                        </button>
-                    `;
-                    div.querySelector('button').onclick = () => {
-                        if (count > 0) {
-                            const earnings = count * crop.sellPrice;
-                            gameState.harvestedCrops[crop.id] = 0;
-                            addCoins(earnings);
-                            audio.playCoin();
-                            renderInventoryVault('harvested');
-                            updateUI();
-                            saveGame();
-                        }
-                    };
-                    container.appendChild(div);
-                });
-            }
+                    </div>
+                    <button class="roblox-btn ${isEquipped ? 'roblox-btn-amber' : 'roblox-btn-purple'} px-3 py-1.5 rounded-xl text-xs font-fredoka">
+                        ${isEquipped ? 'Equipped' : 'Equip Hotbar'}
+                    </button>
+                `;
+                div.querySelector('button').onclick = () => {
+                    gameState.equippedSeed = seedKey;
+                    renderSeedsInventory();
+                    updateUI();
+                    saveGame();
+                };
+                container.appendChild(div);
+            });
         }
 
-        function renderShopItems(tabCategory) {
+        function renderShopItems(tab) {
             const container = document.getElementById('shop-items-container');
             container.innerHTML = '';
 
-            if (tabCategory === 'seeds') {
+            if (tab === 'seeds') {
                 Object.values(CROPS).forEach(crop => {
                     const seedKey = `${crop.id}_seed`;
                     const div = document.createElement('div');
-                    div.className = 'roblox-panel p-4 rounded-2xl flex items-center justify-between border-slate-700';
+                    div.className = 'roblox-panel p-3 rounded-2xl flex items-center justify-between border-slate-700';
                     div.innerHTML = `
                         <div class="flex items-center space-x-3">
                             <span class="text-3xl">${crop.icon}</span>
                             <div>
                                 <div class="font-fredoka text-slate-100">${crop.name} Seeds</div>
-                                <div class="text-xs text-amber-400 font-bold">Sell Value: ${crop.sellPrice}G</div>
+                                <div class="text-xs text-amber-400 font-bold">Price: ${crop.seedPrice}G | Yield: ${crop.sellPrice}G</div>
                             </div>
                         </div>
-                        <button class="roblox-btn roblox-btn-green px-4 py-2 rounded-xl text-sm font-fredoka">
-                            Buy (${crop.seedPrice}G)
-                        </button>
+                        <button class="roblox-btn roblox-btn-green px-3 py-1.5 rounded-xl text-xs font-fredoka">Buy (${crop.seedPrice}G)</button>
                     `;
                     div.querySelector('button').onclick = () => {
                         if (gameState.coins >= crop.seedPrice) {
                             addCoins(-crop.seedPrice);
-                            gameState.inventory[seedKey] = (gameState.inventory[seedKey] || 0) + 1;
+                            gameState.seedsInventory[seedKey] = (gameState.seedsInventory[seedKey] || 0) + 1;
                             audio.playCoin();
                             updateUI();
                             saveGame();
-                        } else {
-                            showFloatingText("Not Enough Coins!", playerGroup.position);
+                        } else showFloatingText("Not Enough Coins!", playerGroup.position);
+                    };
+                    container.appendChild(div);
+                });
+            } else if (tab === 'upgrades') {
+                // Weapons Upgrades
+                Object.keys(WEAPONS).forEach(wKey => {
+                    if (wKey === 'fist') return;
+                    const w = WEAPONS[wKey];
+                    const isUnlocked = gameState.unlockedWeapons.includes(wKey);
+                    const isEquipped = gameState.equippedWeapon === wKey;
+
+                    const div = document.createElement('div');
+                    div.className = 'roblox-panel p-3 rounded-2xl flex items-center justify-between border-slate-700';
+                    div.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <span class="text-3xl">${w.icon}</span>
+                            <div>
+                                <div class="font-fredoka text-slate-100">${w.name}</div>
+                                <div class="text-xs text-red-400 font-bold">Dmg: ${w.damage}</div>
+                            </div>
+                        </div>
+                        <button class="roblox-btn ${isEquipped ? 'roblox-btn-amber' : 'roblox-btn-green'} px-3 py-1.5 rounded-xl text-xs font-fredoka">
+                            ${isEquipped ? 'Equipped' : (isUnlocked ? 'Equip' : `Buy (${w.price}G)`)}
+                        </button>
+                    `;
+                    div.querySelector('button').onclick = () => {
+                        if (isUnlocked) {
+                            gameState.equippedWeapon = wKey;
+                            updateEquippedWeaponMesh();
+                            renderShopItems('upgrades');
+                            updateUI();
+                            saveGame();
+                        } else if (gameState.coins >= w.price) {
+                            addCoins(-w.price);
+                            gameState.unlockedWeapons.push(wKey);
+                            gameState.equippedWeapon = wKey;
+                            updateEquippedWeaponMesh();
+                            audio.playCoin();
+                            renderShopItems('upgrades');
+                            updateUI();
+                            saveGame();
                         }
                     };
                     container.appendChild(div);
                 });
-            } else if (tabCategory === 'upgrades') {
-                const waterUpgradeCost = gameState.waterCanLevel * 150;
-                const waterDiv = document.createElement('div');
-                waterDiv.className = 'roblox-panel p-4 rounded-2xl flex items-center justify-between border-slate-700';
-                waterDiv.innerHTML = `
+
+                const waterCost = gameState.waterCanLevel * 150;
+                const div1 = document.createElement('div');
+                div1.className = 'roblox-panel p-3 rounded-2xl flex items-center justify-between border-slate-700';
+                div1.innerHTML = `
                     <div class="flex items-center space-x-3">
                         <span class="text-3xl">💧</span>
                         <div>
@@ -1416,13 +1925,11 @@
                             <div class="text-xs text-slate-400">Cap: ${gameState.waterCanCapacity} -> ${gameState.waterCanCapacity + 5}</div>
                         </div>
                     </div>
-                    <button class="roblox-btn px-4 py-2 rounded-xl text-sm font-fredoka">
-                        Upgrade (${waterUpgradeCost}G)
-                    </button>
+                    <button class="roblox-btn px-3 py-1.5 rounded-xl text-xs font-fredoka">Upgrade (${waterCost}G)</button>
                 `;
-                waterDiv.querySelector('button').onclick = () => {
-                    if (gameState.coins >= waterUpgradeCost) {
-                        addCoins(-waterUpgradeCost);
+                div1.querySelector('button').onclick = () => {
+                    if (gameState.coins >= waterCost) {
+                        addCoins(-waterCost);
                         gameState.waterCanLevel++;
                         gameState.waterCanCapacity += 5;
                         gameState.inventory.waterCan = gameState.waterCanCapacity;
@@ -1432,8 +1939,8 @@
                         saveGame();
                     }
                 };
-                container.appendChild(waterDiv);
-            } else if (tabCategory === 'expansions') {
+                container.appendChild(div1);
+            } else if (tab === 'expansions') {
                 const cost = gameState.unlockedPlots * 200;
                 const canExpand = gameState.unlockedPlots < farmPlots.length;
                 const div = document.createElement('div');
@@ -1443,10 +1950,10 @@
                         <span class="text-3xl">🌱</span>
                         <div>
                             <div class="font-fredoka text-slate-100">Unlock Farm Plot (${gameState.unlockedPlots}/${farmPlots.length})</div>
-                            <div class="text-xs text-slate-400">Expand your farm garden space</div>
+                            <div class="text-xs text-slate-400">Expand garden plot layout</div>
                         </div>
                     </div>
-                    <button class="roblox-btn roblox-btn-green px-4 py-2 rounded-xl text-sm font-fredoka" ${!canExpand ? 'disabled' : ''}>
+                    <button class="roblox-btn roblox-btn-green px-4 py-2 rounded-xl text-xs font-fredoka" ${!canExpand ? 'disabled' : ''}>
                         ${canExpand ? `Expand (${cost}G)` : 'Maxed Out!'}
                     </button>
                 `;
@@ -1468,57 +1975,18 @@
         function renderQuests() {
             const container = document.getElementById('quests-list');
             container.innerHTML = '';
-            gameState.quests.forEach(quest => {
+            gameState.quests.forEach(q => {
                 const div = document.createElement('div');
-                div.className = `roblox-panel p-4 rounded-2xl flex justify-between items-center ${quest.completed ? 'border-green-500/50 bg-green-950/20' : 'border-slate-700'}`;
+                div.className = `roblox-panel p-3 rounded-2xl flex justify-between items-center ${q.completed ? 'border-green-500/50 bg-green-950/20' : 'border-slate-700'}`;
                 div.innerHTML = `
                     <div>
-                        <div class="font-fredoka ${quest.completed ? 'line-through text-slate-400' : 'text-slate-100'}">${quest.text}</div>
-                        <div class="text-xs text-amber-400 font-bold">Reward: ${quest.reward} Coins + ${quest.rewardXp} XP</div>
+                        <div class="font-fredoka ${q.completed ? 'line-through text-slate-400' : 'text-slate-100'}">${q.text}</div>
+                        <div class="text-xs text-amber-400 font-bold">Reward: ${q.reward}G + ${q.rewardXp} XP</div>
                     </div>
-                    <div class="font-fredoka text-sm px-3 py-1 rounded-lg ${quest.completed ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-300'}">
-                        ${quest.completed ? 'DONE' : `${quest.progress}/${quest.target}`}
+                    <div class="font-fredoka text-xs px-3 py-1 rounded-lg ${q.completed ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-300'}">
+                        ${q.completed ? 'DONE' : `${q.progress}/${q.target}`}
                     </div>
                 `;
-                container.appendChild(div);
-            });
-        }
-
-        function renderPets() {
-            const container = document.getElementById('pets-list');
-            container.innerHTML = '';
-            const pets = [
-                { id: 'bee', name: 'Honey Bee', icon: '🐝', cost: 300, desc: '+15% Crop Speed' },
-                { id: 'dog', name: 'Farm Dog', icon: '🐶', cost: 600, desc: '+20% Harvest Coins' }
-            ];
-            pets.forEach(pet => {
-                const isUnlocked = gameState.unlockedPets.includes(pet.id);
-                const isActive = gameState.activePet === pet.id;
-                const div = document.createElement('div');
-                div.className = 'roblox-panel p-4 rounded-2xl flex flex-col justify-between items-center text-center space-y-2 border-slate-700';
-                div.innerHTML = `
-                    <span class="text-4xl">${pet.icon}</span>
-                    <div class="font-fredoka text-slate-100">${pet.name}</div>
-                    <div class="text-xs text-slate-400">${pet.desc}</div>
-                    <button class="roblox-btn w-full py-2 rounded-xl text-xs font-fredoka">
-                        ${isActive ? 'Equipped' : (isUnlocked ? 'Equip' : `Unlock (${pet.cost}G)`)}
-                    </button>
-                `;
-                div.querySelector('button').onclick = () => {
-                    if (isUnlocked) {
-                        gameState.activePet = pet.id;
-                        createPet(pet.id);
-                        renderPets();
-                        saveGame();
-                    } else if (gameState.coins >= pet.cost) {
-                        addCoins(-pet.cost);
-                        gameState.unlockedPets.push(pet.id);
-                        gameState.activePet = pet.id;
-                        createPet(pet.id);
-                        renderPets();
-                        saveGame();
-                    }
-                };
                 container.appendChild(div);
             });
         }
@@ -1529,28 +1997,65 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
+        // --- MAIN ANIMATION LOOP WITH HUMANOID LIMB SWING ---
         function animate() {
             requestAnimationFrame(animate);
 
             const delta = clock.getDelta();
             const elapsed = clock.getElapsedTime();
 
-            const dayAngle = elapsed * 0.03;
-            sunLight.position.x = Math.cos(dayAngle) * 40;
-            sunLight.position.y = Math.sin(dayAngle) * 40;
+            // Landing Screen Orbiting Camera
+            if (!gameState.gameStarted) {
+                const orbitAngle = elapsed * 0.15;
+                camera.position.x = Math.sin(orbitAngle) * 22;
+                camera.position.z = Math.cos(orbitAngle) * 22;
+                camera.position.y = 10;
+                camera.lookAt(0, 1, 0);
+                renderer.render(scene, camera);
+                return;
+            }
+
+            // Day / Night Cycle
+            const sunAngle = elapsed * 0.03;
+            sunLight.position.x = Math.cos(sunAngle) * 45;
+            sunLight.position.y = Math.sin(sunAngle) * 45;
+
+            // Wind Swaying Trees Animation
+            animatedTrees.forEach(t => {
+                t.group.rotation.z = Math.sin(elapsed * 2 + t.phaseOffset) * 0.04;
+                t.group.rotation.x = Math.cos(elapsed * 1.5 + t.phaseOffset) * 0.03;
+            });
 
             const dayIcon = document.getElementById('day-icon');
             const dayTimeText = document.getElementById('day-time-text');
+
             if (sunLight.position.y > 0) {
+                // Daytime: Clear remaining night ghosts and reset night spawn count
+                if (isNightTime) {
+                    isNightTime = false;
+                    ghostsSpawnedTonight = 0;
+                    monsters.forEach(m => scene.remove(m.mesh));
+                    monsters = [];
+                    showFloatingText("☀️ Morning Arrived! Ghosts Vanished.", playerGroup.position);
+                }
                 ambientLight.intensity = 0.75;
                 if (dayIcon) dayIcon.innerText = '☀️';
                 if (dayTimeText) dayTimeText.innerText = 'Daytime';
             } else {
+                // Nighttime: Cap maximum 2 ghosts per night
+                isNightTime = true;
                 ambientLight.intensity = 0.25;
                 if (dayIcon) dayIcon.innerText = '🌙';
                 if (dayTimeText) dayTimeText.innerText = 'Nighttime';
+
+                if (gameState.difficulty === 'Monster' && ghostsSpawnedTonight < 2 && Math.random() < 0.005) {
+                    spawnNightMonster();
+                    ghostsSpawnedTonight++;
+                    showFloatingText("⚠️ Night Ghost Approaching Entrance!", playerGroup.position);
+                }
             }
 
+            // Player Physics & Movement
             let moveDir = new THREE.Vector3();
             if (keys.w) moveDir.z -= 1;
             if (keys.s) moveDir.z += 1;
@@ -1562,48 +2067,73 @@
                 moveDir.z = joystickVector.y;
             }
 
-            if (moveDir.lengthSq() > 0) {
+            const isMoving = moveDir.lengthSq() > 0;
+
+            if (isMoving) {
                 moveDir.normalize();
                 const rotatedDir = moveDir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraAngleY);
-                const moveSpeed = 7.0;
-                playerGroup.position.x += rotatedDir.x * moveSpeed * delta;
-                playerGroup.position.z += rotatedDir.z * moveSpeed * delta;
+                const moveSpeed = 7.5;
+                const nextX = playerGroup.position.x + rotatedDir.x * moveSpeed * delta;
+                const nextZ = playerGroup.position.z + rotatedDir.z * moveSpeed * delta;
+
+                // Bounding sphere collision test against solid object colliders
+                const playerRadius = 0.55;
+                let canMoveX = true;
+                let canMoveZ = true;
+
+                const testBoxX = new THREE.Box3(
+                    new THREE.Vector3(nextX - playerRadius, 0, playerGroup.position.z - playerRadius),
+                    new THREE.Vector3(nextX + playerRadius, 2, playerGroup.position.z + playerRadius)
+                );
+                const testBoxZ = new THREE.Box3(
+                    new THREE.Vector3(playerGroup.position.x - playerRadius, 0, nextZ - playerRadius),
+                    new THREE.Vector3(playerGroup.position.x + playerRadius, 2, nextZ + playerRadius)
+                );
+
+                for (let box of colliders) {
+                    if (box.intersectsBox(testBoxX)) canMoveX = false;
+                    if (box.intersectsBox(testBoxZ)) canMoveZ = false;
+                }
+
+                if (canMoveX) playerGroup.position.x = nextX;
+                if (canMoveZ) playerGroup.position.z = nextZ;
 
                 playerGroup.rotation.y = Math.atan2(rotatedDir.x, rotatedDir.z);
 
-                const walkCycle = Math.sin(elapsed * 12);
-                leftLeg.rotation.x = walkCycle * 0.6;
-                rightLeg.rotation.x = -walkCycle * 0.6;
-                leftArm.rotation.x = -walkCycle * 0.6;
-                rightArm.rotation.x = walkCycle * 0.6;
+                // Humanoid Limb Walking Animation Rotations
+                const walkCycle = Math.sin(elapsed * 14);
+                humanoidLimbs.leftArm.rotation.x = walkCycle * 0.65;
+                if (humanoidLimbs.rightArm.rotation.x === 0) {
+                    humanoidLimbs.rightArm.rotation.x = -walkCycle * 0.65;
+                }
+                humanoidLimbs.leftLeg.rotation.x = -walkCycle * 0.65;
+                humanoidLimbs.rightLeg.rotation.x = walkCycle * 0.65;
             } else {
-                leftLeg.rotation.x = 0;
-                rightLeg.rotation.x = 0;
-                leftArm.rotation.x = 0;
-                rightArm.rotation.x = 0;
+                humanoidLimbs.leftArm.rotation.x = 0;
+                if (humanoidLimbs.rightArm.rotation.x !== -1.6) humanoidLimbs.rightArm.rotation.x = 0;
+                humanoidLimbs.leftLeg.rotation.x = 0;
+                if (humanoidLimbs.rightLeg) humanoidLimbs.rightLeg.rotation.x = 0;
             }
 
-            if (keys.space && isGrounded) {
-                playerVelY = 7.5;
-                isGrounded = false;
-            }
-
+            // Gravity & Jump Physics
+            if (keys.space && isGrounded) { playerVelY = 7.5; isGrounded = false; }
             if (!isGrounded) {
                 playerGroup.position.y += playerVelY * delta;
                 playerVelY -= 20 * delta;
-                if (playerGroup.position.y <= 0) { playerGroup.position.y = 0; playerVelY = 0; isGrounded = true; }
+                if (playerGroup.position.y <= 0) {
+                    playerGroup.position.y = 0;
+                    playerVelY = 0;
+                    isGrounded = true;
+                }
             }
 
+            // Camera follow
             const targetCamPos = playerGroup.position.clone().add(cameraOffset.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraAngleY));
             camera.position.lerp(targetCamPos, 0.1);
             camera.lookAt(playerGroup.position.clone().add(new THREE.Vector3(0, 1.5, 0)));
 
-            if (petMesh) {
-                petMesh.position.lerp(playerGroup.position.clone().add(new THREE.Vector3(-1.5, 0, -1.5)), 0.05);
-                petMesh.lookAt(playerGroup.position);
-            }
-
             updateCropGrowth(delta);
+            updateMonsters(delta);
             updateParticles(delta);
             updateActionPrompt();
 
@@ -1615,7 +2145,6 @@
             init3D();
             setupModals();
             updateUI();
-            if (gameState.activePet) createPet(gameState.activePet);
             animate();
         };
     </script>
