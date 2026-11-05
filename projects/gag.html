@@ -2,14 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://lynxlab.vercel.app/">
-    <meta property="og:title" content="Leeyam+ - GRO A FARM | (GrowAgarden Plagiarized)">
-    <meta property="og:description" content="Leeyam+ - Grow a garden na plagiarized at ai generated HWHAHAHAHAHAHAHAHHA more updates">
-    <meta property="og:image" content="https://lynxlab.vercel.app/images/gag.jpeg">
-    <meta property="og:site_name" content="Leeyam+ - GRO A FARM | (GrowAgarden Plagiarized)">
-    <title>Gro a Farm</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Farm - Grow a Garden</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
@@ -107,6 +101,12 @@
             box-shadow: 0 4px 0 #78350f, inset 0 2px 0 rgba(255, 255, 255, 0.4);
         }
 
+        .roblox-btn-red {
+            background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%);
+            border: 2px solid #f87171;
+            box-shadow: 0 4px 0 #991b1b, inset 0 2px 0 rgba(255, 255, 255, 0.4);
+        }
+
         /* Inventory Hotbar Slot */
         .hotbar-slot {
             width: 58px;
@@ -137,7 +137,6 @@
             100% { opacity: 0; transform: translateY(-80px) scale(0.8); }
         }
 
-        /* Custom Scrollbars for Modals */
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -203,7 +202,7 @@
                     <span id="fullscreen-icon">⛶</span>
                 </button>
                 <button id="btn-inventory" class="roblox-btn p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
-                    <span>🎒</span> <span>Inventory</span>
+                    <span>🎒</span> <span class="hidden md:inline">Vault</span>
                 </button>
                 <button id="btn-quests" class="roblox-btn p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
                     <span>📜</span> <span class="hidden md:inline">Quests</span>
@@ -213,6 +212,9 @@
                 </button>
                 <button id="btn-pets" class="roblox-btn roblox-btn-amber p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
                     <span>🐾</span> <span class="hidden md:inline">Pets</span>
+                </button>
+                <button id="btn-settings" class="roblox-btn p-3 rounded-2xl font-fredoka flex items-center space-x-2 text-sm">
+                    <span>⚙️</span> <span class="hidden md:inline">Settings</span>
                 </button>
             </div>
         </div>
@@ -253,6 +255,41 @@
             </div>
 
             <div class="roblox-panel p-2 rounded-2xl flex space-x-2 border-slate-700/60" id="hotbar"></div>
+        </div>
+    </div>
+
+    <!-- MODAL: SETTINGS & BACKUP (EXPORT / IMPORT SAVE) -->
+    <div id="settings-modal" class="hidden absolute inset-0 z-30 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="roblox-panel w-full max-w-lg rounded-3xl p-6 flex flex-col max-h-[85vh] border-blue-500/30">
+            <div class="flex justify-between items-center pb-4 border-b border-slate-700">
+                <div class="flex items-center space-x-3">
+                    <span class="text-3xl">⚙️</span>
+                    <h2 class="font-fredoka text-2xl text-slate-100">Save Backup & Settings</h2>
+                </div>
+                <button class="btn-close-modal text-slate-400 hover:text-white font-fredoka text-2xl">✕</button>
+            </div>
+
+            <div class="space-y-4 my-4 overflow-y-auto pr-2 flex-1">
+                <!-- Export Section -->
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-700">
+                    <h3 class="font-fredoka text-lg text-amber-400 mb-1">📤 Export Save Data</h3>
+                    <p class="text-xs text-slate-300 mb-3">Copy this save string before updating your APK so you can transfer your progress!</p>
+                    <textarea id="export-textarea" readonly class="w-full h-24 bg-slate-950 text-emerald-400 font-mono text-xs p-3 rounded-xl border border-slate-800 resize-none select-all focus:outline-none"></textarea>
+                    <button id="btn-copy-save" class="roblox-btn roblox-btn-green w-full py-2.5 rounded-xl font-fredoka text-sm mt-3">
+                        📋 Copy Save String to Clipboard
+                    </button>
+                </div>
+
+                <!-- Import Section -->
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-700">
+                    <h3 class="font-fredoka text-lg text-blue-400 mb-1">📥 Import Save Data</h3>
+                    <p class="text-xs text-slate-300 mb-3">Paste your backup string here in your new APK version to restore your farm:</p>
+                    <textarea id="import-textarea" placeholder="Paste export string here..." class="w-full h-24 bg-slate-950 text-white font-mono text-xs p-3 rounded-xl border border-slate-800 resize-none focus:outline-none"></textarea>
+                    <button id="btn-import-save" class="roblox-btn w-full py-2.5 rounded-xl font-fredoka text-sm mt-3">
+                        💾 Restore / Import Game Save
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -369,10 +406,10 @@
             waterCanCapacity: 10,
             waterCanLevel: 1,
             hoeLevel: 1,
-            heldCrop: null, // { type, isGiant }
+            heldCrop: null,
             harvestedCrops: { carrot: 0, tomato: 0, corn: 0, pumpkin: 0, golden_berry: 0 },
             inventory: { hoe: 1, waterCan: 10, fertilizer: 3, carrot_seed: 5, tomato_seed: 2, corn_seed: 0, pumpkin_seed: 0, golden_berry_seed: 0 },
-            plots: [], // Saved array of plot states
+            plots: [],
             activePet: null,
             unlockedPets: [],
             quests: [
@@ -383,7 +420,6 @@
         };
 
         function saveGame() {
-            // Serialize current farm plots state
             gameState.plots = farmPlots.map(p => ({
                 id: p.id,
                 isUnlocked: p.isUnlocked,
@@ -1207,10 +1243,50 @@
                 };
             }
 
+            const settingsModal = document.getElementById('settings-modal');
             const invModal = document.getElementById('inventory-modal');
             const shopModal = document.getElementById('shop-modal');
             const questsModal = document.getElementById('quests-modal');
             const petsModal = document.getElementById('pets-modal');
+
+            document.getElementById('btn-settings').onclick = () => {
+                saveGame();
+                document.getElementById('export-textarea').value = localStorage.getItem('grow_garden_save') || '';
+                settingsModal.classList.remove('hidden');
+            };
+
+            document.getElementById('btn-copy-save').onclick = () => {
+                const exportBox = document.getElementById('export-textarea');
+                exportBox.select();
+                navigator.clipboard.writeText(exportBox.value).then(() => {
+                    showFloatingText("Save Copied to Clipboard!", playerGroup.position);
+                }).catch(() => {
+                    // Fallback for older WebView versions
+                    document.execCommand('copy');
+                    showFloatingText("Save Copied!", playerGroup.position);
+                });
+            };
+
+            document.getElementById('btn-import-save').onclick = () => {
+                const importText = document.getElementById('import-textarea').value.trim();
+                if (importText) {
+                    try {
+                        JSON.parse(importText); // Validate JSON format
+                        localStorage.setItem('grow_garden_save', importText);
+                        loadGame();
+                        buildFarmGrid();
+                        updatePlayerHandItem();
+                        updateUI();
+                        if (gameState.activePet) createPet(gameState.activePet);
+                        settingsModal.classList.add('hidden');
+                        showFloatingText("Save Restored Successfully!", playerGroup.position);
+                    } catch(e) {
+                        alert("Invalid Save String! Please check your pasted text.");
+                    }
+                } else {
+                    alert("Please paste your save string first.");
+                }
+            };
 
             document.getElementById('btn-inventory').onclick = () => { renderInventoryVault('seeds'); invModal.classList.remove('hidden'); };
             document.getElementById('btn-shop').onclick = () => { renderShopItems('seeds'); shopModal.classList.remove('hidden'); };
@@ -1218,7 +1294,7 @@
             document.getElementById('btn-pets').onclick = () => { renderPets(); petsModal.classList.remove('hidden'); };
 
             document.querySelectorAll('.btn-close-modal').forEach(btn => {
-                btn.onclick = () => { invModal.classList.add('hidden'); shopModal.classList.add('hidden'); questsModal.classList.add('hidden'); petsModal.classList.add('hidden'); };
+                btn.onclick = () => { settingsModal.classList.add('hidden'); invModal.classList.add('hidden'); shopModal.classList.add('hidden'); questsModal.classList.add('hidden'); petsModal.classList.add('hidden'); };
             });
 
             document.querySelectorAll('.inv-tab').forEach(tab => {
