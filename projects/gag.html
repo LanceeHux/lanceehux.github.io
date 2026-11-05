@@ -1335,6 +1335,7 @@
             }
         }
 
+        <!-- ... existing code -->
         // --- SHOP & MODAL MANAGERS ---
         function setupModals() {
             // Fullscreen Toggle Listener
@@ -1356,5 +1357,347 @@
             }
 
             // Modal Toggles
+            const shopModal = document.getElementById('shop-modal');
+            const questsModal = document.getElementById('quests-modal');
+            const petsModal = document.getElementById('pets-modal');
+
             document.getElementById('btn-shop').onclick = () => {
-<!-- ... existing code -->
+                renderShopItems('seeds');
+                shopModal.classList.remove('hidden');
+            };
+
+            document.getElementById('btn-quests').onclick = () => {
+                renderQuests();
+                questsModal.classList.remove('hidden');
+            };
+
+            document.getElementById('btn-pets').onclick = () => {
+                renderPets();
+                petsModal.classList.remove('hidden');
+            };
+
+            // Close buttons
+            document.querySelectorAll('.btn-close-modal').forEach(btn => {
+                btn.onclick = () => {
+                    shopModal.classList.add('hidden');
+                    questsModal.classList.add('hidden');
+                    petsModal.classList.add('hidden');
+                };
+            });
+
+            // Shop Tabs
+            document.querySelectorAll('.shop-tab').forEach(tab => {
+                tab.onclick = (e) => {
+                    document.querySelectorAll('.shop-tab').forEach(t => {
+                        t.classList.remove('active', 'bg-blue-600', 'text-white');
+                        t.classList.add('bg-slate-800', 'text-slate-400');
+                    });
+                    e.target.classList.add('active', 'bg-blue-600', 'text-white');
+                    e.target.classList.remove('bg-slate-800', 'text-slate-400');
+                    renderShopItems(e.target.dataset.tab);
+                };
+            });
+        }
+
+        function renderShopItems(tabCategory) {
+            const container = document.getElementById('shop-items-container');
+            container.innerHTML = '';
+
+            if (tabCategory === 'seeds') {
+                Object.values(CROPS).forEach(crop => {
+                    const seedKey = `${crop.id}_seed`;
+                    const div = document.createElement('div');
+                    div.className = 'roblox-panel p-4 rounded-2xl flex items-center justify-between border-slate-700';
+                    div.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <span class="text-3xl">${crop.icon}</span>
+                            <div>
+                                <div class="font-fredoka text-slate-100">${crop.name} Seeds</div>
+                                <div class="text-xs text-amber-400 font-bold">Sell Value: ${crop.sellPrice}G</div>
+                            </div>
+                        </div>
+                        <button class="roblox-btn roblox-btn-green px-4 py-2 rounded-xl text-sm font-fredoka">
+                            Buy (${crop.seedPrice}G)
+                        </button>
+                    `;
+                    div.querySelector('button').onclick = () => {
+                        if (gameState.coins >= crop.seedPrice) {
+                            addCoins(-crop.seedPrice);
+                            gameState.inventory[seedKey] = (gameState.inventory[seedKey] || 0) + 1;
+                            audio.playCoin();
+                            updateUI();
+                            saveGame();
+                        } else {
+                            showFloatingText("Not Enough Coins!", playerGroup.position);
+                        }
+                    };
+                    container.appendChild(div);
+                });
+            } else if (tabCategory === 'upgrades') {
+                // Water Can Capacity Upgrade
+                const waterUpgradeCost = gameState.waterCanLevel * 150;
+                const waterDiv = document.createElement('div');
+                waterDiv.className = 'roblox-panel p-4 rounded-2xl flex items-center justify-between border-slate-700';
+                waterDiv.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="text-3xl">💧</span>
+                        <div>
+                            <div class="font-fredoka text-slate-100">Water Can Upgrade</div>
+                            <div class="text-xs text-slate-400">Cap: ${gameState.waterCanCapacity} -> ${gameState.waterCanCapacity + 5}</div>
+                        </div>
+                    </div>
+                    <button class="roblox-btn px-4 py-2 rounded-xl text-sm font-fredoka">
+                        Upgrade (${waterUpgradeCost}G)
+                    </button>
+                `;
+                waterDiv.querySelector('button').onclick = () => {
+                    if (gameState.coins >= waterUpgradeCost) {
+                        addCoins(-waterUpgradeCost);
+                        gameState.waterCanLevel++;
+                        gameState.waterCanCapacity += 5;
+                        gameState.inventory.waterCan = gameState.waterCanCapacity;
+                        audio.playCoin();
+                        renderShopItems('upgrades');
+                        updateUI();
+                        saveGame();
+                    }
+                };
+                container.appendChild(waterDiv);
+
+                // Fertilizer Pack
+                const fertDiv = document.createElement('div');
+                fertDiv.className = 'roblox-panel p-4 rounded-2xl flex items-center justify-between border-slate-700';
+                fertDiv.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="text-3xl">🧪</span>
+                        <div>
+                            <div class="font-fredoka text-slate-100">Super Fertilizer x3</div>
+                            <div class="text-xs text-slate-400">Instant Grow Crops</div>
+                        </div>
+                    </div>
+                    <button class="roblox-btn roblox-btn-amber px-4 py-2 rounded-xl text-sm font-fredoka">
+                        Buy (100G)
+                    </button>
+                `;
+                fertDiv.querySelector('button').onclick = () => {
+                    if (gameState.coins >= 100) {
+                        addCoins(-100);
+                        gameState.inventory.fertilizer += 3;
+                        audio.playCoin();
+                        updateUI();
+                        saveGame();
+                    }
+                };
+                container.appendChild(fertDiv);
+            } else if (tabCategory === 'expansions') {
+                const cost = gameState.unlockedPlots * 200;
+                const canExpand = gameState.unlockedPlots < farmPlots.length;
+
+                const div = document.createElement('div');
+                div.className = 'roblox-panel p-4 rounded-2xl flex items-center justify-between border-slate-700 col-span-2';
+                div.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="text-3xl">🌱</span>
+                        <div>
+                            <div class="font-fredoka text-slate-100">Unlock Farm Plot (${gameState.unlockedPlots}/${farmPlots.length})</div>
+                            <div class="text-xs text-slate-400">Expand your farm garden space</div>
+                        </div>
+                    </div>
+                    <button class="roblox-btn roblox-btn-green px-4 py-2 rounded-xl text-sm font-fredoka" ${!canExpand ? 'disabled' : ''}>
+                        ${canExpand ? `Expand (${cost}G)` : 'Maxed Out!'}
+                    </button>
+                `;
+                div.querySelector('button').onclick = () => {
+                    if (canExpand && gameState.coins >= cost) {
+                        addCoins(-cost);
+                        gameState.unlockedPlots++;
+                        buildFarmGrid();
+                        audio.playCoin();
+                        renderShopItems('expansions');
+                        updateUI();
+                        saveGame();
+                    }
+                };
+                container.appendChild(div);
+            }
+        }
+
+        function renderQuests() {
+            const container = document.getElementById('quests-list');
+            container.innerHTML = '';
+
+            gameState.quests.forEach(quest => {
+                const div = document.createElement('div');
+                div.className = `roblox-panel p-4 rounded-2xl flex justify-between items-center ${quest.completed ? 'border-green-500/50 bg-green-950/20' : 'border-slate-700'}`;
+                div.innerHTML = `
+                    <div>
+                        <div class="font-fredoka ${quest.completed ? 'line-through text-slate-400' : 'text-slate-100'}">${quest.text}</div>
+                        <div class="text-xs text-amber-400 font-bold">Reward: ${quest.reward} Coins + ${quest.rewardXp} XP</div>
+                    </div>
+                    <div class="font-fredoka text-sm px-3 py-1 rounded-lg ${quest.completed ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-300'}">
+                        ${quest.completed ? 'DONE' : `${quest.progress}/${quest.target}`}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderPets() {
+            const container = document.getElementById('pets-list');
+            container.innerHTML = '';
+
+            const pets = [
+                { id: 'bee', name: 'Honey Bee', icon: '🐝', cost: 300, desc: '+15% Crop Speed' },
+                { id: 'dog', name: 'Farm Dog', icon: '🐶', cost: 600, desc: '+20% Harvest Coins' }
+            ];
+
+            pets.forEach(pet => {
+                const isUnlocked = gameState.unlockedPets.includes(pet.id);
+                const isActive = gameState.activePet === pet.id;
+
+                const div = document.createElement('div');
+                div.className = 'roblox-panel p-4 rounded-2xl flex flex-col justify-between items-center text-center space-y-2 border-slate-700';
+                div.innerHTML = `
+                    <span class="text-4xl">${pet.icon}</span>
+                    <div class="font-fredoka text-slate-100">${pet.name}</div>
+                    <div class="text-xs text-slate-400">${pet.desc}</div>
+                    <button class="roblox-btn w-full py-2 rounded-xl text-xs font-fredoka">
+                        ${isActive ? 'Equipped' : (isUnlocked ? 'Equip' : `Unlock (${pet.cost}G)`)}
+                    </button>
+                `;
+                div.querySelector('button').onclick = () => {
+                    if (isUnlocked) {
+                        gameState.activePet = pet.id;
+                        createPet(pet.id);
+                        renderPets();
+                        saveGame();
+                    } else if (gameState.coins >= pet.cost) {
+                        addCoins(-pet.cost);
+                        gameState.unlockedPets.push(pet.id);
+                        gameState.activePet = pet.id;
+                        createPet(pet.id);
+                        renderPets();
+                        saveGame();
+                    }
+                };
+                container.appendChild(div);
+            });
+        }
+
+        // --- RESIZE EVENT HANDLER ---
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // --- MAIN GAME LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+            const elapsed = clock.getElapsedTime();
+
+            // 1. Day / Night Cycle Motion
+            const dayCycleSpeed = 0.03;
+            const sunAngle = elapsed * dayCycleSpeed;
+            sunLight.position.x = Math.cos(sunAngle) * 40;
+            sunLight.position.y = Math.sin(sunAngle) * 40;
+
+            const dayIcon = document.getElementById('day-icon');
+            const dayTimeText = document.getElementById('day-time-text');
+            if (sunLight.position.y > 0) {
+                ambientLight.intensity = 0.75;
+                if (dayIcon) dayIcon.innerText = '☀️';
+                if (dayTimeText) dayTimeText.innerText = 'Daytime';
+            } else {
+                ambientLight.intensity = 0.25;
+                if (dayIcon) dayIcon.innerText = '🌙';
+                if (dayTimeText) dayTimeText.innerText = 'Nighttime';
+            }
+
+            // 2. Player Movement Input Physics
+            let moveDir = new THREE.Vector3();
+            if (keys.w) moveDir.z -= 1;
+            if (keys.s) moveDir.z += 1;
+            if (keys.a) moveDir.x -= 1;
+            if (keys.d) moveDir.x += 1;
+
+            if (joystickVector.x !== 0 || joystickVector.y !== 0) {
+                moveDir.x = joystickVector.x;
+                moveDir.z = joystickVector.y;
+            }
+
+            if (moveDir.lengthSq() > 0) {
+                moveDir.normalize();
+                
+                // Rotate direction based on camera view angle
+                const rotatedDir = moveDir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraAngleY);
+                const moveSpeed = 7.0;
+                playerGroup.position.x += rotatedDir.x * moveSpeed * delta;
+                playerGroup.position.z += rotatedDir.z * moveSpeed * delta;
+
+                // Rotate player mesh toward direction
+                const targetRotation = Math.atan2(rotatedDir.x, rotatedDir.z);
+                playerGroup.rotation.y = targetRotation;
+
+                // Slight walking bob animation
+                playerBody.position.y = 1.3 + Math.sin(elapsed * 12) * 0.08;
+            } else {
+                playerBody.position.y = 1.3;
+            }
+
+            // Jump Physics
+            if (keys.space && isGrounded) {
+                playerVelY = 7.5;
+                isGrounded = false;
+            }
+
+            if (!isGrounded) {
+                playerGroup.position.y += playerVelY * delta;
+                playerVelY -= 20 * delta; // Gravity
+
+                if (playerGroup.position.y <= 0) {
+                    playerGroup.position.y = 0;
+                    playerVelY = 0;
+                    isGrounded = true;
+                }
+            }
+
+            // 3. Smooth Camera Follow
+            const targetCamPos = playerGroup.position.clone().add(
+                cameraOffset.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraAngleY)
+            );
+            camera.position.lerp(targetCamPos, 0.1);
+            camera.lookAt(playerGroup.position.clone().add(new THREE.Vector3(0, 1.5, 0)));
+
+            // 4. Pet Smooth Follow Logic
+            if (petMesh) {
+                const targetPetPos = playerGroup.position.clone().add(new THREE.Vector3(-1.5, 0, -1.5));
+                petMesh.position.lerp(targetPetPos, 0.05);
+                petMesh.lookAt(playerGroup.position);
+                petMesh.position.y = Math.sin(elapsed * 6) * 0.05;
+            }
+
+            // 5. Update Crop Growth & Particle Physics
+            updateCropGrowth(delta);
+            updateParticles(delta);
+
+            // 6. Refresh Dynamic Prompt HUD
+            updateActionPrompt();
+
+            renderer.render(scene, camera);
+        }
+
+        // Initialize Game Window Load
+        window.onload = function() {
+            loadGame();
+            init3D();
+            setupModals();
+            updateUI();
+            if (gameState.activePet) createPet(gameState.activePet);
+            animate();
+        };
+    </script>
+</body>
+</html>
