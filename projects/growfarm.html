@@ -34,12 +34,38 @@
 <div class="row0"><div class="col pa"><div class="p stat"><span style="font-size:26px">🪙</span><div><small>SHECKLES</small><div id="co" class="big">0</div></div></div>
 <div class="p stat" style="min-width:190px"><b id="lb" style="background:#3b82f6;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:13px">L1</b><div style="flex:1"><small id="xt"></small><div class="bar"><i id="xb"></i></div></div></div></div>
 <div class="col" style="align-items:center"><div class="p stat" style="padding:6px 14px"><span id="di">☀️</span><b id="dt" style="font-size:13px">Day</b></div><div style="display:flex;gap:6px"><span id="mo" class="p" style="font-size:10px;padding:3px 10px;border-radius:99px">Peaceful</span><span id="wb" class="p" style="font-size:10px;padding:3px 10px;border-radius:99px">☀️ Clear</span></div></div>
+<button id="fullscreen-btn" style="background:transparent">[fs]</button>
 <div class="pa" style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><button class="b" data-o="seeds">🎒 Bag</button><button class="b am" data-o="shop">🏬 Shop</button><button class="b" data-o="quests">📜</button><button class="b g" data-o="menu">⚙️</button></div></div>
 <div id="pr" class="p"><b style="background:var(--gd);color:#020617;border-radius:7px;padding:2px 9px;margin-right:8px">E</b><span id="pt"></span></div>
 <div id="mc" class="pa"><div id="jb"><div id="js"></div></div><div id="ab"><button class="b r" id="ba">👊</button><button class="b" id="bi">✋</button><button class="b am" id="bj">⬆️</button></div></div>
 <div class="pa" style="align-self:center;display:flex;flex-direction:column;align-items:center;gap:6px"><small id="an" class="p" style="padding:3px 12px;border-radius:99px;color:#cbd5e1"></small><div id="hot" class="p"></div></div></div>
 <div id="md" class="hid"><div id="mb" class="p"></div></div>
 <script>
+const fullscreenBtn = document.getElementById('fullscreen-btn');
+
+fullscreenBtn.addEventListener('click', () => {
+  // Check if the document is already in fullscreen mode
+  if (!document.fullscreenElement) {
+    // If not fullscreen, request fullscreen on the entire page
+    document.documentElement.requestFullscreen()
+      .catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+  } else {
+    // If already fullscreen, exit it
+    document.exitFullscreen();
+  }
+});
+
+// Update the button text dynamically when fullscreen state changes
+document.addEventListener('fullscreenchange', () => {
+  if (document.fullscreenElement) {
+    fullscreenBtn.textContent = 'Exit Fullscreen';
+  } else {
+    fullscreenBtn.textContent = 'Enter Fullscreen';
+  }
+});
+
 const $=i=>document.getElementById(i),R=Math.random,PI=Math.PI,KEY='grow_farm_v8';
 const mat=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.7},o));
 const add=(p,g,m,x=0,y=0,z=0)=>{const o=new THREE.Mesh(g,m);o.position.set(x,y,z);o.castShadow=true;p.add(o);return o};
@@ -82,7 +108,7 @@ let camPitch = -0.45;    // Current vertical pitch angle
 let targetPitch = -0.45; // Smooth target pitch angle
 const defaultPitch = -0.45; // Default view angle
 let camDist = 14;        // Current zoom distance
-let targetDist = 14;
+let targetDist = 14;     // Smooth zoom target
 const sky=new THREE.Color(0x87ceeb),skyN=new THREE.Color(0x0b1026);
 function env(){const g=new THREE.Mesh(new THREE.PlaneGeometry(200,200),mat(0xffffff,{map:tex('#3f8f4a',1800,['#4fa85b','#2e7a3b','#68bd6f'],40,2,6),roughness:1}));g.rotation.x=-PI/2;g.receiveShadow=true;scene.add(g);
 const pm=mat(0xffffff,{map:tex('#7b8494',300,['#5b6577','#98a1b2','#475066'],4,14,10)});[[4,44,0,47],[34,3,0,14]].forEach(([w,h,x,z])=>{const p=new THREE.Mesh(new THREE.PlaneGeometry(w,h),pm);p.rotation.x=-PI/2;p.position.set(x,.02,z);p.receiveShadow=true;scene.add(p)});
@@ -194,6 +220,7 @@ document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>openM(b.dataset.o
 function resize(){cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();ren.setSize(innerWidth,innerHeight)}
 function inputs(){addEventListener('keydown',e=>{A.init();if(!S.started||!$('md').classList.contains('hid'))return;const k=e.key.toLowerCase();if(k=='w'||k=='arrowup')K.w=1;if(k=='s'||k=='arrowdown')K.s=1;if(k=='a'||k=='arrowleft')K.a=1;if(k=='d'||k=='arrowright')K.d=1;if(e.code=='Space')K.sp=1;if(k=='e')interact();if(k=='f')attack();if(k>='1'&&k<='5'){S.slot=+k-1;updateUI()}if(k=='b')openM('seeds')});
 addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(k=='w'||k=='arrowup')K.w=0;if(k=='s'||k=='arrowdown')K.s=0;if(k=='a'||k=='arrowleft')K.a=0;if(k=='d'||k=='arrowright')K.d=0;if(e.code=='Space')K.sp=0});
+
 let dr=null,px=0,py=0,pinchDist=0;const cv=ren.domElement;
 cv.addEventListener('pointerdown',e=>{dr=e.pointerId;px=e.clientX;py=e.clientY});
 addEventListener('pointermove',e=>{
@@ -236,15 +263,14 @@ if(night>.5){if(S.mode=='Monster'&&ghosts<2&&R()<.006){spawnGhost();ghosts++;ftx
 flies.forEach(f=>{f.visible=night>.4;f.position.y+=Math.sin(t*2+f.userData.o)*.004;f.position.x+=Math.cos(t+f.userData.o)*.01});bfs.forEach(b=>{b.visible=night<.5;const o=b.userData.o;b.position.x+=Math.cos(t*.7+o)*.03;b.position.z+=Math.sin(t*.6+o)*.03;b.position.y=1.5+Math.sin(t*2+o)*.4;b.userData.w1.rotation.y=Math.sin(t*18)*.9;b.userData['w-1'].rotation.y=-Math.sin(t*18)*.9;b.rotation.y=t*.7+o});
 S.wt-=d;if(S.wt<=0)rollWeather();if(wp){const a=wp.geometry.attributes.position,sn=wp.userData.t=='s';for(let i=0;i<a.count;i++){let y=a.getY(i)-(sn?3:26)*d;if(sn)a.setX(i,a.getX(i)+Math.sin(t+i)*.02);if(y<0)y=35;a.setY(i,y)}a.needsUpdate=true}
 const mv=new THREE.Vector3((K.d?1:0)-(K.a?1:0),0,(K.s?1:0)-(K.w?1:0));if(jv.x||jv.y){mv.x=jv.x;mv.z=jv.y}
-if(mv.lengthSq()>.01){
-  targetPitch += (defaultPitch - targetPitch) * 0.05;mv.normalize().applyAxisAngle(new THREE.Vector3(0,1,0),camA);const nx=player.position.x+mv.x*7.5*d,nz=player.position.z+mv.z*7.5*d;if(!blocked(nx,player.position.z))player.position.x=nx;if(!blocked(player.position.x,nz))player.position.z=nz;player.rotation.y=Math.atan2(mv.x,mv.z);const w=Math.sin(t*14)*.7;limb.l.rotation.x=w;if(limb.r.rotation.x>-1)limb.r.rotation.x=-w;limb.ll.rotation.x=-w;limb.rl.rotation.x=w}else{limb.l.rotation.x=limb.ll.rotation.x=limb.rl.rotation.x=0;if(limb.r.rotation.x>-1)limb.r.rotation.x=0}
+if(mv.lengthSq()>.01){targetPitch += (defaultPitch - targetPitch) * 0.05;mv.normalize().applyAxisAngle(new THREE.Vector3(0,1,0),camA);const nx=player.position.x+mv.x*7.5*d,nz=player.position.z+mv.z*7.5*d;if(!blocked(nx,player.position.z))player.position.x=nx;if(!blocked(player.position.x,nz))player.position.z=nz;player.rotation.y=Math.atan2(mv.x,mv.z);const w=Math.sin(t*14)*.7;limb.l.rotation.x=w;if(limb.r.rotation.x>-1)limb.r.rotation.x=-w;limb.ll.rotation.x=-w;limb.rl.rotation.x=w}else{limb.l.rotation.x=limb.ll.rotation.x=limb.rl.rotation.x=0;if(limb.r.rotation.x>-1)limb.r.rotation.x=0}
 if(K.sp&&gnd){pvy=7.5;gnd=false}if(!gnd){player.position.y+=pvy*d;pvy-=20*d;if(player.position.y<=0){player.position.y=0;pvy=0;gnd=true}}
 if(curW&&curW.userData.o)curW.userData.o.rotation.y=t*3;if(curH)curH.rotation.y=t;
 P.forEach(p=>{if(p.cm)p.cm.rotation.z=Math.sin(t*1.5+p.id)*.025;if(p.mk.visible){p.mk.position.y=3.4+Math.sin(t*3+p.id)*.2;p.mk.rotation.y=t*2}});
 for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.l-=d;p.m.position.addScaledVector(p.v,d);p.v.y-=9.8*d;p.m.scale.multiplyScalar(.96);if(p.l<=0){scene.remove(p.m);parts.splice(i,1)}}
 growth(d);if(S.mode=='Monster')updMons(d,t);pt-=d;if(pt<=0){pt=.4;P.forEach(paint);prompt()}
 if(!window._sv||t-window._sv>10){window._sv=t;save()}
-// NEW CODE (Roblox 3D Orbit & Pitch math):
+
 camPitch += (targetPitch - camPitch) * 0.15;
 camDist += (targetDist - camDist) * 0.15;
 
@@ -260,6 +286,7 @@ const tp = player.position.clone().add(camOffset);
 cam.position.lerp(tp, .12);
 cam.lookAt(player.position.x, 1.5, player.position.z);
 ren.render(scene,cam)}
+
 function start(mode,fresh){A.init();if(fresh){S=def();S.mode=mode;applyPlots();equipMesh();handMesh()}else if(mode)S.mode=mode;S.started=1;$('land').style.display='none';$('ui').style.opacity=1;player.position.set(0,0,12);updateUI();save()}
 window.onload=()=>{const has=load();scene=new THREE.Scene();scene.background=new THREE.Color(0x87ceeb);scene.fog=new THREE.FogExp2(0x87ceeb,.011);cam=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.1,400);ren=new THREE.WebGLRenderer({antialias:true});ren.setSize(innerWidth,innerHeight);ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.shadowMap.enabled=true;ren.shadowMap.type=THREE.PCFSoftShadowMap;$('cv').appendChild(ren.domElement);clk=new THREE.Clock();
 amb=new THREE.AmbientLight(0xffffff,.75);scene.add(amb);sun=new THREE.DirectionalLight(0xfffaed,1.2);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.far=160;['left','bottom'].forEach(k=>sun.shadow.camera[k]=-38);['right','top'].forEach(k=>sun.shadow.camera[k]=38);scene.add(sun);
