@@ -1315,6 +1315,8 @@
     scene.fog = new THREE.FogExp2(0x1b2d42, 0.011);
 
     const camera = new THREE.PerspectiveCamera(78, window.innerWidth / window.innerHeight, 0.1, 220);
+    camera.up.set(0, 1, 0);
+    camera.rotation.order = 'YXZ';
     scene.add(camera);
 
     // Weapon Viewmodel Container attached to Camera
@@ -1667,8 +1669,9 @@
       sfx.playGunshot(w.id);
       if (!w.melee) muzzleLight.intensity = 4.5;
 
-      // Apply camera recoil kick
-      p.pitch = Math.min(Math.PI * 0.47, p.pitch + w.recoilPitch * (p.scoped ? 0.5 : 1));
+      // Apply camera recoil kick (strictly clamped below vertical pole to prevent camera flip)
+      const maxPitch = Math.PI / 2 - 0.05;
+      p.pitch = Math.max(-maxPitch, Math.min(maxPitch, p.pitch + w.recoilPitch * (p.scoped ? 0.5 : 1)));
       p.yaw += (Math.random() - 0.5) * w.recoilYaw;
 
       // Calculate ray origin & direction with dynamic movement spread
@@ -2027,10 +2030,12 @@
         fireWeapon();
       }
 
-      // Camera Rotation
+      // Enforce upright world-up vector and strict FPS Euler order ('YXZ')
+      const maxPitch = Math.PI / 2 - 0.05;
+      p.pitch = Math.max(-maxPitch, Math.min(maxPitch, p.pitch));
+      camera.up.set(0, 1, 0);
       camera.rotation.order = 'YXZ';
-      camera.rotation.y = p.yaw;
-      camera.rotation.x = p.pitch;
+      camera.rotation.set(p.pitch, p.yaw, 0, 'YXZ');
 
       // Movement Input
       let moveForward = (Game.keys['KeyW'] ? 1 : 0) - (Game.keys['KeyS'] ? 1 : 0) - Game.touchMove.y;
@@ -2723,8 +2728,9 @@
     document.addEventListener('mousemove', (e) => {
       if (!Game.isPlaying || Game.buyMenuOpen || document.pointerLockElement !== canvas) return;
       const sens = Game.player.scoped ? 0.00095 : 0.0021;
+      const maxPitch = Math.PI / 2 - 0.05;
       Game.player.yaw -= e.movementX * sens;
-      Game.player.pitch = Math.max(-Math.PI * 0.47, Math.min(Math.PI * 0.47, Game.player.pitch - e.movementY * sens));
+      Game.player.pitch = Math.max(-maxPitch, Math.min(maxPitch, Game.player.pitch - e.movementY * sens));
     });
 
     document.addEventListener('mousedown', (e) => {
@@ -2899,6 +2905,8 @@
       // Lobby Camera Orbit Preview
       if (!Game.isPlaying) {
         const t = now * 0.00025;
+        camera.up.set(0, 1, 0);
+        camera.rotation.order = 'YXZ';
         camera.position.set(Math.sin(t) * 24, 9.5, Math.cos(t) * 24);
         camera.lookAt(0, 1.5, 0);
         renderer.render(scene, camera);
