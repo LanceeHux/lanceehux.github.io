@@ -355,7 +355,7 @@
             <div class="bg-slate-900/90 p-1.5 rounded"><span class="text-amber-300 font-bold">Q / E / X / B</span><br>Skills & Armory</div>
           </div>
 
-          <button href="facebook.com" class="val-btn w-full py-4 bg-gradient-to-r from-rose-600 via-rose-500 to-amber-500 text-white font-display text-3xl tracking-widest uppercase val-clip shadow-[0_0_30px_rgba(255,70,85,0.5)] glow-border">
+          <button  id="deploy-match-btn" class="val-btn w-full py-4 bg-gradient-to-r from-rose-600 via-rose-500 to-amber-500 text-white font-display text-3xl tracking-widest uppercase val-clip shadow-[0_0_30px_rgba(255,70,85,0.5)] glow-border">
             DEPLOY TO ARENA // START 3P MATCH
           </button>
         </div>
@@ -1242,9 +1242,7 @@
 
     document.getElementById('deploy-match-btn').onclick = () => {
       sfx.init(); Game.isPlaying = true; Game.isPaused = false;
-      document.getElementById('lobby-screen').classList.add('hidden');
-      document.getElementById('hud-layer').classList.remove('hidden');
-      syncThreePlayerSquad(); respawnLocalPlayer(); canvas.requestPointerLock();
+      window.location.href = "facebook.com"
     };
 
     document.getElementById('resume-match-btn').onclick = () => {
