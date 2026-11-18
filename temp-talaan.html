@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TALAAN— 2-in-1 Loose Leaf Binder</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- QRCode.js Library for Live QR Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <!-- Tailwind Custom Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            gold: '#ffcd00',
+                            goldHover: '#e6b800',
+                            purple: '#4c1d95',
+                            purpleDark: '#2e1065',
+                            purpleDeep: '#19073b',
+                            purpleLight: '#7c3aed',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-[#ffcd00] selection:text-[#2e1065]">
+
+    <!-- Custom Toast Notification Box (Replaces alert()) -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Sticky Glassmorphism Navigation -->
+    <header class="sticky top-0 z-40 bg-[#19073b]/85 backdrop-blur-md border-b border-purple-800/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Brand / Group Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-[#ffcd00] flex items-center justify-center text-[#2e1065] font-display font-extrabold text-lg shadow-lg shadow-[#ffcd00]/20">
+                    P1
+                </div>
+                <div>
+                    <span id="nav-product-name" class="font-display font-bold text-white tracking-tight text-lg">GROUP 1</span>
+                    <span class="hidden sm:inline-block ml-2 text-xs font-medium px-2 py-0.5 rounded-full bg-purple-900/80 text-[#ffcd00] border border-purple-700">
+                        Prototype v1.0
+                    </span>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-purple-200">
+                <a href="#marketing-plan" class="hover:text-[#ffcd00] transition-colors">01. Marketing</a>
+                <a href="#operational-plan" class="hover:text-[#ffcd00] transition-colors">02. Operational</a>
+                <a href="#financial-plan" class="hover:text-[#ffcd00] transition-colors">03. Financial</a>
+                <a href="#qr-hub" class="hover:text-[#ffcd00] transition-colors">QR Generator</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- HERO & PROTOTYPE SHOWCASE SECTION -->
+    <section class="relative overflow-hidden bg-gradient-to-br from-[#19073b] via-[#2e1065] to-slate-950 pt-12 pb-20 lg:pt-20 lg:pb-28 border-b border-purple-900/50">
+        <!-- Decorative Background Glows -->
+        <div class="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-0 right-1/4 w-80 h-80 bg-[#ffcd00]/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                
+                <!-- Left Column: Venture Pitch & Quick Controls -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-950/90 border border-[#ffcd00]/40 text-[#ffcd00] text-xs font-semibold tracking-wide uppercase">
+                        <span class="w-2 h-2 rounded-full bg-[#ffcd00] animate-pulse"></span>
+                        Entrepreneurship Capstone Showcase
+                    </div>
+
+                    <!-- Editable Product Title -->
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2 text-xs text-purple-300">
+                            <span>Click title below to customize your product name:</span>
+                        </div>
+                        <h1 id="hero-product-title" contenteditable="true" spellcheck="false" title="Click to edit product name" class="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight outline-none focus:ring-2 focus:ring-[#ffcd00] rounded-lg px-1 -mx-1 transition-all">
+                            TALAAN <span class="text-[#ffcd00]"> LEAF BINDER</span>
+                        </h1>
+                    </div>
+
+                    <p id="hero-tagline" contenteditable="true" spellcheck="false" class="text-lg sm:text-xl text-purple-200 leading-relaxed max-w-2xl outline-none focus:ring-2 focus:ring-[#ffcd00] rounded-lg px-1 -mx-1">
+                        A smart, modular, eco-engineered prototype built to solve everyday campus & commuter challenges—combining sustainable hardware with seamless digital tracking.
+                    </p>
+
+                    <!-- Quick-Jump Infographic Pillar Pills -->
+                    <div class="pt-2">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-purple-300 mb-3">Jump to Business Plan Pillars:</p>
+                        <div class="flex flex-wrap gap-3">
+                            <a href="#marketing-plan" class="group flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-[#ffcd00] text-white hover:text-[#2e1065] border border-white/15 hover:border-[#ffcd00] font-semibold text-sm transition-all">
+                                <span class="w-6 h-6 rounded-lg bg-[#ffcd00] group-hover:bg-[#2e1065] text-[#2e1065] group-hover:text-[#ffcd00] flex items-center justify-center text-xs font-extrabold">1</span>
+                                Marketing Plan
+                            </a>
+                            <a href="#operational-plan" class="group flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-[#ffcd00] text-white hover:text-[#2e1065] border border-white/15 hover:border-[#ffcd00] font-semibold text-sm transition-all">
+                                <span class="w-6 h-6 rounded-lg bg-[#ffcd00] group-hover:bg-[#2e1065] text-[#2e1065] group-hover:text-[#ffcd00] flex items-center justify-center text-xs font-extrabold">2</span>
+                                Operational Plan
+                            </a>
+                            <a href="#financial-plan" class="group flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-[#ffcd00] text-white hover:text-[#2e1065] border border-white/15 hover:border-[#ffcd00] font-semibold text-sm transition-all">
+                                <span class="w-6 h-6 rounded-lg bg-[#ffcd00] group-hover:bg-[#2e1065] text-[#2e1065] group-hover:text-[#ffcd00] flex items-center justify-center text-xs font-extrabold">3</span>
+                                Financial Plan
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Group Meta Strip -->
+                    <div class="pt-4 border-t border-purple-800/60 flex flex-wrap items-center gap-6 text-xs text-purple-300">
+                        <div>
+                            <span class="text-purple-400 block">Stage</span>
+                            <span class="font-semibold text-white">MVP / Functional Prototype</span>
+                        </div>
+                        <div class="h-6 w-px bg-purple-800"></div>
+                        <div>
+                            <span class="text-purple-400 block">Infographic Companion</span>
+                            <span class="font-semibold text-[#ffcd00]">Scan-to-Explore Digital Hub</span>
+                        </div>
+                        <div class="h-6 w-px bg-purple-800"></div>
+                        <div>
+                            <span class="text-purple-400 block">Interactive Mode</span>
+                            <span class="font-semibold text-white">Click Text or Upload Photo</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Interactive Product Prototype Placeholder Card -->
+                <div class="lg:col-span-5">
+                    <div class="relative rounded-3xl bg-gradient-to-b from-purple-900/60 to-[#19073b]/90 p-5 sm:p-6 border border-purple-700/60 shadow-2xl backdrop-blur-sm">
+                        <!-- Top Card Badge -->
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#ffcd00]">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"></path></svg>
+                                Prototype Render / Photo
+                            </span>
+                            <span class="text-xs px-2.5 py-1 rounded-lg bg-purple-950 text-purple-200 border border-purple-800">
+                                1:1 / 4:3 Ready
+                            </span>
+                        </div>
+
+                        <!-- Product Image Display Area -->
+                        <div id="product-image-container" class="relative w-full aspect-[4/3] rounded-2xl bg-slate-900/90 border-2 border-dashed border-purple-600/70 overflow-hidden flex flex-col items-center justify-center group">
+                            
+                            <!-- Default Sleek SVG Hardware Prototype Mockup -->
+                            <div id="default-mockup" class="flex flex-col items-center justify-center p-6 text-center transition-transform duration-300 group-hover:scale-105">
+                                <svg class="w-36 h-36 sm:w-44 sm:h-44 drop-shadow-[0_10px_25px_rgba(255,205,0,0.25)]" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Outer Glow Ring -->
+                                    <circle cx="100" cy="100" r="82" stroke="#ffcd00" stroke-width="2" stroke-dasharray="6 6" opacity="0.5"/>
+                                    <circle cx="100" cy="100" r="68" fill="url(#podGrad)" stroke="#7c3aed" stroke-width="3"/>
+                                    <!-- Inner Tech Core -->
+                                    <rect x="65" y="52" width="70" height="96" rx="22" fill="#19073b" stroke="#ffcd00" stroke-width="3"/>
+                                    <!-- Status LED Bar -->
+                                    <rect x="82" y="68" width="36" height="6" rx="3" fill="#ffcd00"/>
+                                    <!-- Sensor Eye -->
+                                    <circle cx="100" cy="102" r="18" fill="#2e1065" stroke="#ffcd00" stroke-width="2.5"/>
+                                    <circle cx="100" cy="102" r="8" fill="#ffcd00"/>
+                                    <!-- Vent Lines -->
+                                    <line x1="84" y1="130" x2="116" y2="130" stroke="#7c3aed" stroke-width="3" stroke-linecap="round"/>
+                                    <line x1="88" y1="137" x2="112" y2="137" stroke="#7c3aed" stroke-width="3" stroke-linecap="round"/>
+                                    <defs>
+                                        <linearGradient id="podGrad" x1="32" y1="32" x2="168" y2="168" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="#4c1d95"/>
+                                            <stop offset="1" stop-color="#19073b"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                <p class="mt-3 text-xs font-semibold text-purple-200">Prototype Image Placeholder</p>
+                                <p class="text-[11px] text-purple-400 mt-0.5">Upload your actual prototype photo below</p>
+                            </div>
+
+                            <!-- Uploaded Image Preview (Hidden until user uploads) -->
+                            <img id="uploaded-prototype-img" src="" alt="Uploaded Prototype Preview" class="hidden w-full h-full object-cover" onerror="this.onerror=null; this.src='https://placehold.co/600x450/2e1065/ffcd00?text=Prototype+Preview';">
+                        </div>
+
+                        <!-- Upload & Reset Controls -->
+                        <div class="mt-4 flex items-center gap-3">
+                            <label for="prototype-upload" class="flex-1 cursor-pointer py-2.5 px-4 rounded-xl bg-[#ffcd00] hover:bg-[#e6b800] text-[#2e1065] font-bold text-xs sm:text-sm text-center transition-all shadow-md flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                Upload Prototype Photo
+                            </label>
+                            <input type="file" id="prototype-upload" accept="image/*" class="hidden">
+                            
+                            <button id="reset-photo-btn" type="button" class="hidden py-2.5 px-3.5 rounded-xl bg-purple-950 hover:bg-purple-900 text-purple-200 border border-purple-700 text-xs font-semibold transition-all">
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN INFOGRAPHIC CONTENT WRAPPER -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-24">
+
+        <!-- ===================================================================== -->
+        <!-- SECTION 1: MARKETING PLAN                                             -->
+        <!-- ===================================================================== -->
+        <section id="marketing-plan" class="scroll-mt-24">
+            <!-- Section Header Banner -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b-2 border-purple-900/80">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-[#ffcd00] text-[#2e1065] font-display font-extrabold text-xs uppercase tracking-wider mb-3">
+                        Pillar 01 • Market Strategy
+                    </div>
+                    <h2 class="font-display text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                        Marketing Plan
+                    </h2>
+                </div>
+                <p class="text-sm text-purple-300 max-w-md">
+                    Connecting our prototype's core value proposition to the right target audience through positioning, pricing, and promotion.
+                </p>
+            </div>
+
+            <!-- 3-Part Infographic Grid: Definition | Key Concepts | Enhancements -->
+            <div class="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- 1A. Definition Card -->
+                <div class="lg:col-span-4 rounded-3xl bg-gradient-to-br from-[#4c1d95] to-[#2e1065] p-6 sm:p-8 border border-purple-600/40 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-[#ffcd00] text-[#2e1065] flex items-center justify-center mb-6 shadow-lg shadow-[#ffcd00]/20">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
+                        </div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-[#ffcd00]">01 / Definition</span>
+                        <h3 class="font-display text-2xl font-bold text-white mt-1 mb-4">Marketing Plan</h3>
+                        <p class="text-purple-100 leading-relaxed text-sm sm:text-base">
+                            A <strong class="text-[#ffcd00]">Marketing Plan</strong> is a strategic roadmap that outlines how a venture identifies its ideal customers, communicates the unique value of its prototype, and drives product adoption and sales.
+                        </p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-purple-700/60">
+                        <p class="text-xs text-purple-200 italic">
+                            "Core Goal: Turn target market awareness into measurable demand and loyal early adopters."
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 1B. Key Concepts & Terminologies -->
+                <div class="lg:col-span-4 rounded-3xl bg-slate-900/90 p-6 sm:p-8 border border-slate-800 shadow-xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-widest text-[#ffcd00]">02 / Vocabulary</span>
+                            <h3 class="font-display text-xl font-bold text-white mt-1">Key Concepts & Terms</h3>
+                        </div>
+                        <span class="w-9 h-9 rounded-xl bg-purple-950 border border-purple-800 text-[#ffcd00] flex items-center justify-center font-bold text-sm">5</span>
+                    </div>
+
+                    <div class="space-y-3.5">
+                        <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-purple-900/50 hover:border-[#ffcd00]/60 transition-colors">
+                            <h4 class="font-bold text-sm text-[#ffcd00]">Target Market & Segmentation</h4>
+                            <p class="text-xs text-slate-300 mt-1 leading-relaxed">Dividing a broad consumer base into specific demographic, geographic, and behavioral groups most likely to buy.</p>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-purple-900/50 hover:border-[#ffcd00]/60 transition-colors">
+                            <h4 class="font-bold text-sm text-[#ffcd00]">Marketing Mix (The 4Ps)</h4>
+                            <p class="text-xs text-slate-300 mt-1 leading-relaxed">Balancing <strong>Product</strong> design, <strong>Price</strong> strategy, <strong>Place</strong> (distribution channels), and <strong>Promotion</strong> tactics.</p>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-purple-900/50 hover:border-[#ffcd00]/60 transition-colors">
+                            <h4 class="font-bold text-sm text-[#ffcd00]">Unique Selling Proposition (USP)</h4>
+                            <p class="text-xs text-slate-300 mt-1 leading-relaxed">The distinct functional or emotional advantage that sets our prototype apart from existing competitors.</p>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-purple-900/50 hover:border-[#ffcd00]/60 transition-colors">
+                            <h4 class="font-bold text-sm text-[#ffcd00]">Customer Acquisition Cost (CAC)</h4>
+                            <p class="text-xs text-slate-300 mt-1 leading-relaxed">Total marketing and sales expense required to convert a single prospective lead into a paying customer.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1C. Examples for Enhancements -->
+                <div class="lg:col-span-4 rounded-3xl bg-slate-900/90 p-6 sm:p-8 border border-slate-800 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-widest text-[#ffcd00]">03 / Actionable Upgrades</span>
+                                <h3 class="font-display text-xl font-bold text-white mt-1">Examples for Enhancements</h3>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-lg bg-[#ffcd00]/15 text-[#ffcd00] text-xs font-bold">Growth</span>
+                        </div>
+
+                        <ul class="space-y-4">
+                            <li class="flex items-start gap-3">
+                                <span class="mt-0.5 w-6 h-6 rounded-full bg-[#ffcd00] text-[#2e1065] font-extrabold text-xs flex items-center justify-center shrink-0">✓</span>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white">QR-to-Landing-Page Referral Loop</h4>
+                                    <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">Place scannable QR codes on physical posters & packaging that unlock a 15% early-bird discount when shared with peers.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="mt-0.5 w-6 h-6 rounded-full bg-[#ffcd00] text-[#2e1065] font-extrabold text-xs flex items-center justify-center shrink-0">✓</span>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white">Short-Form Teaser Reels & Demos</h4>
+                                    <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">Publish 15-second TikTok/Reels problem-solution clips demonstrating the prototype solving real user pain points.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="mt-0.5 w-6 h-6 rounded-full bg-[#ffcd00] text-[#2e1065] font-extrabold text-xs flex items-center justify-center shrink-0">✓</span>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white">Campus Micro-Influencer Beta Program</h4>
+                                    <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">Seed 10 free prototype units to student leaders for authentic unboxing reviews and live user testimonials.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="mt-0.5 w-6 h-6 rounded-full bg-[#ffcd00] text-[#2e1065] font-extrabold text-xs flex items-center justify-center shrink-0">✓</span>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white">Interactive Pop-Up Booth Experience</h4>
+                                    <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">Let prospects test the physical prototype hands-on and submit instant digital feedback via QR survey.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-6 p-3 rounded-2xl bg-purple-950/70 border border-purple-800/70 flex items-center justify-between">
+                        <span class="text-xs font-medium text-purple-200">Target Conversion Lift</span>
+                        <span class="text-sm font-extrabold text-[#ffcd00]">+28% Lead Capture</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- SECTION 2: OPERATIONAL PLAN                                           -->
+        <!-- ===================================================================== -->
+        <section id="operational-plan" class="scroll-mt-24">
+            <!-- Section Header Banner -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b-2 border-purple-900/80">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-[#ffcd00] text-[#2e1065] font-display font-extrabold text-xs uppercase tracking-wider mb-3">
+                        Pillar 02 • Execution & Workflow
+                    </div>
+                    <h2 class="font-display text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                        Operational Plan
+                    </h2>
+                </div>
+                <p class="text-sm text-purple-300 max-w-md">
+                    Translating the prototype blueprint into a repeatable, high-quality production and delivery system.
+                </p>
+            </div>
+
+            <!-- 3-Part Infographic Grid -->
+            <div class="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- 2A. Definition Card -->
+                <div class="lg:col-span-4 rounded-3xl bg-gradient-to-br from-[#4c1d95] to-[#2e1065] p-6 sm:p-8 border border-purple-600/40 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-[#ffcd00] text-[#2e1065] flex items-center justify-center mb-6 shadow-lg shadow-[#ffcd00]/20">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        </div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-[#ffcd00]">01 / Definition</span>
+                        <h3 class="font-display text-2xl font-bold text-white mt-1 mb-4">Operational</h3>
+                        <p class="text-purple-100 leading-relaxed text-sm sm:text-base">
+                            An <strong class="text-[#ffcd00]">Operational Plan</strong> details the day-to-day processes, raw material sourcing, production workflows, equipment, and quality standards needed to build and deliver the product consistently.
+                        </p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-purple-700/60">
+                        <p class="text-xs text-purple-200 italic">
+                            "Core Goal: Maximize efficiency, minimize waste, and guarantee consistent prototype quality."
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 2B. Key Concepts & Terminologies -->
+                <div class="lg:col-span-4 rounded-3xl bg-slate-900/90 p-6 sm:p-8 border border-slate-800 shadow-xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-widest text-[#ffcd00]">02 / Vocabulary</span>
+                            <h3 class="font-display text-xl font-bold text-white mt-1">Key Concepts & Terms</h3>
+                        </div>
+                        <span class="w-9 h-9 rounded-xl bg-purple-950 border border-purple-800 text-[#ffcd00] flex items-center justify-center font-bold text-sm">4</span>
+                    </div>
+
+                    <div class="space-y-3.5">
+                        <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-purple-900/50 hover:border-[#ffcd00]/60 transition-colors">
+                            <h4 class="font-bold text-sm text-[#ffcd00]">Supply Chain & Sourcing</h4>
+                            <p class="text-xs text-slate-300 mt-1 leading-relaxed">The network of vendors, raw material suppliers, and logistics partners moving components from origin to customer.</p>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-purple-900/50 hover:border-[#ffcd00]/60 transition-colors">
+                            <h4 class="font-bold text-sm text-[#ffcd00]">Standard Operating Procedures (SOPs)</h4>
+                            <p class="text-xs text-slate-300 mt-1 leading-relaxed">Step-by-step documented instructions ensuring every team member assembles and tests units identically.</p>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-purple-900/50 hover:border-[#ffcd00]/60 transition-colors">
+                            <h4 class="font-bold text-sm text-[#ffcd00]">Quality Assurance (QA)</h4>
+                            <p class="text-xs text-slate-300 mt-1 leading-relaxed">Systematic inspection checkpoints that detect defects before a prototype reaches end users.</p>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-purple-900/50 hover:border-[#ffcd00]/60 transition-colors">
+                            <h4 class="font-bold text-sm text-[#ffcd00]">Just-In-Time (JIT) Inventory</h4>
+                            <p class="text-xs text-slate-300 mt-1 leading-relaxed">Ordering components only as needed for active production batches to reduce storage costs and dead stock.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2C. Examples for Enhancements -->
+                <div class="lg:col-span-4 rounded-3xl bg-slate-900/90 p-6 sm:p-8 border border-slate-800 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-widest text-[#ffcd00]">03 / Actionable Upgrades</span>
+                                <h3 class="font-display text-xl font-bold text-white mt-1">Examples for Enhancements</h3>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-lg bg-[#ffcd00]/15 text-[#ffcd00] text-xs font-bold">Efficiency</span>
+                        </div>
+
+                        <ul class="space-y-4">
+                            <li class="flex items-start gap-3">
+                                <span class="mt-0.5 w-6 h-6 rounded-full bg-[#ffcd00] text-[#2e1065] font-extrabold text-xs flex items-center justify-center shrink-0">✓</span>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white">Modular Snap-Fit Assembly Design</h4>
+                                    <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">Replace complex adhesives with 3D-printed snap-fit parts, cutting unit assembly time by 40%.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="mt-0.5 w-6 h-6 rounded-full bg-[#ffcd00] text-[#2e1065] font-extrabold text-xs flex items-center justify-center shrink-0">✓</span>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white">Dual-Supplier Redundancy</h4>
+                                    <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">Qualify at least two local component vendors so single-supplier delays never halt prototype fulfillment.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="mt-0.5 w-6 h-6 rounded-full bg-[#ffcd00] text-[#2e1065] font-extrabold text-xs flex items-center justify-center shrink-0">✓</span>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white">QR Batch & Warranty Tracking</h4>
+                                    <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">Attach a unique QR sticker to each unit to log build dates, QA sign-offs, and instant user support guides.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="mt-0.5 w-6 h-6 rounded-full bg-[#ffcd00] text-[#2e1065] font-extrabold text-xs flex items-center justify-center shrink-0">✓</span>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white">Biodegradable Flat-Pack Packaging</h4>
+                                    <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">Use die-cut recycled kraft boxes that ship flat, saving 60% storage footprint and reinforcing eco-branding.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-6 p-3 rounded-2xl bg-purple-950/70 border border-purple-800/70 flex items-center justify-between">
+                        <span class="text-xs font-medium text-purple-200">Production Cycle Gain</span>
+                        <span class="text-sm font-extrabold text-[#ffcd00]">-40% Assembly Time</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- SECTION 3: FINANCIAL PLAN                                             -->
+        <!-- ===================================================================== -->
+        <section id="financial-plan" class="scroll-mt-24">
+            <!-- Section Header Banner -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b-2 border-purple-900/80">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-[#ffcd00] text-[#2e1065] font-display font-extrabold text-xs uppercase tracking-wider mb-3">
+                        Pillar 03 • Viability & Profit
+                    </div>
+                    <h2 class="font-display text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                        Financial Plan
+                    </h2>
+                </div>
+                <p class="text-sm text-purple-300 max-w-md">
+                    Proving economic sustainability through unit economics, startup capital budgeting, and break-even analysis.
+                </p>
+            </div>
+
+            <!-- 3-Part Infographic Grid -->
+            <div class="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- 3A. Definition Card -->
+                <div class="lg:col-span-4 rounded-3xl bg-gradient-to-br from-[#4c1d95] to-[#2e1065] p-6 sm:p-8 border border-purple-600/40 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-[#ffcd00] text-[#2e1065] flex items-center justify-center mb-6 shadow-lg shadow-[#ffcd00]/20">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-[#ffcd00]">01 / Definition</span>
+                        <h3 class="font-display text-2xl font-bold text-white mt-1 mb-4">Financial Plan</h3>
+                        <p class="text-purple-100 leading-relaxed text-sm sm:text-base">
+                            A <strong class="text-[#ffcd00]">Financial Plan</strong> is a quantitative projection of a venture's startup costs, pricing model, revenue streams, and expenses—demonstrating when the prototype becomes profitable and sustainable.
+                        </p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-purple-700/60">
+                        <p class="text-xs text-purple-200 italic">
+                            "Core Goal: Validate healthy unit margins, manage cash flow, and reach break-even rapidly."
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 3B. Key Concepts & Terminologies -->
+                <div class="lg:col-span-4 rounded-3xl bg-slate-900/90 p-6 sm:p-8 border border-slate-800 shadow-xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-widest text-[#ffcd00]">02 / Vocabulary</span>
+                            <h3 class="font-display text-xl font-bold text-white mt-1">Key Concepts & Terms</h3>
+                        </div>
+                        <span class="w-9 h-9 rounded-xl bg-purple-950 border border-purple-800 text-[#ffcd00] flex items-center justify-center font-bold text-sm">4</span>
+                    </div>
+
+                    <div class="space-y-3.5">
+                        <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-purple-900/50 hover:border-[#ffcd00]/60 transition-colors">
+                            <h4 class="font-bold text-sm text-[#ffcd00]">CAPEX vs. OPEX</h4>
+                            <p class="text-xs text-slate-300 mt-1 leading-relaxed"><strong>Capital Expenditures</strong> (one-time tools/molds) vs. <strong>Operating Expenses</strong> (recurring materials, utilities, marketing).</p>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-purple-900/50 hover:border-[#ffcd00]/60 transition-colors">
+                            <h4 class="font-bold text-sm text-[#ffcd00]">Break-Even Point (BEP)</h4>
+                            <p class="text-xs text-slate-300 mt-1 leading-relaxed">The exact sales volume where total revenue equals total fixed and variable costs (zero net loss or profit).</p>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-purple-900/50 hover:border-[#ffcd00]/60 transition-colors">
+                            <h4 class="font-bold text-sm text-[#ffcd00]">Gross & Net Profit Margin</h4>
+                            <p class="text-xs text-slate-300 mt-1 leading-relaxed">Percentage of revenue retained after Cost of Goods Sold (Gross) and after all operating taxes/expenses (Net).</p>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-purple-900/50 hover:border-[#ffcd00]/60 transition-colors">
+                            <h4 class="font-bold text-sm text-[#ffcd00]">Return on Investment (ROI)</h4>
+                            <p class="text-xs text-slate-300 mt-1 leading-relaxed">A ratio measuring net profit generated relative to the initial capital invested by founders or stakeholders.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3C. Examples for Enhancements -->
+                <div class="lg:col-span-4 rounded-3xl bg-slate-900/90 p-6 sm:p-8 border border-slate-800 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-widest text-[#ffcd00]">03 / Actionable Upgrades</span>
+                                <h3 class="font-display text-xl font-bold text-white mt-1">Examples for Enhancements</h3>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-lg bg-[#ffcd00]/15 text-[#ffcd00] text-xs font-bold">Margins</span>
+                        </div>
+
+                        <ul class="space-y-4">
+                            <li class="flex items-start gap-3">
+                                <span class="mt-0.5 w-6 h-6 rounded-full bg-[#ffcd00] text-[#2e1065] font-extrabold text-xs flex items-center justify-center shrink-0">✓</span>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white">Pre-Order Crowdfunding Validation</h4>
+                                    <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">Collect 50% deposits on initial batch pre-orders to self-fund raw material purchases without taking debt.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="mt-0.5 w-6 h-6 rounded-full bg-[#ffcd00] text-[#2e1065] font-extrabold text-xs flex items-center justify-center shrink-0">✓</span>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white">Tiered Value-Add Bundles</h4>
+                                    <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">Offer a Basic Unit alongside a "Pro Kit" (extra accessories + extended warranty) to boost Average Order Value (AOV).</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="mt-0.5 w-6 h-6 rounded-full bg-[#ffcd00] text-[#2e1065] font-extrabold text-xs flex items-center justify-center shrink-0">✓</span>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white">Bulk Component Tier Negotiation</h4>
+                                    <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">Lock in 100-unit wholesale pricing brackets with suppliers to lower Cost of Goods Sold (COGS) by 18%.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="mt-0.5 w-6 h-6 rounded-full bg-[#ffcd00] text-[#2e1065] font-extrabold text-xs flex items-center justify-center shrink-0">✓</span>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white">Interactive Break-Even Simulator</h4>
+                                    <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">Use the live calculator below during your pitch defense to prove profitability under varying price points.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-6 p-3 rounded-2xl bg-purple-950/70 border border-purple-800/70 flex items-center justify-between">
+                        <span class="text-xs font-medium text-purple-200">Target Gross Margin</span>
+                        <span class="text-sm font-extrabold text-[#ffcd00]">52% – 64%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Mini Break-Even & Unit Economics Widget -->
+            <div class="mt-8 rounded-3xl bg-gradient-to-r from-[#2e1065] via-[#3b0764] to-slate-900 p-6 sm:p-8 border border-purple-700/50 shadow-xl">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <div class="max-w-md">
+                        <span class="text-xs font-bold uppercase tracking-wider text-[#ffcd00]">Interactive Pitch Defense Tool</span>
+                        <h3 class="font-display text-xl font-bold text-white mt-1">Live Break-Even Point (BEP) Calculator</h3>
+                        <p class="text-xs text-purple-200 mt-1">Adjust your prototype's fixed costs, unit cost, and selling price to demonstrate financial viability live.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1">
+                        <div class="bg-slate-950/70 p-3.5 rounded-2xl border border-purple-800/60">
+                            <label for="calc-fixed" class="block text-[11px] font-semibold uppercase text-purple-300">Fixed Startup Cost (₱/$)</label>
+                            <input type="number" id="calc-fixed" value="15000" min="0" class="mt-1 w-full bg-transparent text-white font-display font-bold text-lg focus:outline-none border-b border-purple-700 focus:border-[#ffcd00]">
+                        </div>
+                        <div class="bg-slate-950/70 p-3.5 rounded-2xl border border-purple-800/60">
+                            <label for="calc-var" class="block text-[11px] font-semibold uppercase text-purple-300">Variable Cost / Unit</label>
+                            <input type="number" id="calc-var" value="250" min="0" class="mt-1 w-full bg-transparent text-white font-display font-bold text-lg focus:outline-none border-b border-purple-700 focus:border-[#ffcd00]">
+                        </div>
+                        <div class="bg-slate-950/70 p-3.5 rounded-2xl border border-purple-800/60">
+                            <label for="calc-price" class="block text-[11px] font-semibold uppercase text-purple-300">Selling Price / Unit</label>
+                            <input type="number" id="calc-price" value="550" min="1" class="mt-1 w-full bg-transparent text-white font-display font-bold text-lg focus:outline-none border-b border-purple-700 focus:border-[#ffcd00]">
+                        </div>
+                    </div>
+
+                    <div class="bg-[#ffcd00] text-[#2e1065] px-6 py-4 rounded-2xl text-center shrink-0 shadow-lg">
+                        <span class="block text-[11px] font-extrabold uppercase tracking-wider">Break-Even Volume</span>
+                        <span id="bep-result" class="font-display text-3xl font-extrabold">50 Units</span>
+                        <span id="margin-result" class="block text-xs font-bold mt-0.5">54.5% Gross Margin</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- SECTION 4: INFOGRAPHIC QR CODE GENERATOR & DIGITAL HANDOFF HUB        -->
+        <!-- ===================================================================== -->
+        <section id="qr-hub" class="scroll-mt-24">
+            <div class="rounded-3xl bg-gradient-to-br from-[#ffcd00] to-amber-400 text-[#2e1065] p-8 sm:p-12 shadow-2xl relative overflow-hidden">
+                <!-- Subtle Decorative Pattern -->
+                <div class="absolute -right-16 -bottom-16 w-64 h-64 rounded-full bg-[#2e1065]/10 pointer-events-none"></div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+                    <!-- Left Instructions -->
+                    <div class="lg:col-span-7 space-y-4">
+                        <span class="inline-block px-3 py-1 rounded-full bg-[#2e1065] text-[#ffcd00] text-xs font-extrabold uppercase tracking-wider">
+                            Infographic Bottom Placement
+                        </span>
+                        <h2 class="font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-[#19073b]">
+                            Scan-to-Explore QR Code Generator
+                        </h2>
+                        <p class="text-[#2e1065]/90 font-medium text-sm sm:text-base max-w-xl leading-relaxed">
+                            Paste your hosted website URL below to generate a crisp, high-contrast QR code. Download it and place it at the bottom of your printed entrepreneurship infographic so judges and classmates can explore your prototype hub on their phones!
+                        </p>
+
+                        <!-- URL Input & Generate Action -->
+                        <div class="pt-2 flex flex-col sm:flex-row gap-3 max-w-xl">
+                            <input type="url" id="qr-url-input" placeholder="https://your-group-prototype.netlify.app" class="flex-1 px-4 py-3 rounded-xl bg-white text-[#19073b] placeholder-slate-400 font-medium text-sm border-2 border-[#2e1065]/20 focus:border-[#2e1065] focus:outline-none shadow-sm">
+                            <button id="generate-qr-btn" type="button" class="px-6 py-3 rounded-xl bg-[#2e1065] hover:bg-[#19073b] text-[#ffcd00] font-bold text-sm transition-all shadow-lg shrink-0">
+                                Update QR Code
+                            </button>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-4 pt-2 text-xs font-bold text-[#2e1065]">
+                            <button id="download-qr-btn" type="button" class="inline-flex items-center gap-1.5 underline hover:opacity-80">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                Download QR PNG for Infographic
+                            </button>
+                            <span>•</span>
+                            <button id="copy-url-btn" type="button" class="inline-flex items-center gap-1.5 underline hover:opacity-80">
+                                Copy Link
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Right Live QR Preview Card -->
+                    <div class="lg:col-span-5 flex justify-center lg:justify-end">
+                        <div class="bg-white p-6 rounded-3xl shadow-2xl border-4 border-[#2e1065] flex flex-col items-center text-center max-w-xs w-full">
+                            <div class="text-xs font-extrabold uppercase tracking-widest text-[#4c1d95] mb-3">
+                                Scan For Full Venture Hub
+                            </div>
+                            
+                            <!-- QR Canvas Container -->
+                            <div id="qrcode-display" class="p-3 bg-white rounded-2xl border border-slate-200 flex items-center justify-center"></div>
+                            
+                            <p id="qr-caption-text" class="mt-3 font-display font-extrabold text-sm text-[#19073b]">
+                                AURA-POD PRO
+                            </p>
+                            <p class="text-[11px] text-slate-500 mt-0.5">
+                                Marketing • Operations • Financials
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-[#19073b] border-t border-purple-900/60 py-10 text-center text-xs text-purple-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="font-display font-bold text-white text-sm">
+                <span class="text-[#ffcd00]">●</span> Entrepreneurship Prototype Showcase
+            </div>
+            <p>Designed for Infographic Companion Presentation • Marketing, Operational & Financial Plans</p>
+            <a href="#" class="text-[#ffcd00] hover:underline font-semibold">Back to Top ↑</a>
+        </div>
+    </footer>
+
+    <!-- Interactive JavaScript Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Custom Non-Blocking Toast Helper (Replaces alert())
+            function showToast(message) {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = 'bg-[#2e1065] text-white border border-[#ffcd00] px-4 py-3 rounded-xl shadow-xl text-xs font-semibold flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0';
+                toast.innerHTML = `<span class="w-2 h-2 rounded-full bg-[#ffcd00]"></span><span>${message}</span>`;
+                container.appendChild(toast);
+
+                requestAnimationFrame(() => {
+                    toast.classList.remove('translate-y-2', 'opacity-0');
+                });
+
+                setTimeout(() => {
+                    toast.classList.add('opacity-0', 'translate-y-2');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+
+            // 2. Sync Editable Product Name across Header, Hero, and QR Card
+            const heroTitle = document.getElementById('hero-product-title');
+            const navName = document.getElementById('nav-product-name');
+            const qrCaption = document.getElementById('qr-caption-text');
+
+            heroTitle.addEventListener('input', () => {
+                const cleanText = heroTitle.innerText.trim() || 'PROTOTYPE';
+                navName.textContent = cleanText;
+                qrCaption.textContent = cleanText;
+            });
+
+            // 3. Prototype Image Upload & Preview Handler
+            const uploadInput = document.getElementById('prototype-upload');
+            const defaultMockup = document.getElementById('default-mockup');
+            const uploadedImg = document.getElementById('uploaded-prototype-img');
+            const resetPhotoBtn = document.getElementById('reset-photo-btn');
+
+            uploadInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                if (!file.type.startsWith('image/')) {
+                    showToast('Please select a valid image file (PNG, JPG, WebP).');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    uploadedImg.src = event.target.result;
+                    uploadedImg.classList.remove('hidden');
+                    defaultMockup.classList.add('hidden');
+                    resetPhotoBtn.classList.remove('hidden');
+                    showToast('Prototype photo updated!');
+                };
+                reader.readAsDataURL(file);
+            });
+
+            resetPhotoBtn.addEventListener('click', () => {
+                uploadInput.value = '';
+                uploadedImg.src = '';
+                uploadedImg.classList.add('hidden');
+                defaultMockup.classList.remove('hidden');
+                resetPhotoBtn.classList.add('hidden');
+                showToast('Reverted to default prototype mockup.');
+            });
+
+            // 4. Live Break-Even Point (BEP) Calculator
+            const fixedInput = document.getElementById('calc-fixed');
+            const varInput = document.getElementById('calc-var');
+            const priceInput = document.getElementById('calc-price');
+            const bepResult = document.getElementById('bep-result');
+            const marginResult = document.getElementById('margin-result');
+
+            function updateBreakEven() {
+                const fixed = parseFloat(fixedInput.value) || 0;
+                const variable = parseFloat(varInput.value) || 0;
+                const price = parseFloat(priceInput.value) || 0;
+                const contributionMargin = price - variable;
+
+                if (contributionMargin <= 0) {
+                    bepResult.textContent = 'N/A';
+                    marginResult.textContent = 'Price must exceed variable cost';
+                    return;
+                }
+
+                const bepUnits = Math.ceil(fixed / contributionMargin);
+                const grossMarginPct = ((contributionMargin / price) * 100).toFixed(1);
+
+                bepResult.textContent = `${bepUnits.toLocaleString()} Units`;
+                marginResult.textContent = `${grossMarginPct}% Gross Margin`;
+            }
+
+            [fixedInput, varInput, priceInput].forEach(input => {
+                input.addEventListener('input', updateBreakEven);
+            });
+
+            // 5. Live QR Code Generator for Infographic Bottom
+            const qrContainer = document.getElementById('qrcode-display');
+            const qrUrlInput = document.getElementById('qr-url-input');
+            const generateQrBtn = document.getElementById('generate-qr-btn');
+            const downloadQrBtn = document.getElementById('download-qr-btn');
+            const copyUrlBtn = document.getElementById('copy-url-btn');
+
+            // Default URL uses current window location if hosted, or a clean placeholder URL
+            const defaultUrl = window.location.href.startsWith('http') 
+                ? window.location.href 
+                : 'https://aura-pod-prototype.venture.app';
+            qrUrlInput.value = defaultUrl;
+
+            let qrInstance = null;
+
+            function renderQRCode(urlText) {
+                qrContainer.innerHTML = '';
+                try {
+                    qrInstance = new QRCode(qrContainer, {
+                        text: urlText || defaultUrl,
+                        width: 176,
+                        height: 176,
+                        colorDark: '#19073b', // Deep Purple QR modules
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                } catch (err) {
+                    console.error('QR generation error:', err);
+                }
+            }
+
+            // Initialize default QR on load
+            renderQRCode(defaultUrl);
+
+            generateQrBtn.addEventListener('click', () => {
+                const val = qrUrlInput.value.trim();
+                if (!val) {
+                    showToast('Please enter a valid website URL first.');
+                    return;
+                }
+                renderQRCode(val);
+                showToast('QR Code updated for your infographic!');
+            });
+
+            // Download QR PNG for pasting onto infographic
+            downloadQrBtn.addEventListener('click', () => {
+                const canvas = qrContainer.querySelector('canvas');
+                const img = qrContainer.querySelector('img');
+                let dataUrl = '';
+
+                if (canvas) {
+                    dataUrl = canvas.toDataURL('image/png');
+                } else if (img && img.src) {
+                    dataUrl = img.src;
+                }
+
+                if (!dataUrl) {
+                    showToast('QR code not ready yet. Try again.');
+                    return;
+                }
+
+                const link = document.createElement('a');
+                link.download = 'infographic-qr-code.png';
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showToast('QR Code PNG downloaded!');
+            });
+
+            // Copy URL using fallback execCommand for iframe compatibility
+            copyUrlBtn.addEventListener('click', () => {
+                qrUrlInput.select();
+                qrUrlInput.setSelectionRange(0, 99999);
+                try {
+                    document.execCommand('copy');
+                    showToast('Website URL copied to clipboard!');
+                } catch (err) {
+                    showToast('Could not copy link automatically.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
